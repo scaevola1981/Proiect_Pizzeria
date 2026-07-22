@@ -41,6 +41,15 @@ async function loadProductsFromSupabase() {
     renderProducts();
 }
 
+function getProductImage(nume) {
+    const nameLower = nume.toLowerCase();
+    if (nameLower.includes('margherita')) return 'img/pizza_margherita.png';
+    if (nameLower.includes('diavola')) return 'img/pizza_diavola.png';
+    if (nameLower.includes('apă') || nameLower.includes('apa')) return 'img/apa-minerala.png';
+    if (nameLower.includes('cola')) return 'img/coca-cola_0.25.png';
+    return 'img/pizza_margherita.png'; // Fallback pt produse fara poza
+}
+
 function renderProducts() {
     const container = document.getElementById('produse-container');
     container.innerHTML = '';
@@ -51,9 +60,11 @@ function renderProducts() {
     }
     
     produse.forEach(p => {
+        const imageUrl = getProductImage(p.nume);
         const div = document.createElement('div');
         div.className = 'product-card';
         div.innerHTML = `
+            <img src="${imageUrl}" alt="${p.nume}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
             <h3>${p.nume}</h3>
             <p>${p.descriere || ''}</p>
             <h4>${p.pret} Lei</h4>
