@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Bucătărie - Pizzerie</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="glass-panel main-header">
+        <h1>Bucătărie - Live Orders</h1>
+    </header>
+
+    <main class="glass-panel kitchen-area">
+        <div id="comenzi-active-container" class="orders-grid">
+            <!-- Comenzile vor apărea aici -->
+            <p>Fără comenzi active momentan.</p>
+        </div>
+    </main>
+
+    <!-- Modal pentru acceptarea comenzii și setarea timpului -->
+    <div id="accept-modal" class="modal hidden">
+        <div class="glass-panel modal-content">
+            <h2>Acceptă Comanda</h2>
+            <p>Timp estimat de preparare (minute):</p>
+            <input type="number" id="timp-estimat" value="15" min="5" max="120" step="5">
+            <div class="modal-actions">
+                <button id="btn-confirm-accept">Confirmă</button>
+                <button id="btn-cancel-accept" class="btn-secondary">Anulează</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

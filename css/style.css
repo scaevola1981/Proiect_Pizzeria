@@ -1,0 +1,305 @@
+/* Reset de bază și setări font */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+h1, h2, h3 {
+    margin-bottom: 20px;
+    color: #222;
+}
+
+/* Efectul principal de Glassmorphism (Sticlă mată - stil iOS) */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* Header */
+.main-header {
+    text-align: center;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header h1 {
+    margin-bottom: 0;
+}
+
+#table-info {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: rgba(255,255,255,0.4);
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+
+/* Layout index.html: Produse și Coș */
+.content-wrapper {
+    display: flex;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.products-area {
+    flex: 2;
+}
+
+.cart-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    position: sticky;
+    top: 20px;
+}
+
+/* Grid Produse */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.product-card {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.product-card p {
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+/* Cart Items */
+#cart-items {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.cart-summary {
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding-top: 15px;
+}
+
+/* Form inputs & buttons */
+input, select, button {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.5);
+    font-size: 1rem;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #ff7e67;
+}
+
+button {
+    background: #ff7e67;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+}
+
+button:hover:not(:disabled) {
+    background: #ff5733;
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+button.btn-secondary {
+    background: #95a5a6;
+}
+
+button.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+/* Kitchen & Orders */
+.kitchen-area {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.orders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.order-card {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.order-card h3 {
+    margin-bottom: 10px;
+}
+
+.order-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: rgba(255,255,255,0.9);
+    padding: 30px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Customer Display */
+.customer-display-body {
+    background: #1a1a2e;
+    color: white;
+}
+
+.customer-display-body .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.customer-display-body h1, 
+.customer-display-body h2, 
+.customer-display-body h3 {
+    color: white;
+}
+
+.display-columns {
+    display: flex;
+    gap: 30px;
+}
+
+.column {
+    flex: 1;
+}
+
+.display-order-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.5rem;
+}
+
+.display-order-card.ready {
+    background: rgba(46, 204, 113, 0.2);
+    border: 1px solid #2ecc71;
+}
+
+.time-badge {
+    background: #ff7e67;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* =========================================
+   MEDIA QUERIES PENTRU MOBILE (RESPONSIVE)
+   ========================================= */
+@media (max-width: 768px) {
+    .content-wrapper {
+        flex-direction: column;
+    }
+    
+    .cart-area {
+        /* Pe mobil, coșul se așază sub produse. Oprim sticky pentru a nu ocupa abuziv ecranul */
+        position: static;
+        max-height: none;
+        margin-top: 20px;
+    }
+    
+    .main-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* Și ecranul clienților se aliniază pe coloană pe display-uri mici */
+    .display-columns {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .products-grid {
+        /* Asigură-te că pe mobil, cardurile iau toată lățimea sau măcar sunt frumos centrate */
+        grid-template-columns: 1fr;
+    }
+}
