@@ -31,5 +31,27 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+        // Funcție utilitară pentru a calcula minutele rămase din Timestamp
+        window.calculateRemainingTime = function(timestamp) {
+            if (!timestamp) return "?";
+            const now = Date.now();
+            const diffMs = timestamp - now;
+            const diffMins = Math.ceil(diffMs / 60000);
+            return diffMins > 0 ? diffMins : 0; // Nu afișăm numere negative
+        };
+
+        // Aici va veni logica de randare reală după ce Supabase furnizează datele.
+        // Pentru moment, lăsăm un comentariu pentru implementare.
+        /*
+        function renderCustomerDisplay(orders) {
+            ...
+            const timeRemaining = calculateRemainingTime(order.timp_asteptare);
+            element.innerText = `~ ${timeRemaining} min`;
+            ...
+        }
+        */
+    </script>
 </body>
 </html>

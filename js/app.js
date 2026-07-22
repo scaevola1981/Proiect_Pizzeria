@@ -120,17 +120,10 @@ if (btnTrimite) {
                 updateCartUI();
                 btnTrimite.innerText = "Trimite Comanda";
             } else {
-                alert("Eroare la trimitere. Încearcă din nou.");
+                alert("Eroare la trimitere. Supabase nu este configurat.");
                 btnTrimite.disabled = false;
                 btnTrimite.innerText = "Trimite Comanda";
             }
-        } else {
-            // Fallback în caz că Supabase nu e conectat
-            console.log("Comandă trimisă (Mock):", { masa: numarMasa, cart, total });
-            alert("[Demo] Comanda a fost trimisă spre bucătărie!");
-            cart = [];
-            updateCartUI();
-            btnTrimite.innerText = "Trimite Comanda";
         }
     });
 }

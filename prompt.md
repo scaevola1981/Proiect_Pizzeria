@@ -1,8 +1,10 @@
-Obiectiv: Inițializarea structurii de fișiere și a codului de bază pentru MVP-ul Pizzeriei.
+Obiectiv: Refactorizarea logicii MVP-ului pentru a elimina mock-ul de localStorage, a pregăti terenul pentru Supabase și a repara sistemul de gestionare a timpului.
 
-Sarcini:
-1. Creează fișierele: `index.html`, `owner.html` și `kitchen.html` folosind o structură HTML5 standard.
-2. Creează un folder `css` cu un fișier `style.css`. Definește în el clasa `.glass-panel` care să implementeze efectul vizual de glassmorphism din iOS (fundal semi-transparent, blur și margini subtile).
-3. În `index.html`, construiește structura principală a paginii aplicând clasa `.glass-panel` pe un container principal. Include un formular de finalizare comandă care să conțină un selector de timp. Selectorul trebuie să permită exclusiv alegerea orelor în intervale de 30 de minute sau ore fixe.
-4. Creează un folder `js` cu două fișiere goale: `app.js` și `supabase.js`.
-5. Leagă fișierul CSS și scripturile JS în toate documentele HTML create.
+Fișiere vizate: `js/app.js`, `js/supabase.js`, `kitchen.html`, `customer-display.html`.
+
+Sarcini stricte de execuție:
+1. Eliminarea Mock-ului: În `js/supabase.js` și `js/app.js`, șterge absolut toată logica bazată pe `localStorage` și `window.dispatchEvent('storage')`. Lasă în `supabase.js` doar scheletul gol pregătit pentru inițializarea clientului Supabase real (variabilele de URL și Key).
+2. Logica de Timp (Timestamp Absolut): Modifică modalul din `kitchen.html` și logica asociată din JavaScript. Bucătarul nu trebuie să mai introducă "minute" (ex: 15 min). Modifică input-ul astfel încât să genereze un Timestamp (o oră viitoare). 
+3. Regula Intervalelor: Orice timp estimat setat de bucătărie trebuie restricționat și rotunjit automat pentru a fi afișat exclusiv în ore întregi sau în intervale de 30 de minute (ex. 14:00, 14:30, 15:00). Nicio altă valoare intermediară nu este permisă în interfață sau în baza de date.
+4. Display-ul Clientului: Actualizează scriptul din `customer-display.html`. În loc să scadă un număr fix de minute, scriptul trebuie să primească Timestamp-ul (ex: 14:30) și să calculeze dinamic diferența față de ora curentă (`Date.now()`) pentru a afișa timpul rămas.
+5. Stilizare: Asigură-te că orice element UI nou generat (cum ar fi noile selectoare de timp) primește automat clasa `.glass-panel` pentru a păstra coerența vizuală.
