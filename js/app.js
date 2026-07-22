@@ -63,7 +63,7 @@ function renderProducts() {
     });
 }
 
-function addToCart(productId) {
+window.addToCart = function(productId) {
     const product = produse.find(p => p.id === productId);
     const existingItem = cart.find(item => item.product.id === productId);
     
@@ -74,12 +74,12 @@ function addToCart(productId) {
     }
     
     updateCartUI();
-}
+};
 
-function removeFromCart(productId) {
+window.removeFromCart = function(productId) {
     cart = cart.filter(item => item.product.id !== productId);
     updateCartUI();
-}
+};
 
 function updateCartUI() {
     const cartContainer = document.getElementById('cart-items');
