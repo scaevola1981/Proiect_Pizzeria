@@ -5,6 +5,7 @@
 const supabaseUrl = 'https://tzdtssvjsrhyocskivmm.supabase.co';
 const supabaseKey = 'sb_publishable_JRIxO4MMjth3IkqfaOCPmw_e69T87UP';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabase; // Facem clientul disponibil pentru preluarea meniului în app.js
 
 // Trimitere comandă nouă
 window.sendOrderToDatabase = async function (masa, cart, total) {

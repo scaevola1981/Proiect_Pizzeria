@@ -1,10 +1,4 @@
-const produse = [
-    { id: 1, nume: "Margherita", pret: 35, ingrediente: "Sos roșii, Mozzarella, Busuioc" },
-    { id: 2, nume: "Diavola", pret: 42, ingrediente: "Sos roșii, Mozzarella, Salam picant" },
-    { id: 3, nume: "Quattro Formaggi", pret: 45, ingrediente: "Mozzarella, Gorgonzola, Parmezan, Fontina" },
-    { id: 4, nume: "Capricciosa", pret: 40, ingrediente: "Sos, Mozzarella, Șuncă, Ciuperci, Măsline" }
-];
-
+let produse = []; // Meniul se va încărca acum dinamic din Supabase
 let cart = [];
 let numarMasa = null;
 
@@ -23,6 +17,27 @@ if (document.getElementById('produse-container')) {
         document.getElementById('masa-id').innerText = "Necunoscută";
         alert("Te rugăm să scanezi codul QR de pe masă pentru a comanda.");
     }
+    loadProductsFromSupabase();
+}
+
+async function loadProductsFromSupabase() {
+    const container = document.getElementById('produse-container');
+    container.innerHTML = '<p style="text-align:center; width:100%;">Se încarcă meniul...</p>';
+    
+    if (!window.supabaseClient) {
+        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare: Clientul bazei de date nu este inițializat.</p>';
+        return;
+    }
+    
+    const { data, error } = await window.supabaseClient.from('meniu').select('*');
+    
+    if (error) {
+        console.error("Eroare la preluarea meniului din Supabase:", error);
+        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la încărcarea meniului.</p>';
+        return;
+    }
+    
+    produse = data || [];
     renderProducts();
 }
 
@@ -30,12 +45,17 @@ function renderProducts() {
     const container = document.getElementById('produse-container');
     container.innerHTML = '';
     
+    if (produse.length === 0) {
+        container.innerHTML = '<p style="text-align:center; width:100%;">Meniul este momentan gol.</p>';
+        return;
+    }
+    
     produse.forEach(p => {
         const div = document.createElement('div');
         div.className = 'product-card';
         div.innerHTML = `
             <h3>${p.nume}</h3>
-            <p>${p.ingrediente}</p>
+            <p>${p.descriere || ''}</p>
             <h4>${p.pret} Lei</h4>
             <button onclick="addToCart(${p.id})">Adaugă în coș</button>
         `;
