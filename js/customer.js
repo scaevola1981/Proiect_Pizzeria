@@ -39,8 +39,8 @@ async function loadCustomerOrders() {
 }
 
 window.renderCustomerOrders = function() {
-    const inPreparareContainer = document.getElementById('comenzi-in-preparare');
-    const finalizateContainer = document.getElementById('comenzi-finalizate');
+    const inPreparareContainer = document.getElementById('in-preparare-container');
+    const finalizateContainer = document.getElementById('finalizate-container');
     
     if (inPreparareContainer) inPreparareContainer.innerHTML = '';
     if (finalizateContainer) finalizateContainer.innerHTML = '';
