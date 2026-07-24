@@ -50,7 +50,8 @@ window.renderOwnerOrders = function() {
         const orderDate = new Date(order.created_at);
         const isToday = orderDate >= today;
         
-        if (isToday) {
+        // Încasările de azi conțin doar comenzile NEFINALIZATE (dacă se închide ziua, se resetează la 0)
+        if (isToday && order.status !== 'finalizata') {
             totalRevenue += parseFloat(order.total) || 0;
         }
         
@@ -119,16 +120,20 @@ window.renderOwnerOrders = function() {
         container.appendChild(div);
     });
     
-    const revDiv = document.createElement('div');
-    revDiv.style.gridColumn = '1 / -1';
-    revDiv.innerHTML = `<h2 style="margin-bottom:20px; color:#2ecc71; text-align: center;">Încasări Azi: ${totalRevenue.toFixed(2)} Lei</h2>`;
-    container.insertBefore(revDiv, container.firstChild);
-    
     // Ascundem butonul de încheiere zi dacă nu sunt comenzi de azi (active sau servite)
     const todayNonFinalOrders = allOrders.filter(o => {
         const d = new Date(o.created_at);
         return d >= today && o.status !== 'finalizata';
     });
+    
+    // Afișăm Încasări Azi doar dacă avem comenzi active (dacă s-a închis ziua, dispare / e 0)
+    if (todayNonFinalOrders.length > 0 || totalRevenue > 0) {
+        const revDiv = document.createElement('div');
+        revDiv.style.gridColumn = '1 / -1';
+        revDiv.innerHTML = `<h2 style="margin-bottom:20px; color:#2ecc71; text-align: center;">Încasări Azi: ${totalRevenue.toFixed(2)} Lei</h2>`;
+        container.insertBefore(revDiv, container.firstChild);
+    }
+    
     const endDayBtn = document.getElementById('btn-incheiere-zi');
     if (endDayBtn) {
         endDayBtn.style.display = todayNonFinalOrders.length > 0 ? 'inline-block' : 'none';
@@ -153,6 +158,13 @@ window.renderHistory = function() {
     if (recentOrders.length === 0) {
         html = '<p style="text-align:center; margin-top:20px;">Nu există comenzi în ultimele 7 zile.</p>';
     } else {
+        // Calculăm totalurile zilnice mai întâi
+        const dailyTotals = {};
+        recentOrders.forEach(o => {
+            const fullDateStr = new Date(o.created_at).toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            dailyTotals[fullDateStr] = (dailyTotals[fullDateStr] || 0) + (parseFloat(o.total) || 0);
+        });
+
         recentOrders.forEach(o => {
             const orderDate = new Date(o.created_at);
             const dateStr = orderDate.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -160,8 +172,10 @@ window.renderHistory = function() {
             
             const fullDateStr = orderDate.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             if (fullDateStr !== lastDate) {
-                html += `<div style="grid-column: 1 / -1; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-top: 20px; margin-bottom: 10px;">
+                const totalZi = dailyTotals[fullDateStr] ? dailyTotals[fullDateStr].toFixed(2) : '0.00';
+                html += `<div style="grid-column: 1 / -1; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-top: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                              <h3 style="color: #f1c40f; text-transform: capitalize; margin: 0;">${fullDateStr}</h3>
+                             <h3 style="color: #2ecc71; margin: 0; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 8px;">Total Zi: ${totalZi} Lei</h3>
                          </div>`;
                 lastDate = fullDateStr;
             }
