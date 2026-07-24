@@ -370,7 +370,7 @@ button.btn-secondary:hover {
 
 #table-info {
     font-size: 1.4rem;
-    color: #2c3e50;
+    color: #fff;
     margin: 0;
     background: transparent;
     padding: 0;
@@ -580,15 +580,14 @@ button.btn-secondary:hover {
     .hero-overlay {
         justify-content: center;
     }
-    .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
-        gap: 20px;
-    }
     #add-product-form {
         gap: 20px !important;
     }
     .glass-panel {
         padding: 15px;
+    }
+    #comenzi-container, #history-content {
+        grid-template-columns: 1fr;
     }
 }
 @media (max-width: 480px) {

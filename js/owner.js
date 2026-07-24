@@ -36,6 +36,9 @@ window.renderOwnerOrders = function() {
     
     container.innerHTML = '';
     
+    // Calculăm încasările doar pentru ziua curentă
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     let totalRevenue = 0;
     
     if (allOrders.length === 0) {
@@ -44,10 +47,13 @@ window.renderOwnerOrders = function() {
     }
     
     allOrders.forEach(order => {
-        totalRevenue += parseFloat(order.total) || 0;
+        const orderDate = new Date(order.created_at);
+        if (orderDate >= today) {
+            totalRevenue += parseFloat(order.total) || 0;
+        }
         
-        // Ascundem comenzile finalizate de pe display, dar le păstrăm la încasări
-        if (order.status === 'finalizata' || order.status === 'preluata') {
+        // Ascundem comenzile finalizate de pe display
+        if (order.status === 'finalizata') {
             return;
         }
 
