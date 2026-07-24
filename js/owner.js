@@ -48,12 +48,14 @@ window.renderOwnerOrders = function() {
     
     allOrders.forEach(order => {
         const orderDate = new Date(order.created_at);
-        if (orderDate >= today) {
+        const isToday = orderDate >= today;
+        
+        if (isToday) {
             totalRevenue += parseFloat(order.total) || 0;
         }
         
-        // Ascundem comenzile finalizate de pe display
-        if (order.status === 'finalizata') {
+        // Ascundem comenzile finalizate și cele din alte zile de pe panoul de recepție
+        if (order.status === 'finalizata' || !isToday) {
             return;
         }
 
@@ -101,8 +103,19 @@ window.renderOwnerOrders = function() {
     });
     
     const revDiv = document.createElement('div');
-    revDiv.innerHTML = `<h2 style="margin-bottom:20px; color:#2ecc71; text-align: center;">Încasări Totale: ${totalRevenue.toFixed(2)} Lei</h2>`;
+    revDiv.style.gridColumn = '1 / -1';
+    revDiv.innerHTML = `<h2 style="margin-bottom:20px; color:#2ecc71; text-align: center;">Încasări Azi: ${totalRevenue.toFixed(2)} Lei</h2>`;
     container.insertBefore(revDiv, container.firstChild);
+    
+    // Ascundem butonul de încheiere zi dacă nu sunt comenzi active azi
+    const todayActiveOrders = allOrders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= today && o.status !== 'finalizata';
+    });
+    const endDayBtn = document.getElementById('btn-incheiere-zi');
+    if (endDayBtn) {
+        endDayBtn.style.display = todayActiveOrders.length > 0 ? 'inline-block' : 'none';
+    }
     
     window.renderHistory();
 };
@@ -181,3 +194,104 @@ window.toggleHistory = (show) => {
         istoric.style.display = 'none';
     }
 };
+
+// ==========================================
+// ÎNCHEIERE ZI DE MUNCĂ
+// ==========================================
+const END_DAY_PWD = "bella"; // Aceeași parolă ca la admin
+
+window.showEndDayModal = function() {
+    const modal = document.getElementById('end-day-modal');
+    const summary = document.getElementById('end-day-summary');
+    const pwdInput = document.getElementById('end-day-password');
+    const errMsg = document.getElementById('end-day-error');
+    
+    // Resetăm starea
+    pwdInput.value = '';
+    errMsg.style.display = 'none';
+    
+    // Calculăm sumarul zilei
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayOrders = allOrders.filter(o => new Date(o.created_at) >= today);
+    const activeOrders = todayOrders.filter(o => o.status !== 'finalizata');
+    const totalRevenue = todayOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+    const totalComenzi = todayOrders.length;
+    
+    summary.innerHTML = `
+        <p style="color: #f5b041; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;">Sumar Zi de Lucru</p>
+        <p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-receipt" style="width: 20px;"></i> Total comenzi azi: <strong>${totalComenzi}</strong></p>
+        <p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-clock" style="width: 20px;"></i> Comenzi active (nefinalizate): <strong style="color: ${activeOrders.length > 0 ? '#e74c3c' : '#2ecc71'};">${activeOrders.length}</strong></p>
+        <p style="color: #2ecc71; font-size: 1.3rem; font-weight: bold; margin-top: 10px;"><i class="fas fa-cash-register" style="width: 20px;"></i> Încasări: ${totalRevenue.toFixed(2)} Lei</p>
+    `;
+    
+    modal.classList.remove('hidden');
+    
+    // Focus pe câmpul de parolă
+    setTimeout(() => pwdInput.focus(), 100);
+};
+
+window.closeEndDayModal = function() {
+    document.getElementById('end-day-modal').classList.add('hidden');
+};
+
+window.confirmEndDay = async function() {
+    const pwd = document.getElementById('end-day-password').value;
+    const errMsg = document.getElementById('end-day-error');
+    
+    if (pwd !== END_DAY_PWD) {
+        errMsg.style.display = 'block';
+        return;
+    }
+    
+    errMsg.style.display = 'none';
+    
+    // Finalizăm toate comenzile de azi care nu sunt deja finalizate
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const activeToday = allOrders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= today && o.status !== 'finalizata';
+    });
+    
+    if (activeToday.length === 0) {
+        alert('Nu există comenzi active de finalizat.');
+        window.closeEndDayModal();
+        return;
+    }
+    
+    // Actualizăm fiecare comandă la status 'finalizata'
+    let errors = 0;
+    for (const order of activeToday) {
+        const { error } = await window.supabaseClient
+            .from('comenzi')
+            .update({ status: 'finalizata' })
+            .eq('id', order.id);
+        
+        if (error) {
+            console.error('Eroare la finalizare comanda #' + order.id, error);
+            errors++;
+        }
+    }
+    
+    window.closeEndDayModal();
+    
+    if (errors === 0) {
+        const totalRevenue = allOrders
+            .filter(o => new Date(o.created_at) >= today)
+            .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+        alert(`✅ Ziua de muncă a fost închisă cu succes!\n\nTotal încasări: ${totalRevenue.toFixed(2)} Lei\nComenzi finalizate: ${activeToday.length}\n\nToate comenzile au fost mutate în Istoric.`);
+    } else {
+        alert(`Ziua a fost închisă, dar ${errors} comenzi au avut erori. Verificați istoricul.`);
+    }
+};
+
+// Permite Enter pe câmpul de parolă
+const endDayPwdInput = document.getElementById('end-day-password');
+if (endDayPwdInput) {
+    endDayPwdInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') window.confirmEndDay();
+    });
+}
