@@ -6,9 +6,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        kitchen: resolve(__dirname, 'kitchen.html'),
-        customer: resolve(__dirname, 'customer-display.html'),
-        owner: resolve(__dirname, 'owner.html')
+        owner: resolve(__dirname, 'owner.html'),
+        admin: resolve(__dirname, 'admin.html')
       }
     }
   }

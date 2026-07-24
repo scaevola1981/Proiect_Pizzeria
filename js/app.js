@@ -2,6 +2,9 @@ let produse = []; // Meniul se va încărca acum dinamic din Supabase
 let cart = [];
 let numarMasa = null;
 
+let currentTab = 'restaurant';
+let searchQuery = '';
+
 // Preluare număr masă din URL (ex: ?masa=5)
 function getTableNumber() {
     const params = new URLSearchParams(window.location.search);
@@ -17,15 +20,52 @@ if (document.getElementById('produse-container')) {
         document.getElementById('masa-id').innerText = "Necunoscută";
         alert("Te rugăm să scanezi codul QR de pe masă pentru a comanda.");
     }
+    
+    const tabBar = document.getElementById('tab-bar');
+    const tabRestaurant = document.getElementById('tab-restaurant');
+    const searchInput = document.getElementById('search-input');
+    
+    if (tabBar && tabRestaurant) {
+        tabBar.addEventListener('click', () => setTab('bar'));
+        tabRestaurant.addEventListener('click', () => setTab('restaurant'));
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderProducts();
+        });
+    }
+    
     loadProductsFromSupabase();
+}
+
+function setTab(tab) {
+    currentTab = tab;
+    const tabBar = document.getElementById('tab-bar');
+    const tabRestaurant = document.getElementById('tab-restaurant');
+    
+    if (tab === 'bar') {
+        tabBar.style.background = '#fff';
+        tabBar.style.color = '#333';
+        tabRestaurant.style.background = 'transparent';
+        tabRestaurant.style.color = '#fff';
+    } else {
+        tabRestaurant.style.background = '#fff';
+        tabRestaurant.style.color = '#333';
+        tabBar.style.background = 'transparent';
+        tabBar.style.color = '#fff';
+    }
+    renderProducts();
 }
 
 async function loadProductsFromSupabase() {
     const container = document.getElementById('produse-container');
-    container.innerHTML = '<p style="text-align:center; width:100%;">Se încarcă meniul...</p>';
+    
+    if (container) container.innerHTML = '<p style="text-align:center; width:100%;">Se încarcă meniul...</p>';
     
     if (!window.supabaseClient) {
-        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare: Clientul bazei de date nu este inițializat.</p>';
+        if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare: Clientul bazei de date nu este inițializat.</p>';
         return;
     }
     
@@ -33,7 +73,7 @@ async function loadProductsFromSupabase() {
     
     if (error) {
         console.error("Eroare la preluarea meniului din Supabase:", error);
-        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la încărcarea meniului.</p>';
+        if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la încărcarea meniului.</p>';
         return;
     }
     
@@ -41,17 +81,14 @@ async function loadProductsFromSupabase() {
     renderProducts();
 }
 
-function getProductImage(nume) {
-    const nameLower = nume.toLowerCase();
-    if (nameLower.includes('margherita')) return 'img/pizza_margherita.png';
-    if (nameLower.includes('diavola')) return 'img/pizza_diavola.png';
-    if (nameLower.includes('apă') || nameLower.includes('apa')) return 'img/apa-minerala.png';
-    if (nameLower.includes('cola')) return 'img/coca-cola_0.25.png';
-    return 'img/pizza_margherita.png'; // Fallback pt produse fara poza
+function getDefaultProductImage() {
+    return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80';
 }
 
 function renderProducts() {
     const container = document.getElementById('produse-container');
+    if (!container) return;
+    
     container.innerHTML = '';
     
     if (produse.length === 0) {
@@ -59,36 +96,87 @@ function renderProducts() {
         return;
     }
     
+    let renderedCount = 0;
+    
     produse.forEach(p => {
-        const imageUrl = getProductImage(p.nume);
+        // Căutăm cuvinte cheie pentru a sorta ca băutură (în categorie sau în nume)
+        const catStr = ((p.categorie || '') + ' ' + (p.nume || '')).toLowerCase();
+        const isBautura = catStr.includes('bautur') || catStr.includes('băutur') || catStr.includes('suc') || catStr.includes('apa') || catStr.includes('apă') || catStr.includes('coca') || catStr.includes('cola') || catStr.includes('pepsi') || catStr.includes('fanta') || catStr.includes('sprite') || catStr.includes('cafea') || catStr.includes('bere') || catStr.includes('vin');
+        
+        // Search filtering (dacă utilizatorul caută ceva, căutăm global și ignorăm tab-urile)
+        if (searchQuery) {
+            if (!p.nume.toLowerCase().includes(searchQuery) && !(p.descriere || '').toLowerCase().includes(searchQuery)) return;
+        } else {
+            // Tab filtering (doar dacă nu caută)
+            if (currentTab === 'bar' && !isBautura) return;
+            if (currentTab === 'restaurant' && isBautura) return;
+        }
+        
+        const imageUrl = p.imagine_url || getDefaultProductImage();
         const div = document.createElement('div');
         div.className = 'product-card';
+        // Creăm o variantă de nume escaped pentru on-click
+        const safeName = p.nume.replace(/'/g, "\\'");
         div.innerHTML = `
             <img src="${imageUrl}" alt="${p.nume}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
             <h3>${p.nume}</h3>
             <p>${p.descriere || ''}</p>
             <h4>${p.pret} Lei</h4>
-            <button onclick="addToCart(${p.id})">Adaugă în coș</button>
+            <div style="display: flex; gap: 10px; margin-top: auto; padding-top: 15px;">
+                <button class="btn-secondary" style="flex: 1; padding: 10px 5px; font-size: 0.9rem;" onclick="window.openCustomizeModal(${p.id}, '${safeName}')" title="Personalizează"><i class="fas fa-pen"></i></button>
+                <button style="flex: 3;" onclick="addToCart(${p.id})">Alegerea mea</button>
+            </div>
         `;
+        
         container.appendChild(div);
+        renderedCount++;
     });
+    
+    if (renderedCount === 0) {
+        container.innerHTML = '<p style="text-align:center; width:100%; margin-top: 30px;">Niciun produs aici încă. 🤔</p>';
+    }
 }
 
-window.addToCart = function(productId) {
+let currentCustomizeProductId = null;
+
+window.openCustomizeModal = function(id, name) {
+    currentCustomizeProductId = id;
+    document.getElementById('customize-product-name').innerText = "Personalizează " + name;
+    document.getElementById('customize-notes').value = "";
+    document.getElementById('customize-modal').classList.remove('hidden');
+};
+
+window.closeCustomizeModal = function() {
+    document.getElementById('customize-modal').classList.add('hidden');
+    currentCustomizeProductId = null;
+};
+
+window.confirmCustomizeAndAdd = function() {
+    const notes = document.getElementById('customize-notes').value.trim();
+    if (currentCustomizeProductId) {
+        addToCart(currentCustomizeProductId, notes);
+    }
+    window.closeCustomizeModal();
+};
+
+window.addToCart = function(productId, notes = '') {
     const product = produse.find(p => p.id === productId);
-    const existingItem = cart.find(item => item.product.id === productId);
+    if (!product) return;
+    
+    // Verificăm dacă există deja acest produs cu EXACT aceleași observații
+    const existingItem = cart.find(item => item.product.id === productId && item.notes === notes);
     
     if (existingItem) {
         existingItem.quantity++;
     } else {
-        cart.push({ product, quantity: 1 });
+        cart.push({ product, quantity: 1, notes });
     }
     
     updateCartUI();
 };
 
-window.removeFromCart = function(productId) {
-    cart = cart.filter(item => item.product.id !== productId);
+window.removeFromCart = function(index) {
+    cart.splice(index, 1);
     updateCartUI();
 };
 
@@ -96,6 +184,7 @@ function updateCartUI() {
     const cartContainer = document.getElementById('cart-items');
     const totalSpan = document.getElementById('cart-total');
     const sendBtn = document.getElementById('btn-trimite-comanda');
+    const cartTitle = document.getElementById('cart-title');
     
     if (!cartContainer) return;
     
@@ -103,20 +192,23 @@ function updateCartUI() {
     let total = 0;
     
     if (cart.length === 0) {
-        cartContainer.innerHTML = '<p class="empty-cart">Coșul este gol.</p>';
+        if (cartTitle) cartTitle.innerText = "Coșul meu";
+        cartContainer.innerHTML = '<p class="empty-cart">Nu ati comandat inca nimic</p>';
         sendBtn.disabled = true;
     } else {
-        cart.forEach(item => {
+        if (cartTitle) cartTitle.innerText = "Ati facut o alegere perfecta!";
+        cart.forEach((item, index) => {
             total += item.product.pret * item.quantity;
             const div = document.createElement('div');
             div.className = 'cart-item';
             div.innerHTML = `
-                <div>
+                <div style="flex: 1; text-align: left;">
                     <strong>${item.quantity}x ${item.product.nume}</strong>
+                    ${item.notes ? `<div style="font-size: 0.85rem; color: #f5b041; margin-top: 3px;"><em>* ${item.notes}</em></div>` : ''}
                 </div>
-                <div>
-                    <span>${item.product.pret * item.quantity} Lei</span>
-                    <button class="btn-secondary" style="width: auto; padding: 5px 10px; margin-left: 10px;" onclick="removeFromCart(${item.product.id})">X</button>
+                <div style="display: flex; align-items: center; justify-content: flex-end; min-width: 80px;">
+                    <span style="font-weight: bold;">${(item.product.pret * item.quantity).toFixed(2)}</span>
+                    <button class="btn-secondary" style="width: auto; padding: 5px 10px; margin-left: 10px;" onclick="removeFromCart(${index})">X</button>
                 </div>
             `;
             cartContainer.appendChild(div);

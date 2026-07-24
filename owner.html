@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html lang="ro">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panou Proprietar - Pizzerie</title>
+    <title>Panou Receptie - Pizzerie</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-    <main class="glass-panel">
-        <h1>Panou Proprietar</h1>
+    <main class="glass-panel" id="receptie-panel" style="margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; flex-direction: column;">
+                <h1 style="margin: 0;">Panou Receptie</h1>
+                <span style="font-family: 'Georgia', serif; color: #d35400; font-weight: bold; font-size: 1.1rem; letter-spacing: 2px; margin-top: 5px;">BELLA ROMA - PUB &amp; PIZZERIE</span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="window.location.href='admin.html'" style="background: #2c3e50; color: white; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i class="fas fa-cogs"></i> Admin Meniu</button>
+                <button onclick="window.toggleHistory(true)" class="btn-secondary" style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i class="fas fa-history"></i> Vezi Istoric</button>
+            </div>
+        </div>
         <div id="comenzi-container">
             <!-- Comenzile noi vor apărea aici în timp real -->
             <p>Așteptare comenzi noi...</p>
         </div>
+    </main>
+
+    <main class="glass-panel" id="istoric-panel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">Istoric Comenzi (Ultimele 7 Zile)</h2>
+            <button onclick="window.toggleHistory(false)" class="btn-secondary" style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i class="fas fa-arrow-left"></i> Înapoi la Recepție</button>
+        </div>
+        <div id="history-content"></div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -20,4 +40,5 @@
     <script type="module" src="js/app.js"></script>
     <script type="module" src="js/owner.js"></script>
 </body>
+
 </html>

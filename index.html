@@ -1,29 +1,49 @@
 <!DOCTYPE html>
 <html lang="ro">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pizzerie - Comandă Online</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
-    <header class="glass-panel main-header">
-        <h1>Meniu Pizzerie</h1>
-        <div id="table-info">Masa: <span id="masa-id">Scanați QR</span></div>
+    <header class="bella-roma-hero">
+        <div class="hero-overlay">
+            <h1 class="hero-title">BELLA ROMA</h1>
+            <p class="hero-subtitle">PUB & PIZZERIE</p>
+        </div>
     </header>
+
+    <div class="table-info-bar">
+        <div id="table-info">Masa: <span id="masa-id" style="font-weight: 800;">Scanați QR</span></div>
+    </div>
 
     <div class="content-wrapper">
         <main class="glass-panel products-area">
+            <!-- Search & Tabs -->
+            <div class="menu-controls" style="margin-bottom: 25px;">
+                <div class="search-bar" style="margin-bottom: 15px; position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666;"></i>
+                    <input type="text" id="search-input" placeholder="Caută" style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <div class="menu-tabs" style="display: flex; background: rgba(255, 255, 255, 0.15); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <button id="tab-bar" class="tab-btn" style="flex: 1; padding: 12px; border: none; background: transparent; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s; border-right: 1px solid rgba(255, 255, 255, 0.2);">Meniu Bar</button>
+                    <button id="tab-restaurant" class="tab-btn active" style="flex: 1; padding: 12px; border: none; background: #fff; color: #333; font-weight: bold; cursor: pointer; transition: all 0.3s;">Meniu Restaurant</button>
+                </div>
+            </div>
+
             <div id="produse-container" class="products-grid">
-                <!-- Produsele vor fi generate aici din JavaScript -->
-                <p>Meniul se încarcă...</p>
+                <p style="text-align:center; width:100%;">Meniul se încarcă...</p>
             </div>
         </main>
 
         <aside class="glass-panel cart-area">
-            <h2>Coșul meu</h2>
+            <h2 id="cart-title">Coșul meu</h2>
             <div id="cart-items">
-                <p class="empty-cart">Coșul este gol.</p>
+                <p class="empty-cart">Nu ati comandat inca nimic</p>
             </div>
             <div class="cart-summary">
                 <h3>Total: <span id="cart-total">0.00</span> Lei</h3>
@@ -32,8 +52,25 @@
         </aside>
     </div>
 
+    <!-- Modal Personalizare Produs -->
+    <div id="customize-modal" class="modal hidden">
+        <div class="modal-content glass-panel"
+            style="max-width: 500px; color: #333; border: 1px solid rgba(255,255,255,0.8);">
+            <h2 id="customize-product-name" style="color: #2c3e50; margin-bottom: 10px;">Personalizează</h2>
+            <p style="color: #666; margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vreo alergie? Scrie mai
+                jos:</p>
+            <textarea id="customize-notes" rows="3" placeholder="ex: fără ceapă, extra sos, alergic la alune..."
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; margin-bottom: 20px; resize: none;"></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secondary" onclick="window.closeCustomizeModal()">Anulează</button>
+                <button onclick="window.confirmCustomizeAndAdd()">Alegerea mea</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
+
 </html>
