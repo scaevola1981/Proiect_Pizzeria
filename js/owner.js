@@ -189,7 +189,6 @@ window.renderHistory = function() {
                             <span class="modern-tag">${dateStr}</span>
                         </div>
                     </div>
-                    <button class="modern-card-btn disabled" disabled>Finalizată</button>
                 </div>
             `;
         });
