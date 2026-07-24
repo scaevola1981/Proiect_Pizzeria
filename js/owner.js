@@ -54,7 +54,7 @@ window.renderOwnerOrders = function() {
             totalRevenue += parseFloat(order.total) || 0;
         }
         
-        // Ascundem comenzile finalizate și cele din alte zile de pe panoul de recepție
+        // Ascundem doar comenzile finalizate (mutate în istoric) și cele din alte zile
         if (order.status === 'finalizata' || !isToday) {
             return;
         }
@@ -64,6 +64,7 @@ window.renderOwnerOrders = function() {
         
         let headerGradient = "linear-gradient(135deg, #f5b041 0%, #e67e22 100%)";
         if (order.status === 'in_preparare') headerGradient = "linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)";
+        if (order.status === 'servita') headerGradient = "linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)";
 
         let itemsStr = order.detalii_comanda && Array.isArray(order.detalii_comanda) ? order.detalii_comanda.map(i => {
             let noteHtml = i.notes ? `<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${i.notes}</small>` : '';
@@ -72,11 +73,27 @@ window.renderOwnerOrders = function() {
         const dateStr = new Date(order.created_at).toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
         const timeStr = new Date(order.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute:'2-digit' });
 
+        let statusLabel = order.status.toUpperCase();
+        let statusColor = '#f39c12';
+        
+        if (order.status === 'noua') {
+            statusLabel = 'NOUĂ';
+            statusColor = '#f39c12';
+        } else if (order.status === 'in_preparare') {
+            statusLabel = 'ÎN PREPARARE';
+            statusColor = '#2ecc71';
+        } else if (order.status === 'servita') {
+            statusLabel = 'SERVITĂ';
+            statusColor = '#95a5a6';
+        }
+
         let buttonHtml = '';
         if (order.status === 'noua') {
             buttonHtml = `<button class="modern-card-btn" onclick="window.updateOrderStatus(${order.id}, 'in_preparare')"><i class="fas fa-check"></i> Acceptă Comanda</button>`;
         } else if (order.status === 'in_preparare') {
-            buttonHtml = `<button class="modern-card-btn success" onclick="window.updateOrderStatus(${order.id}, 'finalizata')"><i class="fas fa-flag-checkered"></i> Încheiere Comandă</button>`;
+            buttonHtml = `<button class="modern-card-btn success" onclick="window.updateOrderStatus(${order.id}, 'servita')"><i class="fas fa-flag-checkered"></i> Încheiere Comandă</button>`;
+        } else if (order.status === 'servita') {
+            buttonHtml = `<button class="modern-card-btn disabled" disabled><i class="fas fa-check-circle"></i> Comanda Încheiată</button>`;
         }
 
         div.innerHTML = `
@@ -94,7 +111,7 @@ window.renderOwnerOrders = function() {
                 <div class="modern-card-tags">
                     <span class="modern-tag">Ora ${timeStr}</span>
                     <span class="modern-tag">${dateStr}</span>
-                    <span class="modern-tag" style="background: #f39c12; color: white;">${order.status.toUpperCase()}</span>
+                    <span class="modern-tag" style="background: ${statusColor}; color: white;">${statusLabel}</span>
                 </div>
             </div>
             ${buttonHtml}
@@ -107,14 +124,14 @@ window.renderOwnerOrders = function() {
     revDiv.innerHTML = `<h2 style="margin-bottom:20px; color:#2ecc71; text-align: center;">Încasări Azi: ${totalRevenue.toFixed(2)} Lei</h2>`;
     container.insertBefore(revDiv, container.firstChild);
     
-    // Ascundem butonul de încheiere zi dacă nu sunt comenzi active azi
-    const todayActiveOrders = allOrders.filter(o => {
+    // Ascundem butonul de încheiere zi dacă nu sunt comenzi de azi (active sau servite)
+    const todayNonFinalOrders = allOrders.filter(o => {
         const d = new Date(o.created_at);
         return d >= today && o.status !== 'finalizata';
     });
     const endDayBtn = document.getElementById('btn-incheiere-zi');
     if (endDayBtn) {
-        endDayBtn.style.display = todayActiveOrders.length > 0 ? 'inline-block' : 'none';
+        endDayBtn.style.display = todayNonFinalOrders.length > 0 ? 'inline-block' : 'none';
     }
     
     window.renderHistory();
@@ -215,14 +232,16 @@ window.showEndDayModal = function() {
     today.setHours(0, 0, 0, 0);
     
     const todayOrders = allOrders.filter(o => new Date(o.created_at) >= today);
-    const activeOrders = todayOrders.filter(o => o.status !== 'finalizata');
+    const activeOrders = todayOrders.filter(o => o.status === 'noua' || o.status === 'in_preparare');
+    const servitaOrders = todayOrders.filter(o => o.status === 'servita');
     const totalRevenue = todayOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
     const totalComenzi = todayOrders.length;
     
     summary.innerHTML = `
         <p style="color: #f5b041; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;">Sumar Zi de Lucru</p>
         <p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-receipt" style="width: 20px;"></i> Total comenzi azi: <strong>${totalComenzi}</strong></p>
-        <p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-clock" style="width: 20px;"></i> Comenzi active (nefinalizate): <strong style="color: ${activeOrders.length > 0 ? '#e74c3c' : '#2ecc71'};">${activeOrders.length}</strong></p>
+        <p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-check-circle" style="width: 20px;"></i> Comenzi servite: <strong style="color: #2ecc71;">${servitaOrders.length}</strong></p>
+        ${activeOrders.length > 0 ? `<p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-exclamation-circle" style="width: 20px;"></i> Comenzi încă active: <strong style="color: #e74c3c;">${activeOrders.length}</strong></p>` : ''}
         <p style="color: #2ecc71; font-size: 1.3rem; font-weight: bold; margin-top: 10px;"><i class="fas fa-cash-register" style="width: 20px;"></i> Încasări: ${totalRevenue.toFixed(2)} Lei</p>
     `;
     
