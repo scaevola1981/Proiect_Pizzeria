@@ -43,19 +43,19 @@
 
     <!-- Modal Confirmare Încheiere Zi -->
     <div id="end-day-modal" class="modal hidden">
-        <div class="modal-content glass-panel" style="max-width: 450px; border: 1px solid rgba(255,255,255,0.3);">
-            <h2 style="color: #e74c3c; margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i> Încheiere Zi de Muncă</h2>
-            <div id="end-day-summary" style="background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: left;">
+        <div style="max-width: 450px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <h2 style="color: #e74c3c; margin-bottom: 20px; font-size: 1.4rem;"><i class="fas fa-exclamation-triangle"></i> Încheiere Zi de Muncă</h2>
+            <div id="end-day-summary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 18px; margin-bottom: 20px; text-align: left;">
                 <!-- Sumar zi va fi completat dinamic -->
             </div>
-            <p style="color: #cbd5e1; margin-bottom: 15px; font-size: 0.95rem;">
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 15px; font-size: 0.95rem;">
                 <i class="fas fa-lock" style="color: #f5b041;"></i> Introduceți parola de patron pentru a confirma închiderea zilei.
             </p>
-            <input type="password" id="end-day-password" placeholder="Parola patron" style="width: 100%; margin-bottom: 10px; text-align: center; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.3); color: #fff; font-size: 1rem;">
+            <input type="password" id="end-day-password" placeholder="Parola patron" class="modern-input" style="margin-bottom: 10px; text-align: center;">
             <p id="end-day-error" style="color: #e74c3c; display: none; margin-bottom: 10px; font-weight: bold;">Parolă incorectă!</p>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-secondary" onclick="window.closeEndDayModal()" style="border-radius: 10px;">Anulează</button>
-                <button onclick="window.confirmEndDay()" style="background: #e74c3c; color: white; border-radius: 10px;"><i class="fas fa-check"></i> Confirmă Închiderea</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-secondary" onclick="window.closeEndDayModal()" style="border-radius: 10px; padding: 12px;">Anulează</button>
+                <button onclick="window.confirmEndDay()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 10px; padding: 12px; font-weight: bold;"><i class="fas fa-check"></i> Confirmă Închiderea</button>
             </div>
         </div>
     </div>

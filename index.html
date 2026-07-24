@@ -54,16 +54,15 @@
 
     <!-- Modal Personalizare Produs -->
     <div id="customize-modal" class="modal hidden">
-        <div class="modal-content glass-panel"
-            style="max-width: 500px; color: #333; border: 1px solid rgba(255,255,255,0.8);">
-            <h2 id="customize-product-name" style="color: #2c3e50; margin-bottom: 10px;">Personalizează</h2>
-            <p style="color: #666; margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vreo alergie? Scrie mai
+        <div style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <h2 id="customize-product-name" style="color: #f5b041; margin-bottom: 10px;">Personalizează</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vreo alergie? Scrie mai
                 jos:</p>
             <textarea id="customize-notes" rows="3" placeholder="ex: fără ceapă, extra sos, alergic la alune..."
-                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; margin-bottom: 20px; resize: none;"></textarea>
+                class="modern-input" style="margin-bottom: 20px; resize: none;"></textarea>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-secondary" onclick="window.closeCustomizeModal()">Anulează</button>
-                <button onclick="window.confirmCustomizeAndAdd()">Alegerea mea</button>
+                <button class="btn-secondary" onclick="window.closeCustomizeModal()" style="border-radius: 10px; padding: 12px;">Anulează</button>
+                <button onclick="window.confirmCustomizeAndAdd()" style="border-radius: 10px; padding: 12px; font-weight: bold;">Alegerea mea</button>
             </div>
         </div>
     </div>
