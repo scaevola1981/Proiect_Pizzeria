@@ -263,8 +263,8 @@ if (btnTrimite) {
                 const registration = await navigator.serviceWorker.register('/sw.js');
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    // Vite injectează cheia publică din .env
-                    const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+                    // Hardcodăm cheia publică pentru a evita probleme cu variabilele de mediu
+                    const publicVapidKey = "BAxhEvzEuSTKNSIHcJIxoy3fEa31mbZJ6S3gLmo4lJLfbOfL_G0_5X6wVTKcJFw41nvzx5ay9LRnbLbFD0S8GKo";
                     if (publicVapidKey) {
                         pushSubscription = await registration.pushManager.subscribe({
                             userVisibleOnly: true,

@@ -22,17 +22,24 @@
     </header>
 
     <main class="glass-panel" id="receptie-panel" style="margin-bottom: 30px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; flex-direction: column;">
                 <h1 style="margin: 0;">Panou Recepție</h1>
-                <span style="font-family: 'Georgia', serif; color: #d35400; font-weight: bold; font-size: 1.1rem; letter-spacing: 2px; margin-top: 5px;">BELLA ROMA - PUB &amp; PIZZERIE</span>
+                <span
+                    style="font-family: 'Georgia', serif; color: #010d2d; font-weight: bold; font-size: 1.1rem; letter-spacing: 2px; margin-top: 5px;">BELLA
+                    ROMA - PUB &amp; PIZZERIE</span>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                 <button id="install-app-btn" class="ios-button-banana">
                     <i class="fas fa-download"></i> Descarcă Aplicația
                 </button>
-                <button onclick="window.location.href='admin.html'" style="background: #2c3e50; color: white; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i class="fas fa-cogs"></i> Admin Meniu</button>
-                <button onclick="window.toggleHistory(true)" class="btn-secondary" style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i class="fas fa-history"></i> Vezi Istoric</button>
+                <button onclick="window.location.href='admin.html'"
+                    style="background: #2c3e50; color: rgb(248, 33, 33); width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
+                        class="fas fa-cogs"></i> Admin Meniu</button>
+                <button onclick="window.toggleHistory(true)" class="btn-secondary"
+                    style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
+                        class="fas fa-history"></i> Vezi Istoric</button>
             </div>
         </div>
         <div id="comenzi-container">
@@ -41,8 +48,10 @@
         </div>
 
         <!-- Buton Încheiere Zi de Muncă -->
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,0.15);">
-            <button id="btn-incheiere-zi" onclick="window.showEndDayModal()" style="width: auto; padding: 14px 30px; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 12px; font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);">
+        <div
+            style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,0.15);">
+            <button id="btn-incheiere-zi" onclick="window.showEndDayModal()"
+                style="width: auto; padding: 14px 30px; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 12px; font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);">
                 <i class="fas fa-door-closed"></i> Încheiere Zi de Muncă
             </button>
         </div>
@@ -50,19 +59,28 @@
 
     <!-- Modal Confirmare Încheiere Zi -->
     <div id="end-day-modal" class="modal hidden">
-        <div style="max-width: 450px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
-            <h2 style="color: #e74c3c; margin-bottom: 20px; font-size: 1.4rem;"><i class="fas fa-exclamation-triangle"></i> Încheiere Zi de Muncă</h2>
-            <div id="end-day-summary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 18px; margin-bottom: 20px; text-align: left;">
+        <div
+            style="max-width: 450px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <h2 style="color: #e74c3c; margin-bottom: 20px; font-size: 1.4rem;"><i
+                    class="fas fa-exclamation-triangle"></i> Încheiere Zi de Muncă</h2>
+            <div id="end-day-summary"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 18px; margin-bottom: 20px; text-align: left;">
                 <!-- Sumar zi va fi completat dinamic -->
             </div>
             <p style="color: rgba(255,255,255,0.7); margin-bottom: 15px; font-size: 0.95rem;">
-                <i class="fas fa-lock" style="color: #f5b041;"></i> Introduceți parola de patron pentru a confirma închiderea zilei.
+                <i class="fas fa-lock" style="color: #f5b041;"></i> Introduceți parola de patron pentru a confirma
+                închiderea zilei.
             </p>
-            <input type="password" id="end-day-password" placeholder="Parola patron" class="modern-input" style="margin-bottom: 10px; text-align: center;">
-            <p id="end-day-error" style="color: #e74c3c; display: none; margin-bottom: 10px; font-weight: bold;">Parolă incorectă!</p>
+            <input type="password" id="end-day-password" placeholder="Parola patron" class="modern-input"
+                style="margin-bottom: 10px; text-align: center;">
+            <p id="end-day-error" style="color: #e74c3c; display: none; margin-bottom: 10px; font-weight: bold;">Parolă
+                incorectă!</p>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn-secondary" onclick="window.closeEndDayModal()" style="border-radius: 10px; padding: 12px;">Anulează</button>
-                <button onclick="window.confirmEndDay()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 10px; padding: 12px; font-weight: bold;"><i class="fas fa-check"></i> Confirmă Închiderea</button>
+                <button class="btn-secondary" onclick="window.closeEndDayModal()"
+                    style="border-radius: 10px; padding: 12px;">Anulează</button>
+                <button onclick="window.confirmEndDay()"
+                    style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 10px; padding: 12px; font-weight: bold;"><i
+                        class="fas fa-check"></i> Confirmă Închiderea</button>
             </div>
         </div>
     </div>
@@ -70,7 +88,9 @@
     <main class="glass-panel" id="istoric-panel" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="margin: 0;">Istoric Comenzi (Ultimele 7 Zile)</h2>
-            <button onclick="window.toggleHistory(false)" class="btn-secondary" style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i class="fas fa-arrow-left"></i> Înapoi la Recepție</button>
+            <button onclick="window.toggleHistory(false)" class="btn-secondary"
+                style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
+                    class="fas fa-arrow-left"></i> Înapoi la Recepție</button>
         </div>
         <div id="history-content"></div>
     </main>
