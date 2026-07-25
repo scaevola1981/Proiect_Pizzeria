@@ -252,6 +252,6 @@ window.checkAdminPassword = async function() {
 window.logoutAdmin = function() {
     // Ștergem sesiunea
     sessionStorage.removeItem('admin_logged_in');
-    // Redirecționăm către meniul clienților (sau se reîncarcă admin.html ca să ceară parola)
-    window.location.href = 'index.html';
+    // Redirecționăm către panoul recepției (owner)
+    window.location.href = 'owner.html';
 };
