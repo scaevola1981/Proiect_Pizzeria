@@ -219,6 +219,18 @@ function updateCartUI() {
     totalSpan.innerText = total.toFixed(2);
 }
 
+// Helper pentru conversia cheii VAPID
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 // Handler pentru trimiterea comenzii (dacă există butonul pe pagină)
 const btnTrimite = document.getElementById('btn-trimite-comanda');
 if (btnTrimite) {
@@ -231,12 +243,40 @@ if (btnTrimite) {
         btnTrimite.disabled = true;
         btnTrimite.innerText = "Se trimite...";
         
+        // Deblocăm contextul audio imediat pe click pentru iOS
+        try {
+            window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.log("Audio init failed:", e);
+        }
+
+        // Cerem permisiuni Push Notifications
+        let pushSubscription = null;
+        try {
+            if ('serviceWorker' in navigator && 'PushManager' in window) {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // Vite injectează cheia publică din .env
+                    const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+                    if (publicVapidKey) {
+                        pushSubscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            console.log("Eroare la Push Notifications (probabil iOS fara PWA):", error);
+        }
+        
         // Calculăm totalul
         const total = cart.reduce((sum, item) => sum + (item.product.pret * item.quantity), 0);
         
         // Apelăm funcția din supabase.js
         if (typeof window.sendOrderToDatabase === 'function') {
-            const placedOrder = await window.sendOrderToDatabase(numarMasa, cart, total);
+            const placedOrder = await window.sendOrderToDatabase(numarMasa, cart, total, pushSubscription);
             if (placedOrder) {
                 // Afișăm o notificare custom frumoasă în loc de alert standard
                 showOrderStatusNotification("Comanda a fost trimisă cu succes!", "fas fa-check-circle", "#2ecc71");
@@ -271,7 +311,11 @@ if (btnTrimite) {
 // Funcție pentru generarea unui sunet plăcut de notificare (fără fișiere externe)
 function playNotificationSound() {
     try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioCtx = window.audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
         

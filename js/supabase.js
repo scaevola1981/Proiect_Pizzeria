@@ -8,13 +8,18 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 window.supabaseClient = supabase; // Facem clientul disponibil pentru preluarea meniului în app.js
 
 // Trimitere comandă nouă
-window.sendOrderToDatabase = async function (masa, cart, total) {
+window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription = null) {
     const order = {
         numar_masa: masa,
         detalii_comanda: cart, // JSON
         total: total,
         status: 'noua'
     };
+    
+    if (pushSubscription) {
+        order.push_subscription = pushSubscription;
+    }
+
     const { data, error } = await supabase.from('comenzi').insert([order]).select();
     if (error) {
         console.error("Eroare la inserare:", error);
