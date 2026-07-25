@@ -7,7 +7,7 @@ webpush.setVapidDetails(
     process.env.VAPID_PRIVATE_KEY || "UDk_DvXGtVAFH44o7KJXPR2nDHeK1vBi66zBUiYwsW4"
 );
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Permitem CORS pentru a fi apelat din frontend sau Supabase
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
