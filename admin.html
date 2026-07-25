@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ro">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,20 +8,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <!-- Login Overlay -->
-    <div id="login-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <div id="login-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <div class="glass-panel" style="max-width: 400px; width: 90%; text-align: center;">
             <h2 style="color: #f5b041; margin-bottom: 20px;"><i class="fas fa-lock"></i> Acces Securizat</h2>
             <p style="color: #cbd5e1; margin-bottom: 20px;">Introduceți parola pentru panoul de administrare.</p>
-            <input type="password" id="admin-password" placeholder="Parola" style="width: 100%; margin-bottom: 15px; text-align: center;">
-            <button onclick="window.checkAdminPassword()" style="width: 100%;"><i class="fas fa-sign-in-alt"></i> Autentificare</button>
+            <input type="password" id="admin-password" placeholder="Parola"
+                style="width: 100%; margin-bottom: 15px; text-align: center;">
+            <button onclick="window.checkAdminPassword()" style="width: 100%;"><i class="fas fa-sign-in-alt"></i>
+                Autentificare</button>
             <p id="login-error" style="color: #e74c3c; margin-top: 15px; display: none;">Parolă incorectă!</p>
         </div>
     </div>
     <header class="bella-roma-hero" style="height: 150px; margin-bottom: 30px;">
         <div class="hero-overlay" style="position: relative;">
-            <button onclick="window.logoutAdmin()" style="position: absolute; top: 15px; right: 15px; width: auto; background: #e74c3c; color: white; padding: 8px 15px; font-size: 0.9rem; border-radius: 8px;"><i class="fas fa-sign-out-alt"></i> Ieșire</button>
+            <button onclick="window.logoutAdmin()"
+                style="position: absolute; top: 15px; right: 15px; width: auto; background: #e74c3c; color: white; padding: 8px 15px; font-size: 0.9rem; border-radius: 8px;"><i
+                    class="fas fa-sign-out-alt"></i> Ieșire</button>
             <h1 class="hero-title" style="font-size: 2.5rem;">ADMINISTRARE MENIU</h1>
             <p class="hero-subtitle" style="font-size: 1.2rem;">BELLA ROMA - PUB & PIZZERIE</p>
         </div>
@@ -33,29 +40,44 @@
                 <div style="display: flex; flex-direction: column; gap: 20px; flex: 1; min-width: 300px;">
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                         <div style="flex: 2; min-width: 150px;">
-                            <label for="nume" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Nume Produs *</label>
-                            <input type="text" id="nume" required placeholder="ex: Pizza Margherita" class="modern-input">
+                            <label for="nume"
+                                style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Nume Produs
+                                *</label>
+                            <input type="text" id="nume" required placeholder="ex: Pizza Margherita"
+                                class="modern-input">
                         </div>
                         <div style="flex: 1; min-width: 100px;">
-                            <label for="pret" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Preț (Lei) *</label>
-                            <input type="number" id="pret" required min="1" step="0.5" placeholder="ex: 35" class="modern-input">
+                            <label for="pret"
+                                style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Preț (Lei)
+                                *</label>
+                            <input type="number" id="pret" required min="1" step="0.5" placeholder="ex: 35"
+                                class="modern-input">
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; flex: 1;">
-                        <label for="descriere" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Descriere (opțional)</label>
-                        <textarea id="descriere" placeholder="ex: sos roșii, mozzarella, busuioc proaspăt..." class="modern-input" style="resize: vertical; flex: 1; min-height: 120px;"></textarea>
+                        <label for="descriere"
+                            style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Descriere
+                            (opțional)</label>
+                        <textarea id="descriere" placeholder="ex: sos roșii, mozzarella, busuioc proaspăt..."
+                            class="modern-input" style="resize: vertical; flex: 1; min-height: 120px;"></textarea>
                     </div>
-                    <button type="submit" class="modern-form-btn" style="margin-top: auto;"><i class="fas fa-save"></i> Adaugă în Meniu</button>
+                    <button type="submit" class="modern-form-btn" style="margin-top: auto; background: #e74c3c; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);"><i class="fas fa-save"></i> Adaugă în Meniu</button>
                 </div>
-                
-                <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; background: rgba(0,0,0,0.2); padding: 20px; min-height: 300px;">
+
+                <div
+                    style="flex: 1; min-width: 300px; display: flex; flex-direction: column; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; background: rgba(0,0,0,0.2); padding: 20px; min-height: 300px;">
                     <div style="margin-bottom: 20px; width: 100%;">
-                        <label for="imagine_upload" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff; text-align: center;">Alege Poză (opțional)</label>
+                        <label for="imagine_upload"
+                            style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff; text-align: center;">Alege
+                            Poză (opțional)</label>
                         <input type="file" id="imagine_upload" accept="image/*" class="modern-file-input">
                     </div>
                     <div style="flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;">
-                        <span id="preview-placeholder" style="color: rgba(255,255,255,0.5); text-align: center;"><i class="fas fa-image fa-2x" style="margin-bottom:10px; display:block;"></i>Previzualizare imagine</span>
-                        <img id="image-preview" src="" style="max-width: 100%; max-height: 250px; display: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); object-fit: cover;">
+                        <span id="preview-placeholder" style="color: rgba(255,255,255,0.5); text-align: center;"><i
+                                class="fas fa-image fa-2x" style="margin-bottom:10px; display:block;"></i>Previzualizare
+                            imagine</span>
+                        <img id="image-preview" src=""
+                            style="max-width: 100%; max-height: 250px; display: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); object-fit: cover;">
                     </div>
                 </div>
             </form>
@@ -73,14 +95,20 @@
             <p style="color: #cbd5e1; margin-bottom: 20px;">Schimbă parola panoului de administrare și recepție.</p>
             <form id="change-password-form" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
                 <div style="flex: 1; min-width: 200px;">
-                    <label for="old-pwd" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Veche *</label>
+                    <label for="old-pwd"
+                        style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Veche
+                        *</label>
                     <input type="password" id="old-pwd" required class="modern-input">
                 </div>
                 <div style="flex: 1; min-width: 200px;">
-                    <label for="new-pwd" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Nouă *</label>
+                    <label for="new-pwd"
+                        style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Nouă
+                        *</label>
                     <input type="password" id="new-pwd" required class="modern-input">
                 </div>
-                <button type="submit" class="modern-form-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);"><i class="fas fa-key"></i> Schimbă Parola</button>
+                <button type="submit" class="modern-form-btn"
+                    style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);"><i class="fas fa-key"></i>
+                    Schimbă Parola</button>
             </form>
             <p id="pwd-change-msg" style="margin-top: 15px; font-weight: bold; display: none;"></p>
         </main>
@@ -90,4 +118,5 @@
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/admin.js"></script>
 </body>
+
 </html>
