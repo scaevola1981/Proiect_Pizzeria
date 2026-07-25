@@ -7,9 +7,10 @@
   "theme_color": "#d35400",
   "icons": [
     {
-      "src": "/img/bella-roma.png",
+      "src": "/img/pwa-icon.png",
       "sizes": "192x192 512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
