@@ -74,3 +74,33 @@ window.subscribeToCustomerDisplay = function (callback) {
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'comenzi' }, callback)
         .subscribe();
 };
+
+// ==========================================
+// SECURITATE - SETĂRI PAROLĂ
+// ==========================================
+window.getAdminPasswordHash = async function() {
+    const { data, error } = await supabase
+        .from('setari')
+        .select('value')
+        .eq('key', 'admin_pwd')
+        .single();
+    if (error) {
+        console.warn("Tabelul 'setari' nu exista sau e gol. Fallback la parola initiala.");
+        return "a03ea09072d789adff29aff6a3758e9294c96ce803915c1456384eaa6e2d2df9"; // 'bella' hash
+    }
+    return data.value;
+};
+
+window.updateAdminPasswordHash = async function(newHash) {
+    // Încercăm să dăm UPDATE. (Necesită ca RLS să permită anon UPDATE pe acest tabel,
+    // Ceea ce nu este 100% sigur fără Supabase Auth. Este o vulnerabilitate cunoscută).
+    const { error } = await supabase
+        .from('setari')
+        .upsert({ key: 'admin_pwd', value: newHash }, { onConflict: 'key' });
+        
+    if (error) {
+        console.error("Eroare la actualizarea parolei:", error);
+        return false;
+    }
+    return true;
+};

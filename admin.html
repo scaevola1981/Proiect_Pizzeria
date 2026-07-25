@@ -67,6 +67,23 @@
                 <p>Se încarcă meniul...</p>
             </div>
         </main>
+
+        <main class="glass-panel" style="margin-top: 30px;">
+            <h2 style="color: #e74c3c;"><i class="fas fa-shield-alt"></i> Securitate</h2>
+            <p style="color: #cbd5e1; margin-bottom: 20px;">Schimbă parola panoului de administrare și recepție.</p>
+            <form id="change-password-form" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="old-pwd" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Veche *</label>
+                    <input type="password" id="old-pwd" required class="modern-input">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="new-pwd" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Nouă *</label>
+                    <input type="password" id="new-pwd" required class="modern-input">
+                </div>
+                <button type="submit" class="modern-form-btn" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);"><i class="fas fa-key"></i> Schimbă Parola</button>
+            </form>
+            <p id="pwd-change-msg" style="margin-top: 15px; font-weight: bold; display: none;"></p>
+        </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

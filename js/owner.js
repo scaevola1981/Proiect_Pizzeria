@@ -228,7 +228,12 @@ window.toggleHistory = (show) => {
 // ==========================================
 // ÎNCHEIERE ZI DE MUNCĂ
 // ==========================================
-const END_DAY_PWD_HASH = "a03ea09072d789adff29aff6a3758e9294c96ce803915c1456384eaa6e2d2df9"; // Parola hash-uită (ex: "bella")
+let END_DAY_PWD_HASH = ""; // Va fi încărcată dinamic
+if (typeof window.getAdminPasswordHash === 'function') {
+    window.getAdminPasswordHash().then(hash => {
+        END_DAY_PWD_HASH = hash;
+    });
+}
 
 window.showEndDayModal = function() {
     const modal = document.getElementById('end-day-modal');

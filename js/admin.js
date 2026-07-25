@@ -158,16 +158,22 @@ window.deleteProduct = async (id) => {
     }
 };
 
-const ADMIN_PWD_HASH = "a03ea09072d789adff29aff6a3758e9294c96ce803915c1456384eaa6e2d2df9"; // Parola hash-uită (ex: "bella")
+let ADMIN_PWD_HASH = ""; // Va fi încărcată dinamic
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Verificăm dacă e deja logat în sesiune
-    if (sessionStorage.getItem('admin_logged_in') === 'true') {
-        const overlay = document.getElementById('login-overlay');
-        if (overlay) overlay.style.display = 'none';
-        if (document.getElementById('admin-products-container')) {
-            loadAdminProducts();
-        }
+    // Preia parola din Supabase la încărcare
+    if (typeof window.getAdminPasswordHash === 'function') {
+        window.getAdminPasswordHash().then(hash => {
+            ADMIN_PWD_HASH = hash;
+            // Verificăm dacă e deja logat în sesiune (după ce am preluat parola)
+            if (sessionStorage.getItem('admin_logged_in') === 'true') {
+                const overlay = document.getElementById('login-overlay');
+                if (overlay) overlay.style.display = 'none';
+                if (document.getElementById('admin-products-container')) {
+                    loadAdminProducts();
+                }
+            }
+        });
     }
 
     // Permitem login și cu tasta Enter
@@ -176,6 +182,47 @@ document.addEventListener('DOMContentLoaded', () => {
         pwdInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 window.checkAdminPassword();
+            }
+        });
+    }
+    
+    // Logica pentru schimbarea parolei
+    const changePwdForm = document.getElementById('change-password-form');
+    if (changePwdForm) {
+        changePwdForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPwd = document.getElementById('old-pwd').value;
+            const newPwd = document.getElementById('new-pwd').value;
+            const msg = document.getElementById('pwd-change-msg');
+            
+            // Hash old password
+            const encoder = new TextEncoder();
+            const oldHashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(oldPwd));
+            const oldHashHex = Array.from(new Uint8Array(oldHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            if (oldHashHex !== ADMIN_PWD_HASH) {
+                msg.style.display = 'block';
+                msg.style.color = '#e74c3c';
+                msg.innerText = "Parola veche este incorectă!";
+                return;
+            }
+            
+            // Hash new password
+            const newHashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(newPwd));
+            const newHashHex = Array.from(new Uint8Array(newHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            const success = await window.updateAdminPasswordHash(newHashHex);
+            if (success) {
+                ADMIN_PWD_HASH = newHashHex;
+                msg.style.display = 'block';
+                msg.style.color = '#2ecc71';
+                msg.innerText = "Parola a fost schimbată cu succes!";
+                changePwdForm.reset();
+                setTimeout(() => msg.style.display = 'none', 3000);
+            } else {
+                msg.style.display = 'block';
+                msg.style.color = '#e74c3c';
+                msg.innerText = "Eroare la actualizarea parolei în baza de date.";
             }
         });
     }
