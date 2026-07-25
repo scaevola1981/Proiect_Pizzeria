@@ -1,10 +1,10 @@
 {
-  "name": "Bella Roma",
-  "short_name": "Bella Roma",
-  "start_url": "/",
+  "name": "Bella Roma Recepție",
+  "short_name": "Recepție",
+  "start_url": "/owner.html",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "theme_color": "#d35400",
   "icons": [
     {
       "src": "/img/logo.png",
