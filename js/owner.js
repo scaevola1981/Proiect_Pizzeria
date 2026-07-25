@@ -279,6 +279,20 @@ window.confirmEndDay = async function() {
     
     errMsg.style.display = 'none';
     
+    // Curățare automată a bazei de date: ștergem fizic comenzile mai vechi de 7 zile
+    // Astfel păstrăm în permanență doar istoricul pe ultimele 7 zile.
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    try {
+        await window.supabaseClient
+            .from('comenzi')
+            .delete()
+            .lt('created_at', sevenDaysAgo.toISOString());
+    } catch (e) {
+        console.error("Eroare la curățarea istoriclui vechi:", e);
+    }
+    
     // Finalizăm toate comenzile de azi care nu sunt deja finalizate
     const today = new Date();
     today.setHours(0, 0, 0, 0);
