@@ -27,10 +27,40 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { subscription, title, body, status } = req.body;
+        let subscription, title, body, status;
+
+        // Check if this is a Supabase Webhook payload
+        if (req.body && req.body.record) {
+            const record = req.body.record;
+            const oldRecord = req.body.old_record || {};
+            
+            // Daca statusul nu s-a schimbat, ignoram
+            if (record.status === oldRecord.status) {
+                return res.status(200).json({ message: 'Status nemodificat' });
+            }
+            
+            subscription = record.push_subscription;
+            status = record.status;
+            
+            if (status === 'in_preparare') {
+                title = 'Comanda a fost acceptată!';
+                body = 'Bucătarii noștri au început prepararea comenzii tale. 🍕';
+            } else if (status === 'servita') {
+                title = 'Comanda este gata!';
+                body = 'Va fi servită la masă. Poftă bună! 🛎️';
+            } else {
+                return res.status(200).json({ message: 'Status ignorat' });
+            }
+        } else {
+            // Fallback
+            subscription = req.body.subscription;
+            title = req.body.title;
+            body = req.body.body;
+            status = req.body.status;
+        }
 
         if (!subscription) {
-            return res.status(400).json({ error: 'No push subscription provided' });
+            return res.status(200).json({ message: 'Fără abonament push' });
         }
 
         const payload = JSON.stringify({
