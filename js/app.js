@@ -236,13 +236,25 @@ if (btnTrimite) {
         
         // Apelăm funcția din supabase.js
         if (typeof window.sendOrderToDatabase === 'function') {
-            const success = await window.sendOrderToDatabase(numarMasa, cart, total);
-            if (success) {
-                alert("Comanda a fost trimisă spre bucătărie!");
+            const placedOrder = await window.sendOrderToDatabase(numarMasa, cart, total);
+            if (placedOrder) {
+                // Afișăm o notificare custom frumoasă în loc de alert standard
+                showOrderStatusNotification("Comanda a fost trimisă cu succes!", "fas fa-check-circle", "#2ecc71");
                 cart = [];
                 btnTrimite.disabled = false;
                 btnTrimite.innerText = "Trimite Comanda";
                 updateCartUI();
+                
+                // Ascultăm schimbările de status pentru această comandă
+                if (typeof window.subscribeToOrderStatus === 'function') {
+                    window.subscribeToOrderStatus(placedOrder.id, (newStatus) => {
+                        if (newStatus === 'in_preparare') {
+                            showOrderStatusNotification("Comanda dumneavoastră este în procesare!", "fas fa-fire", "#f39c12");
+                        } else if (newStatus === 'servita') {
+                            showOrderStatusNotification("Comanda dumneavoastră este gata!", "fas fa-bell", "#2ecc71");
+                        }
+                    });
+                }
             } else {
                 alert("Eroare la trimitere. Vă rugăm încercați din nou.");
                 btnTrimite.disabled = false;
@@ -254,4 +266,44 @@ if (btnTrimite) {
             btnTrimite.innerText = "Trimite Comanda";
         }
     });
+}
+
+// Funcție helper pentru afișarea unor notificări premium (Glassmorphism) clientului
+function showOrderStatusNotification(message, iconClass, color) {
+    const notif = document.createElement('div');
+    notif.className = 'glass-panel';
+    notif.style.position = 'fixed';
+    notif.style.top = '20px';
+    notif.style.left = '50%';
+    notif.style.transform = 'translateX(-50%)';
+    notif.style.zIndex = '9999';
+    notif.style.padding = '15px 25px';
+    notif.style.borderRadius = '15px';
+    notif.style.display = 'flex';
+    notif.style.alignItems = 'center';
+    notif.style.gap = '15px';
+    notif.style.boxShadow = '0 15px 35px rgba(0,0,0,0.5)';
+    notif.style.border = `1px solid ${color}`;
+    notif.style.background = 'rgba(15, 23, 42, 0.9)'; // Darker glass
+    notif.style.transition = 'all 0.5s ease';
+    
+    notif.innerHTML = `
+        <i class="${iconClass}" style="font-size: 1.8rem; color: ${color};"></i>
+        <span style="color: white; font-size: 1.1rem; font-weight: bold;">${message}</span>
+    `;
+    
+    document.body.appendChild(notif);
+    
+    // Animație de slide down
+    notif.animate([
+        { top: '-100px', opacity: 0 },
+        { top: '20px', opacity: 1 }
+    ], { duration: 400, easing: 'ease-out' });
+    
+    // Ascundere după 6 secunde
+    setTimeout(() => {
+        notif.style.opacity = '0';
+        notif.style.top = '-100px';
+        setTimeout(() => notif.remove(), 500);
+    }, 6000);
 }

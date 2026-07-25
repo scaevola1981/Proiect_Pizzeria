@@ -15,12 +15,30 @@ window.sendOrderToDatabase = async function (masa, cart, total) {
         total: total,
         status: 'noua'
     };
-    const { data, error } = await supabase.from('comenzi').insert([order]);
+    const { data, error } = await supabase.from('comenzi').insert([order]).select();
     if (error) {
         console.error("Eroare la inserare:", error);
-        return false;
+        return null;
     }
-    return true;
+    return data[0]; // returnăm obiectul complet al comenzii create
+};
+
+// Abonare la statusul unei anumite comenzi (pentru client)
+window.subscribeToOrderStatus = function (orderId, callback) {
+    supabase.channel(`order-${orderId}`)
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'comenzi',
+                filter: `id=eq.${orderId}`
+            },
+            (payload) => {
+                callback(payload.new.status);
+            }
+        )
+        .subscribe();
 };
 
 // Actualizare status comandă
