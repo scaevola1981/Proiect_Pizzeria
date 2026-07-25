@@ -228,7 +228,7 @@ window.toggleHistory = (show) => {
 // ==========================================
 // ÎNCHEIERE ZI DE MUNCĂ
 // ==========================================
-const END_DAY_PWD = "bella"; // Aceeași parolă ca la admin
+const END_DAY_PWD_HASH = "a03ea09072d789adff29aff6a3758e9294c96ce803915c1456384eaa6e2d2df9"; // Parola hash-uită (ex: "bella")
 
 window.showEndDayModal = function() {
     const modal = document.getElementById('end-day-modal');
@@ -272,7 +272,12 @@ window.confirmEndDay = async function() {
     const pwd = document.getElementById('end-day-password').value;
     const errMsg = document.getElementById('end-day-error');
     
-    if (pwd !== END_DAY_PWD) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pwd);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    if (hashHex !== END_DAY_PWD_HASH) {
         errMsg.style.display = 'block';
         return;
     }

@@ -158,7 +158,7 @@ window.deleteProduct = async (id) => {
     }
 };
 
-const ADMIN_PWD = "bella"; // Parola pentru panoul Admin
+const ADMIN_PWD_HASH = "a03ea09072d789adff29aff6a3758e9294c96ce803915c1456384eaa6e2d2df9"; // Parola hash-uită (ex: "bella")
 
 document.addEventListener('DOMContentLoaded', () => {
     // Verificăm dacă e deja logat în sesiune
@@ -181,10 +181,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-window.checkAdminPassword = function() {
+window.checkAdminPassword = async function() {
     const pwd = document.getElementById('admin-password').value;
     const err = document.getElementById('login-error');
-    if (pwd === ADMIN_PWD) {
+    
+    // Hash-uim parola introdusă pentru a o compara în mod securizat
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pwd);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    if (hashHex === ADMIN_PWD_HASH) {
         sessionStorage.setItem('admin_logged_in', 'true');
         document.getElementById('login-overlay').style.display = 'none';
         if (document.getElementById('admin-products-container')) {
