@@ -14,7 +14,9 @@ body {
     color: #e2e8f0;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     margin-bottom: 20px;
     color: #f8fafc;
 }
@@ -22,7 +24,7 @@ h1, h2, h3 {
 /* Efectul principal de Glassmorphism (Sticlă mată - stil iOS) */
 .glass-panel {
     background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 16px;
@@ -46,7 +48,7 @@ h1, h2, h3 {
 #table-info {
     font-size: 1.2rem;
     font-weight: bold;
-    background: rgba(255,255,255,0.4);
+    background: rgba(255, 255, 255, 0.4);
     padding: 10px 20px;
     border-radius: 10px;
 }
@@ -122,12 +124,14 @@ h1, h2, h3 {
 }
 
 .cart-summary {
-    border-top: 1px solid rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
     padding-top: 15px;
 }
 
 /* Form inputs & buttons */
-input, select, button {
+input,
+select,
+button {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.4);
@@ -136,15 +140,18 @@ input, select, button {
     transition: background 0.3s ease, border-color 0.3s ease;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     outline: none;
     background: rgba(255, 255, 255, 0.9);
     border-color: #ff7e67;
 }
 
 button {
-    background: #f5b041; /* Auriu/Chihlimbar */
-    color: #1e293b; /* Text închis pe auriu */
+    background: #f5b041;
+    /* Auriu/Chihlimbar */
+    color: #1e293b;
+    /* Text închis pe auriu */
     font-weight: bold;
     cursor: pointer;
     border: none;
@@ -152,7 +159,8 @@ button {
 }
 
 button:hover:not(:disabled) {
-    background: #e67e22; /* Portocaliu la hover */
+    background: #e67e22;
+    /* Portocaliu la hover */
     color: white;
 }
 
@@ -200,7 +208,10 @@ button.btn-secondary:hover {
 /* Modal */
 .modal {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -213,7 +224,7 @@ button.btn-secondary:hover {
 }
 
 .modal-content {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     padding: 30px;
     max-width: 400px;
     width: 100%;
@@ -237,8 +248,8 @@ button.btn-secondary:hover {
     border-color: rgba(255, 255, 255, 0.1);
 }
 
-.customer-display-body h1, 
-.customer-display-body h2, 
+.customer-display-body h1,
+.customer-display-body h2,
 .customer-display-body h3 {
     color: white;
 }
@@ -283,25 +294,25 @@ button.btn-secondary:hover {
     .content-wrapper {
         flex-direction: column;
     }
-    
+
     .cart-area {
         /* Pe mobil, coșul se așază sub produse. Oprim sticky pentru a nu ocupa abuziv ecranul */
         position: static;
         max-height: none;
         margin-top: 20px;
     }
-    
+
     .main-header {
         flex-direction: column;
         gap: 15px;
     }
-    
+
     /* Și ecranul clienților se aliniază pe coloană pe display-uri mici */
     .display-columns {
         flex-direction: column;
         gap: 20px;
     }
-    
+
     .products-grid {
         /* Asigură-te că pe mobil, cardurile iau toată lățimea sau măcar sunt frumos centrate */
         grid-template-columns: 1fr;
@@ -314,7 +325,8 @@ button.btn-secondary:hover {
 .bella-roma-hero {
     height: 300px;
     background: url('/img/bella-roma.png') center center/cover no-repeat;
-    background-color: #2c3e50; /* Fallback color */
+    background-color: #2c3e50;
+    /* Fallback color */
     border-radius: 16px;
     margin-bottom: 20px;
     display: flex;
@@ -322,7 +334,7 @@ button.btn-secondary:hover {
     justify-content: center;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .hero-overlay {
@@ -342,7 +354,7 @@ button.btn-secondary:hover {
     letter-spacing: 4px;
     margin: 0;
     text-transform: uppercase;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
     border-bottom: 2px solid #f1c40f;
     padding-bottom: 10px;
     margin-bottom: 10px;
@@ -355,7 +367,7 @@ button.btn-secondary:hover {
     margin: 0;
     text-transform: uppercase;
     font-weight: 600;
-    text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
 }
 
 .table-info-bar {
@@ -379,7 +391,8 @@ button.btn-secondary:hover {
 /* =========================================
    MODERN CARDS (OWNER / HISTORY)
    ========================================= */
-#comenzi-container, #history-content {
+#comenzi-container,
+#history-content {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
@@ -390,12 +403,12 @@ button.btn-secondary:hover {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     text-align: left;
 }
 
@@ -406,7 +419,8 @@ button.btn-secondary:hover {
 }
 
 .modern-card.history-card .modern-card-header {
-    background: linear-gradient(135deg, #475569 0%, #1e293b 100%); /* Slate grey premium pentru istoric */
+    background: linear-gradient(135deg, #475569 0%, #1e293b 100%);
+    /* Slate grey premium pentru istoric */
 }
 
 .modern-card-tab {
@@ -419,7 +433,7 @@ button.btn-secondary:hover {
     font-size: 0.9rem;
     color: #666;
     border-bottom-right-radius: 16px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .modern-card-body {
@@ -520,15 +534,18 @@ button.btn-secondary:hover {
     font-size: 1rem;
     transition: all 0.3s;
 }
+
 .modern-input::placeholder {
     color: rgba(255, 255, 255, 0.4);
 }
+
 .modern-input:focus {
     outline: none;
     border-color: #f5b041;
     background: rgba(0, 0, 0, 0.5);
     box-shadow: 0 0 12px rgba(245, 176, 65, 0.4);
 }
+
 .modern-file-input {
     width: 100%;
     padding: 12px;
@@ -539,10 +556,12 @@ button.btn-secondary:hover {
     cursor: pointer;
     transition: all 0.3s;
 }
+
 .modern-file-input:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: #f5b041;
 }
+
 .modern-form-btn {
     background: linear-gradient(135deg, #f5b041 0%, #e67e22 100%);
     color: white;
@@ -560,6 +579,7 @@ button.btn-secondary:hover {
     align-items: center;
     gap: 10px;
 }
+
 .modern-form-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(230, 126, 34, 0.6);
@@ -572,26 +592,82 @@ button.btn-secondary:hover {
         text-align: center;
         letter-spacing: 2px;
     }
+
     .hero-subtitle {
         font-size: 1rem;
         text-align: center;
         letter-spacing: 3px;
     }
+
     .hero-overlay {
         justify-content: center;
     }
+
     #add-product-form {
         gap: 20px !important;
     }
+
     .glass-panel {
         padding: 15px;
     }
-    #comenzi-container, #history-content {
+
+    #comenzi-container,
+    #history-content {
         grid-template-columns: 1fr;
     }
 }
+
 @media (max-width: 480px) {
     .hero-title {
         font-size: 2rem;
     }
+}
+
+/* ========================================================
+   BUtON INSTALARE APP (NANO-BANANA)
+   ======================================================== */
+.ios-button-banana {
+    position: relative;
+    background: rgba(255, 255, 255, 0.15); /* Fundal translucid */
+    backdrop-filter: blur(12px);             /* Efect blur pronunțat */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 16px;                     /* Colțuri mai rotunjite, tip iOS modern */
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 12px 20px;
+    cursor: pointer;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Umbră mai soft */
+    transition: all 0.3s ease;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);  /* Contur text pentru lizibilitate */
+    overflow: hidden;                        /* Ascunde elementele care ies în afară */
+    display: none; /* Ascuns implicit, se afișează din JS dacă poate fi instalat */
+}
+
+/* Efect la hover */
+.ios-button-banana:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Efect la apăsare */
+.ios-button-banana:active {
+    transform: scale(0.97);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Adăugarea vizuală a nanobananei */
+.ios-button-banana::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;   /* Poziționată în partea de jos, iese puțin în afară */
+    right: -5px;
+    width: 30px;      /* Dimensiune mică, "nano" */
+    height: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23f1c40f' d='M464.37 31.99C356.51 61.44 273.4 117.65 220.87 192.03c-88.57 48.33-152.55 119.39-191.91 192.01C11.52 416.62 0 437.53 0 459.94c0 28.28 19.71 52.06 48 52.06v-.01c33.64 0 56.94-23.96 83.2-51.2 44.8-46.08 96.64-89.6 153.6-115.2 20.48-9.6 41.6-19.2 64-25.6 53.76-14.08 108.16-17.28 163.84-9.6 9.6-7.68 19.84-17.28 28.8-28.8 9.6-9.6 17.28-19.84 24.32-30.72 3.84-5.76 6.4-12.16 8.32-18.56 2.56-8.96 4.48-17.92 5.12-27.52.64-6.4.64-12.8.64-19.2-.64-7.04-2.56-14.08-5.12-20.48-2.56-7.04-6.4-13.44-10.24-19.84-3.84-5.76-7.68-11.52-12.16-17.28-4.48-5.12-9.6-9.6-14.72-14.72-4.48-4.48-8.96-9.6-13.44-14.72-13.44-13.44-25.6-28.16-39.04-42.88zm-4.48 70.4c-9.6 7.04-17.92 14.08-25.6 21.12-8.96 8.32-17.92 17.28-26.88 26.24-9.6 9.6-19.2 19.84-28.8 30.08-21.76 23.68-45.44 47.36-70.4 70.4-36.48 33.92-76.16 64.64-117.76 89.6 40.96-74.88 110.08-149.76 196.48-217.6 10.24-7.68 19.84-16 29.44-25.04-9.6 7.68-18.56 16-28.16 25.04z'%3E%3C/path%3E%3C/svg%3E"); /* Iconiță SVG de banană */
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.7;            /* Translucidă */
+    pointer-events: none;    /* Pentru a nu bloca click-ul */
 }
