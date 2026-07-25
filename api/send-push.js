@@ -2,9 +2,9 @@ const webpush = require('web-push');
 
 // Configurare VAPID Keys
 webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:admin@bellalroma.ro',
-    process.env.VITE_VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
+    'mailto:admin@bellalroma.ro',
+    process.env.VITE_VAPID_PUBLIC_KEY || "BAxhEvzEuSTKNSIHcJIxoy3fEa31mbZJ6S3gLmo4lJLfbOfL_G0_5X6wVTKcJFw41nvzx5ay9LRnbLbFD0S8GKo",
+    process.env.VAPID_PRIVATE_KEY || "UDk_DvXGtVAFH44o7KJXPR2nDHeK1vBi66zBUiYwsW4"
 );
 
 export default async function handler(req, res) {
