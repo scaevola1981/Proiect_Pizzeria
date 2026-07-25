@@ -5,10 +5,15 @@ let numarMasa = null;
 let currentTab = 'restaurant';
 let searchQuery = '';
 
-// Preluare număr masă din URL (ex: ?masa=5)
+// Preluare număr masă din URL (ex: ?masa=5) sau din localStorage pentru PWA
 function getTableNumber() {
     const params = new URLSearchParams(window.location.search);
-    return params.get('masa');
+    let masa = params.get('masa');
+    if (masa) {
+        localStorage.setItem('numarMasa', masa);
+        return masa;
+    }
+    return localStorage.getItem('numarMasa');
 }
 
 // Inițializare pagină index.html
@@ -18,6 +23,7 @@ if (document.getElementById('produse-container')) {
         document.getElementById('masa-id').innerText = numarMasa;
     } else {
         document.getElementById('masa-id').innerText = "Necunoscută";
+        // Folosim un div custom în loc de alert blocant, sau alert cu explicație
         alert("Te rugăm să scanezi codul QR de pe masă pentru a comanda.");
     }
     
