@@ -268,8 +268,37 @@ if (btnTrimite) {
     });
 }
 
+// Funcție pentru generarea unui sunet plăcut de notificare (fără fișiere externe)
+function playNotificationSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        // Un "ding" plăcut și scurt
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Frecvența de pornire
+        oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1); 
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05); // Volum
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); // Fade out
+        
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {
+        console.log("Audio autoplay restrictionat.");
+    }
+}
+
 // Funcție helper pentru afișarea unor notificări premium (Glassmorphism) clientului
 function showOrderStatusNotification(message, iconClass, color) {
+    // Redăm sunetul
+    playNotificationSound();
+    
     const notif = document.createElement('div');
     notif.className = 'glass-panel';
     notif.style.position = 'fixed';
