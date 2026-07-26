@@ -10,17 +10,16 @@ let numarMasa = null;
 let currentTab = 'restaurant';
 let searchQuery = '';
 
-// Preluare număr masă din URL (ex: ?masa=5) sau din localStorage pentru PWA
+// Preluare număr masă din URL (ex: ?masa=5)
 function getTableNumber() {
     const params = new URLSearchParams(window.location.search);
     let masa = params.get('masa');
     if (masa) {
         // Validăm că e un număr valid
         masa = String(masa).replace(/[^0-9a-zA-Z]/g, '').substring(0, 10);
-        localStorage.setItem('numarMasa', masa);
         return masa;
     }
-    return localStorage.getItem('numarMasa');
+    return null;
 }
 
 // Inițializare pagină meniu.html
@@ -30,7 +29,10 @@ if (document.getElementById('produse-container')) {
         document.getElementById('masa-id').innerText = escapeHTML(numarMasa);
     } else {
         document.getElementById('masa-id').innerText = "Necunoscută";
-        alert("Te rugăm să scanezi codul QR de pe masă pentru a comanda.");
+        setTimeout(() => {
+            const qrModal = document.getElementById('qr-error-modal');
+            if (qrModal) qrModal.classList.remove('hidden');
+        }, 500);
     }
 
     const tabBar = document.getElementById('tab-bar');
@@ -254,7 +256,7 @@ function renderProducts() {
             <h4>${safePrice} Lei</h4>
             <div style="display: flex; gap: 10px; margin-top: auto; padding-top: 15px;">
                 <button class="btn-customize" style="flex: 1;" onclick="window.openCustomizeModal(${parseInt(p.id)}, '${safeName.replace(/'/g, "\\'")}')" title="Personalizează"><i class="fas fa-edit"></i> ✏️</button>
-                <button style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea</button>
+                <button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea</button>
             </div>
         `;
 
@@ -352,6 +354,19 @@ function updateCartUI() {
     }
 
     totalSpan.innerText = total.toFixed(2);
+
+    // Sync button states
+    const allButtons = document.querySelectorAll('.btn-alegere');
+    allButtons.forEach(btn => {
+        const pId = parseInt(btn.getAttribute('data-product-id'));
+        if (cart.some(item => item.product.id === pId)) {
+            btn.classList.add('selected');
+            btn.innerHTML = '✅ Selectat';
+        } else {
+            btn.classList.remove('selected');
+            btn.innerHTML = 'Alegerea mea';
+        }
+    });
 }
 
 // Helper pentru conversia cheii VAPID
@@ -374,7 +389,12 @@ const btnTrimite = document.getElementById('btn-trimite-comanda');
 if (btnTrimite) {
     btnTrimite.addEventListener('click', async () => {
         if (!numarMasa) {
-            alert("Nu am putut detecta numărul mesei. Scanează QR-ul din nou.");
+            const qrModal = document.getElementById('qr-error-modal');
+            if (qrModal) {
+                qrModal.classList.remove('hidden');
+            } else {
+                alert("Nu am putut detecta numărul mesei. Scanează QR-ul din nou.");
+            }
             return;
         }
 
@@ -388,11 +408,16 @@ if (btnTrimite) {
 
         if (!geoResult.allowed) {
             // Afișăm eroarea într-un mod vizual
-            showOrderStatusNotification(
-                geoResult.error || "Nu poți comanda din această locație.",
-                "fas fa-map-marker-alt",
-                "#e74c3c"
-            );
+            const geoModal = document.getElementById('geo-error-modal');
+            if (geoModal) {
+                geoModal.classList.remove('hidden');
+            } else {
+                showOrderStatusNotification(
+                    geoResult.error || "Nu poți comanda din această locație.",
+                    "fas fa-map-marker-alt",
+                    "#e74c3c"
+                );
+            }
             btnTrimite.disabled = false;
             btnTrimite.innerText = "Trimite Comanda";
             return;

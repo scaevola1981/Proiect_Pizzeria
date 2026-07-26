@@ -169,12 +169,42 @@ button:disabled {
     cursor: not-allowed;
 }
 
+#btn-trimite-comanda {
+    background: #3498db;
+    color: white;
+}
+
+#btn-trimite-comanda:hover:not(:disabled) {
+    background: #2ecc71;
+    color: white;
+}
+
 button.btn-secondary {
     background: #95a5a6;
 }
 
 button.btn-secondary:hover {
     background: #7f8c8d;
+}
+
+button.btn-alegere {
+    background: #3498db;
+    color: white;
+}
+
+button.btn-alegere:hover:not(:disabled) {
+    background: #2980b9;
+    color: white;
+}
+
+button.btn-alegere.selected {
+    background: #2ecc71;
+    color: white;
+}
+
+button.btn-alegere.selected:hover:not(:disabled) {
+    background: #27ae60;
+    color: white;
 }
 
 /* Kitchen & Orders */
