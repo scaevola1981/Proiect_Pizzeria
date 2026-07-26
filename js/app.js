@@ -93,11 +93,17 @@ if (document.getElementById('produse-container')) {
 
     if (clientInstallBtn) {
         clientInstallBtn.addEventListener('click', async () => {
+            // Solicităm automat permisiunile pentru notificări și sunete
+            await window.requestNotificationPermissionAndSetup();
+
             if (deferredPromptClient) {
                 // Pentru Google Chrome / Android: prompt nativ cu 1 click
                 deferredPromptClient.prompt();
                 const { outcome } = await deferredPromptClient.userChoice;
                 console.log("Status instalare Chrome:", outcome);
+                if (outcome === 'accepted') {
+                    await window.requestNotificationPermissionAndSetup();
+                }
                 deferredPromptClient = null;
             } else {
                 // Pentru iOS Safari / browsere fără prompt automat: modalul cu instrucțiuni
@@ -107,6 +113,32 @@ if (document.getElementById('produse-container')) {
         });
     }
 }
+
+// Funcție globală pentru activare permisiuni Notificări ("Allow") și Sunete
+window.requestNotificationPermissionAndSetup = async function () {
+    try {
+        // 1. Deblocăm contextul audio pentru redarea sunetului pe mobil
+        if (!window.audioCtx) {
+            window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (window.audioCtx && window.audioCtx.state === 'suspended') {
+            await window.audioCtx.resume();
+        }
+
+        // 2. Solicităm permisiunea nativă de Notificări ("Allow / Permite")
+        if ('Notification' in window && Notification.permission !== 'granted') {
+            const permission = await Notification.requestPermission();
+            console.log("Status permisiune notificări acordată:", permission);
+        }
+
+        // 3. Înregistrăm Service Worker-ul pentru notificări în fundal
+        if ('serviceWorker' in navigator) {
+            await navigator.serviceWorker.register('/sw.js');
+        }
+    } catch (err) {
+        console.warn("Nu s-au putut inițializa notificările automates:", err);
+    }
+};
 
 function setTab(tab) {
     currentTab = tab;

@@ -97,8 +97,8 @@
                 <div style="margin-bottom: 6px;"><strong style="color: #f5b041;"><i class="fab fa-android"></i> Android / PC (Chrome):</strong></div>
                 Apasă pe cele 3 puncte <i class="fas fa-ellipsis-v"></i> sus ➔ <strong>Instalează aplicația</strong>.
             </div>
-            <button onclick="document.getElementById('pwa-install-modal').classList.add('hidden')" class="modern-form-btn" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); font-weight: bold; border-radius: 10px; cursor: pointer;">
-                Am înțeles
+            <button onclick="document.getElementById('pwa-install-modal').classList.add('hidden'); if(typeof window.requestNotificationPermissionAndSetup === 'function') window.requestNotificationPermissionAndSetup();" class="modern-form-btn" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); font-weight: bold; border-radius: 10px; cursor: pointer;">
+                <i class="fas fa-bell"></i> Am înțeles & Permite Notificările
             </button>
         </div>
     </div>
