@@ -11,6 +11,9 @@ const RESTAURANT_LAT = 44.8839;
 const RESTAURANT_LNG = 24.2908;
 const MAX_DISTANCE_METERS = 200; // Raza maximă permisă (metri)
 
+// Pune pe 'true' pentru a PUNE PE PAUZĂ verificarea de geolocație în timpul testării!
+const GEOFENCING_TEST_MODE = true; 
+
 /**
  * Calculează distanța între două puncte GPS folosind formula Haversine
  * @returns distanța în metri
@@ -37,6 +40,23 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
  */
 window.checkGeolocation = function () {
     return new Promise((resolve) => {
+        // Verificare Mod de Testare (din flag, URL ?test=1 sau localStorage)
+        const urlParams = new URLSearchParams(window.location.search);
+        const isTestMode = GEOFENCING_TEST_MODE || 
+                           urlParams.get('test') === '1' || 
+                           urlParams.get('test') === 'true' ||
+                           localStorage.getItem('bypass_geo') === 'true';
+
+        if (isTestMode) {
+            console.log('⚡ Geofencing pe PAUZĂ (Mod Testare). Comanda se trimite fără restricție de locație.');
+            resolve({
+                allowed: true,
+                distance: 0,
+                coords: { lat: RESTAURANT_LAT, lng: RESTAURANT_LNG },
+                error: null
+            });
+            return;
+        }
         if (!navigator.geolocation) {
             resolve({
                 allowed: false,
