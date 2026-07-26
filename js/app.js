@@ -574,7 +574,7 @@ function showOrderStatusNotification(message, iconClass, color) {
 // IN-APP QR SCANNER
 // ==========================================
 
-let html5QrcodeScanner = null;
+let html5QrCode = null;
 
 window.startQRScanner = function() {
     const scannerModal = document.getElementById('qr-scanner-modal');
@@ -582,49 +582,65 @@ window.startQRScanner = function() {
         scannerModal.classList.remove('hidden');
     }
 
-    if (!html5QrcodeScanner) {
-        html5QrcodeScanner = new Html5QrcodeScanner(
-            "qr-reader",
-            { fps: 10, qrbox: {width: 250, height: 250}, aspectRatio: 1.0 },
-            /* verbose= */ false
-        );
+    if (typeof Html5Qrcode === 'undefined') {
+        alert("Modulul pentru scanare nu a putut fi încărcat.");
+        return;
     }
 
-    html5QrcodeScanner.render((decodedText, decodedResult) => {
-        // on success
-        try {
-            const url = new URL(decodedText);
-            const masaParam = url.searchParams.get('masa');
-            if (masaParam) {
-                const masaClean = String(masaParam).replace(/[^0-9a-zA-Z]/g, '').substring(0, 10);
-                numarMasa = masaClean;
-                
-                // Update UI
-                const masaIdElem = document.getElementById('masa-id');
-                if (masaIdElem) {
-                    masaIdElem.innerText = escapeHTML(numarMasa);
+    if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("qr-reader");
+    }
+
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText, decodedResult) => {
+            // on success
+            try {
+                const url = new URL(decodedText);
+                const masaParam = url.searchParams.get('masa');
+                if (masaParam) {
+                    const masaClean = String(masaParam).replace(/[^0-9a-zA-Z]/g, '').substring(0, 10);
+                    numarMasa = masaClean;
+                    
+                    // Update UI
+                    const masaIdElem = document.getElementById('masa-id');
+                    if (masaIdElem) {
+                        masaIdElem.innerText = escapeHTML(numarMasa);
+                    }
+
+                    // Close Scanner
+                    window.stopQRScanner();
+
+                    showOrderStatusNotification("Masa scanată cu succes! Poți trimite comanda.", "fas fa-check", "#2ecc71");
+                } else {
+                    alert("Codul QR scanat nu este valid pentru aplicația noastră.");
                 }
-
-                // Close Scanner
-                window.stopQRScanner();
-
-                showOrderStatusNotification("Masa scanată cu succes! Poți trimite comanda.", "fas fa-check", "#2ecc71");
-            } else {
-                alert("Codul QR scanat nu este valid pentru aplicația noastră.");
+            } catch (e) {
+                alert("Cod QR invalid. Te rugăm scanează codul de pe masă.");
             }
-        } catch (e) {
-            alert("Cod QR invalid. Te rugăm scanează codul de pe masă.");
+        },
+        (errorMessage) => {
+            // background parse error, ignore
         }
-    }, (errorMessage) => {
-        // background parse error, ignore
+    ).catch(err => {
+        alert("Eroare la accesarea camerei. Te rugăm să permiți accesul la cameră din setările browserului. Detalii: " + err);
     });
 };
 
 window.stopQRScanner = function() {
-    if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear().catch(error => {
-            console.error("Failed to clear scanner. ", error);
-        });
+    if (html5QrCode) {
+        try {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+            }).catch(error => {
+                console.error("Failed to stop scanner. ", error);
+            });
+        } catch (e) {
+            console.error("Error stopping scanner", e);
+        }
     }
     const scannerModal = document.getElementById('qr-scanner-modal');
     if (scannerModal) {
