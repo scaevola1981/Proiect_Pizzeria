@@ -420,25 +420,45 @@ window.toggleHistory = (show) => {
 // PWA INSTALL LOGIC
 // ==========================================
 
-let deferredPrompt;
+let deferredPromptOwner;
 const installAppBtn = document.getElementById('install-app-btn');
+
+function updateOwnerInstallButtonVisibility() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (installAppBtn) {
+        if (isStandalone) {
+            installAppBtn.style.display = 'none'; // Ascunde dacă rulează deja ca aplicație PWA instalată
+        } else {
+            installAppBtn.style.display = 'inline-flex'; // Reapare dacă se deschide din browser (dacă a fost ștearsă)
+        }
+    }
+}
+
+updateOwnerInstallButtonVisibility();
 
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    deferredPrompt = e;
-    if (installAppBtn) {
-        installAppBtn.style.display = 'block';
-    }
+    deferredPromptOwner = e;
+    updateOwnerInstallButtonVisibility();
+});
+
+window.addEventListener('appinstalled', () => {
+    console.log('🎉 PWA Recepție instalată cu succes!');
+    if (installAppBtn) installAppBtn.style.display = 'none';
 });
 
 if (installAppBtn) {
     installAppBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            deferredPrompt = null;
-            installAppBtn.style.display = 'none';
+        if (deferredPromptOwner) {
+            deferredPromptOwner.prompt();
+            const { outcome } = await deferredPromptOwner.userChoice;
+            console.log(`PWA install choice: ${outcome}`);
+            if (outcome === 'accepted') {
+                installAppBtn.style.display = 'none';
+            }
+            deferredPromptOwner = null;
+        } else {
+            alert("Pentru a instala aplicația pe ecranul principal:\n\n• Pe iPhone (Safari): Apasă Partajare ⎋ -> Adaugă pe ecranul principal ➕\n• Pe iPhone (Chrome): Apasă Partajare ⎋ sus -> Adaugă pe ecranul principal ➕\n• Pe Android / PC (Chrome): Apasă Meniu ⁝ -> Instalează aplicația");
         }
     });
 }
