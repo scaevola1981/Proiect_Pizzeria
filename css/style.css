@@ -585,6 +585,28 @@ button.btn-secondary:hover {
     box-shadow: 0 8px 25px rgba(230, 126, 34, 0.6);
 }
 
+/* Buton Personalizare Produs (Verde cu Creion) */
+.btn-customize {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
+    padding: 10px 5px !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-customize:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(46, 204, 113, 0.6) !important;
+}
+
 /* Media Query for mobile header */
 @media (max-width: 768px) {
     .hero-title {

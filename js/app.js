@@ -253,7 +253,7 @@ function renderProducts() {
             <p>${safeDesc}</p>
             <h4>${safePrice} Lei</h4>
             <div style="display: flex; gap: 10px; margin-top: auto; padding-top: 15px;">
-                <button style="flex: 1; padding: 10px 5px; font-size: 1.1rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.35); transition: transform 0.2s;" onclick="window.openCustomizeModal(${parseInt(p.id)}, '${safeName.replace(/'/g, "\\'")}')" title="Personalizează"><i class="fas fa-edit"></i></button>
+                <button class="btn-customize" style="flex: 1;" onclick="window.openCustomizeModal(${parseInt(p.id)}, '${safeName.replace(/'/g, "\\'")}')" title="Personalizează"><i class="fas fa-edit"></i> ✏️</button>
                 <button style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea</button>
             </div>
         `;
