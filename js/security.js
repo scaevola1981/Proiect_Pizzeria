@@ -202,10 +202,10 @@ window.resetLoginAttempts = function () {
  * Verifică dacă utilizatorul este autentificat.
  * Dacă nu, ascunde conținutul și redirecționează.
  * @param {object} supabaseClient - clientul Supabase
- * @param {string} redirectUrl - URL-ul de redirect dacă nu e logat (default: owner.html)
+ * @param {string} redirectUrl - URL-ul de redirect dacă nu e logat (default: receptie.html)
  * @returns Promise<{authenticated: boolean, user: object|null}>
  */
-window.checkAuthGuard = async function (supabaseClient, redirectUrl = 'owner.html') {
+window.checkAuthGuard = async function (supabaseClient, redirectUrl = 'receptie.html') {
     try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
 

@@ -23,7 +23,7 @@ function getTableNumber() {
     return localStorage.getItem('numarMasa');
 }
 
-// Inițializare pagină index.html
+// Inițializare pagină meniu.html
 if (document.getElementById('produse-container')) {
     numarMasa = getTableNumber();
     if (numarMasa) {

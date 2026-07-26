@@ -22,7 +22,7 @@ window.handleAdminLogin = async function () {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Se deblochează...';
 
-    // Verificăm dacă există deja o sesiune Supabase (de pe owner.html)
+    // Verificăm dacă există deja o sesiune Supabase (de pe receptie.html)
     let { authenticated } = await window.getAuthSession();
 
     // Dacă nu este autentificat deloc, cerem email + parolă
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (backBtn) {
         backBtn.addEventListener('click', () => {
             sessionStorage.removeItem('admin_pin_verified');
-            window.location.href = 'owner.html';
+            window.location.href = 'receptie.html';
         });
     }
 

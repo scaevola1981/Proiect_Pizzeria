@@ -2,7 +2,7 @@
   "name": "Bella Roma - Pub & Pizzerie",
   "short_name": "Bella Roma",
   "description": "Comandă online mâncare și băuturi la Bella Roma Pub & Pizzerie",
-  "start_url": "/",
+  "start_url": "/meniu.html",
   "scope": "/",
   "id": "/",
   "display": "standalone",

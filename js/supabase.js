@@ -39,7 +39,7 @@ window.loginAdmin = async function (email, password) {
  */
 window.logoutAdmin = async function () {
     await supabase.auth.signOut();
-    window.location.href = 'owner.html';
+    window.location.href = 'receptie.html';
 };
 
 /**
@@ -231,7 +231,7 @@ window.updateOrderStatus = async function (orderId, newStatus, timestampFinaliza
     if (!authenticated) {
         console.error('Nu ești autentificat. Operațiune refuzată.');
         alert('Sesiunea a expirat. Te rugăm să te autentifici din nou.');
-        window.location.href = 'owner.html';
+        window.location.href = 'receptie.html';
         return;
     }
 
