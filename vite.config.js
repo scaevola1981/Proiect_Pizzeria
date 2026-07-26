@@ -7,7 +7,8 @@ export default defineConfig({
       input: {
         meniu: resolve(__dirname, 'meniu.html'),
         receptie: resolve(__dirname, 'receptie.html'),
-        admin: resolve(__dirname, 'admin.html')
+        admin: resolve(__dirname, 'admin.html'),
+        index: resolve(__dirname, 'index.html')
       }
     }
   }
