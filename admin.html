@@ -5,29 +5,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panou Administrare Meniu - BELLA ROMA</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://cdnjs.cloudflare.com; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl0HPNiekfRgJIf+X5ycReBmeByPmIa09Z3S24z0H8w23+bUEuKd5ICxGBe2hPkdWus9VqAeL6cBA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <!-- Login Overlay -->
+    <!-- Login Overlay — Acces cu PIN Admin -->
     <div id="login-overlay"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <div class="glass-panel" style="max-width: 400px; width: 90%; text-align: center;">
-            <h2 style="color: #f5b041; margin-bottom: 20px;"><i class="fas fa-lock"></i> Acces Securizat</h2>
-            <p style="color: #cbd5e1; margin-bottom: 20px;">Introduceți parola pentru panoul de administrare.</p>
-            <input type="password" id="admin-password" placeholder="Parola"
-                style="width: 100%; margin-bottom: 15px; text-align: center;">
-            <button onclick="window.checkAdminPassword()" style="width: 100%;"><i class="fas fa-sign-in-alt"></i>
-                Autentificare</button>
-            <p id="login-error" style="color: #e74c3c; margin-top: 15px; display: none;">Parolă incorectă!</p>
+            <h2 style="color: #e74c3c; margin-bottom: 10px;"><i class="fas fa-shield-alt"></i> Acces Administrare Meniu
+            </h2>
+            <p style="color: #cbd5e1; margin-bottom: 20px;" id="login-subtitle">
+                Introduceți PIN-ul secret de Admin pentru a debloca.
+            </p>
+            <div id="credentials-fields" style="display: none;">
+                <input type="email" id="admin-email" placeholder="Email"
+                    style="width: 100%; margin-bottom: 15px; text-align: center;" autocomplete="email">
+                <input type="password" id="admin-password" placeholder="Parola"
+                    style="width: 100%; margin-bottom: 15px; text-align: center;" autocomplete="current-password">
+            </div>
+            <input type="password" id="admin-pin" placeholder="🔑 PIN Admin (4 cifre)"
+                style="width: 100%; margin-bottom: 20px; text-align: center; border: 2px solid #e74c3c; font-size: 1.2rem; letter-spacing: 3px;"
+                maxlength="20">
+            <button id="btn-login" onclick="window.handleAdminLogin()"
+                style="width: 100%; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); font-size: 1.1rem; padding: 12px;"><i
+                    class="fas fa-unlock"></i>
+                Deblochează Meniu</button>
+            <p id="login-error" style="color: #e74c3c; margin-top: 15px; display: none; font-weight: bold;"></p>
         </div>
     </div>
+
     <header class="bella-roma-hero" style="height: 150px; margin-bottom: 30px;">
         <div class="hero-overlay" style="position: relative;">
-            <button onclick="window.logoutAdmin()"
-                style="position: absolute; top: 15px; right: 15px; width: auto; background: #e74c3c; color: white; padding: 8px 15px; font-size: 0.9rem; border-radius: 8px;"><i
-                    class="fas fa-sign-out-alt"></i> Ieșire</button>
+            <button id="btn-back-to-owner"
+                style="position: absolute; top: 15px; right: 15px; width: auto; background: #2c3e50; color: white; padding: 8px 15px; font-size: 0.9rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); cursor: pointer;"><i
+                    class="fas fa-arrow-left"></i> Înapoi la Recepție</button>
             <h1 class="hero-title" style="font-size: 2.5rem;">ADMINISTRARE MENIU</h1>
             <p class="hero-subtitle" style="font-size: 1.2rem;">BELLA ROMA - PUB & PIZZERIE</p>
         </div>
@@ -44,36 +61,50 @@
                                 style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Nume Produs
                                 *</label>
                             <input type="text" id="nume" required placeholder="ex: Pizza Margherita"
-                                class="modern-input">
+                                class="modern-input" maxlength="100">
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label for="categorie"
+                                style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Categorie
+                                *</label>
+                            <select id="categorie" class="modern-input"
+                                style="background: rgba(15, 23, 42, 0.9); color: white;">
+                                <option value="restaurant">🍕 Mâncare (Restaurant)</option>
+                                <option value="bar">🍹 Băutură (Bar)</option>
+                            </select>
                         </div>
                         <div style="flex: 1; min-width: 100px;">
                             <label for="pret"
                                 style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Preț (Lei)
                                 *</label>
-                            <input type="number" id="pret" required min="1" step="0.5" placeholder="ex: 35"
+                            <input type="number" id="pret" required min="1" max="9999" step="0.5" placeholder="ex: 35"
                                 class="modern-input">
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; flex: 1;">
                         <label for="descriere"
-                            style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Descriere
-                            (opțional)</label>
+                            style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Descriere</label>
                         <textarea id="descriere" placeholder="ex: sos roșii, mozzarella, busuioc proaspăt..."
-                            class="modern-input" style="resize: vertical; flex: 1; min-height: 120px;"></textarea>
+                            class="modern-input" style="resize: vertical; flex: 1; min-height: 120px;"
+                            maxlength="500"></textarea>
                     </div>
-                    <button type="submit" class="modern-form-btn" style="margin-top: auto; background: #e74c3c; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);"><i class="fas fa-save"></i> Adaugă în Meniu</button>
+                    <button type="submit" class="modern-form-btn"
+                        style="margin-top: auto; background: #e74c3c; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);"><i
+                            class="fas fa-save"></i> Adaugă în Meniu</button>
                 </div>
 
-                <div
-                    style="flex: 1; min-width: 300px; display: flex; flex-direction: column; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; background: rgba(0,0,0,0.2); padding: 20px; min-height: 300px;">
-                    <div style="margin-bottom: 20px; width: 100%;">
+                <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+                    <div>
                         <label for="imagine_upload"
-                            style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff; text-align: center;">Alege
-                            Poză (opțional)</label>
-                        <input type="file" id="imagine_upload" accept="image/*" class="modern-file-input">
+                            style="display: block; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #ffffff; padding: 12px 20px; border-radius: 10px; border: 1px solid #60a5fa; cursor: pointer; text-align: center; width: 100%; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.45); font-weight: bold; transition: all 0.2s;">
+                            <i class="fas fa-image" style="margin-right: 8px;"></i> Alegeti fotografia dorita!
+                        </label>
+                        <input type="file" id="imagine_upload" accept="image/jpeg,image/png,image/webp,image/gif"
+                            style="display: none;">
                     </div>
-                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;">
-                        <span id="preview-placeholder" style="color: rgba(255,255,255,0.5); text-align: center;"><i
+                    <div
+                        style="flex: 1; display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; background: rgba(0,0,0,0.2); padding: 20px; min-height: 250px;">
+                        <span id="preview-placeholder" style="color: rgb(201, 203, 203); text-align: center;"><i
                                 class="fas fa-image fa-2x" style="margin-bottom:10px; display:block;"></i>Previzualizare
                             imagine</span>
                         <img id="image-preview" src=""
@@ -85,36 +116,103 @@
 
         <main class="glass-panel">
             <h2 style="color: #f5b041;"><i class="fas fa-list"></i> Produse Curente în Meniu</h2>
+            <!-- Tab-uri de filtrare Restaurant vs Bar -->
+            <div class="menu-tabs"
+                style="display: flex; background: rgba(255, 255, 255, 0.15); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.3); margin-bottom: 20px;">
+                <button id="admin-tab-restaurant" class="tab-btn active"
+                    style="flex: 1; padding: 12px; border: none; background: #fff; color: #333; font-weight: bold; cursor: pointer; transition: all 0.3s;"><i
+                        class="fas fa-utensils"></i> Meniu Restaurant (Mâncare)</button>
+                <button id="admin-tab-bar" class="tab-btn"
+                    style="flex: 1; padding: 12px; border: none; background: transparent; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s; border-left: 1px solid rgba(255, 255, 255, 0.2);"><i
+                        class="fas fa-glass-martini-alt"></i> Meniu Bar (Băuturi)</button>
+            </div>
             <div id="admin-products-container" class="products-grid">
                 <p>Se încarcă meniul...</p>
             </div>
         </main>
 
         <main class="glass-panel" style="margin-top: 30px;">
-            <h2 style="color: #e74c3c;"><i class="fas fa-shield-alt"></i> Securitate</h2>
-            <p style="color: #cbd5e1; margin-bottom: 20px;">Schimbă parola panoului de administrare și recepție.</p>
-            <form id="change-password-form" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
-                <div style="flex: 1; min-width: 200px;">
-                    <label for="old-pwd"
-                        style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Veche
-                        *</label>
-                    <input type="password" id="old-pwd" required class="modern-input">
+            <h2 style="color: #e74c3c; margin-bottom: 25px;"><i class="fas fa-shield-alt"></i> Securitate</h2>
+
+            <div style="display: flex; gap: 30px; flex-wrap: wrap; align-items: stretch;">
+                <!-- Stânga: Schimbare Parolă Cont -->
+                <div
+                    style="flex: 1; min-width: 300px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 25px; display: flex; flex-direction: column;">
+                    <h3 style="color: #e74c3c; margin-top: 0; margin-bottom: 10px;"><i class="fas fa-key"></i> Parolă
+                        Cont</h3>
+                    <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 0.95rem;">Schimbă parola generală a
+                        contului</p>
+                    <form id="change-password-form"
+                        style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;">
+                        <div>
+                            <label for="new-pwd"
+                                style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Nouă
+                                * (minim 6 caractere)</label>
+                            <input type="password" id="new-pwd" required minlength="6" class="modern-input"
+                                style="width: 100%;">
+                        </div>
+                        <div>
+                            <label for="confirm-pwd"
+                                style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Confirmă
+                                Parola Nouă *</label>
+                            <input type="password" id="confirm-pwd" required minlength="6" class="modern-input"
+                                style="width: 100%;">
+                        </div>
+                        <button type="submit" class="modern-form-btn"
+                            style="margin-top: auto; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); width: 100%; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);"><i
+                                class="fas fa-key"></i> Schimbă Parola</button>
+                    </form>
+                    <p id="pwd-change-msg" style="margin-top: 15px; font-weight: bold; display: none;"></p>
                 </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label for="new-pwd"
-                        style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Parola Nouă
-                        *</label>
-                    <input type="password" id="new-pwd" required class="modern-input">
+
+                <!-- Dreapta: Schimbare PIN Secret Admin -->
+                <div
+                    style="flex: 1; min-width: 300px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 25px; display: flex; flex-direction: column;">
+                    <h3 style="color: #f5b041; margin-top: 0; margin-bottom: 10px;"><i class="fas fa-lock"></i> Cod
+                        Admin</h3>
+                    <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 0.95rem;">Schimbă PIN-ul secret de acces
+                        la administrarea meniului.</p>
+                    <form id="change-pin-form" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;">
+                        <div>
+                            <label for="new-pin"
+                                style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">PIN Nou *
+                                (minim 4 caractere)</label>
+                            <input type="password" id="new-pin" required minlength="4" maxlength="20"
+                                class="modern-input" placeholder="ex: 1234" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label for="confirm-pin"
+                                style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Confirmă PIN
+                                Nou *</label>
+                            <input type="password" id="confirm-pin" required minlength="4" maxlength="20"
+                                class="modern-input" style="width: 100%;">
+                        </div>
+                        <button type="submit" class="modern-form-btn"
+                            style="margin-top: auto;background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); width: 100%; box-shadow: 0 4px 15px rgba(245, 176, 65, 0.4);"><i
+                                class="fas fa-lock"></i> Schimbă PIN Admin</button>
+                    </form>
+                    <p id="pin-change-msg" style="margin-top: 15px; font-weight: bold; display: none;"></p>
                 </div>
-                <button type="submit" class="modern-form-btn"
-                    style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);"><i class="fas fa-key"></i>
-                    Schimbă Parola</button>
-            </form>
-            <p id="pwd-change-msg" style="margin-top: 15px; font-weight: bold; display: none;"></p>
+            </div>
         </main>
+    <!-- Modal Atenționare Ștergere Produs -->
+    <div id="delete-confirm-modal" class="modal hidden" style="z-index: 99999;">
+        <div class="glass-panel" style="max-width: 450px; width: 90%; text-align: center; border: 2px solid #e74c3c; box-shadow: 0 10px 40px rgba(231, 76, 60, 0.4); background: rgba(15, 23, 42, 0.95);">
+            <h2 style="color: #e74c3c; margin-bottom: 15px; font-size: 1.4rem;">
+                <i class="fas fa-exclamation-triangle"></i> Atenționare
+            </h2>
+            <p style="color: #ffffff; font-size: 1.15rem; margin-bottom: 25px; font-weight: bold; line-height: 1.4;">
+                Sunteti sigur ca dorieti sa stergeti din meniu?
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn-secondary" onclick="window.closeDeleteModal()" style="border-radius: 10px; padding: 12px 20px; flex: 1; cursor: pointer;">Anulează</button>
+                <button onclick="window.confirmDeleteProduct()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; border-radius: 10px; padding: 12px 20px; font-weight: bold; flex: 1; cursor: pointer; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);"><i class="fas fa-trash"></i> Șterge</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/security.js"></script>
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/admin.js"></script>
 </body>

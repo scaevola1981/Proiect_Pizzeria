@@ -615,6 +615,19 @@ button.btn-secondary:hover {
     #history-content {
         grid-template-columns: 1fr;
     }
+
+    .owner-header-btns {
+        justify-content: center !important;
+        width: 100% !important;
+        margin-top: 10px;
+    }
+
+    .owner-header-btns #btn-owner-logout {
+        flex-basis: 100% !important;
+        max-width: 260px !important;
+        margin: 5px auto 0 auto !important;
+        text-align: center !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -641,8 +654,7 @@ button.btn-secondary:hover {
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Umbră mai soft */
     transition: all 0.3s ease;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);  /* Contur text pentru lizibilitate */
-    overflow: hidden;                        /* Ascunde elementele care ies în afară */
-    display: none; /* Ascuns implicit, se afișează din JS dacă poate fi instalat */
+    display: inline-flex; align-items: center; justify-content: center;
 }
 
 /* Efect la hover */

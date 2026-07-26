@@ -2,19 +2,41 @@ self.addEventListener('push', function(event) {
     if (event.data) {
         try {
             const data = event.data.json();
-            const title = data.title || 'Notificare Nouă';
+            const title = data.title || 'Pizzerie Bella Roma';
+            const body = data.body || 'Statutul comenzii tale s-a schimbat!';
+            const status = data.status || 'update';
+            const iconUrl = data.icon || (location.origin + '/img/icon.png');
+
             const options = {
-                body: data.body,
-                icon: data.icon || '/img/icon.png',
-                badge: '/img/icon.png',
+                body: body,
+                icon: iconUrl,
+                badge: iconUrl,
                 vibrate: [200, 100, 200, 100, 200],
                 data: {
-                    status: data.status
+                    status: status,
+                    title: title,
+                    body: body
                 },
-                requireInteraction: true
+                requireInteraction: true,
+                renotify: true,
+                tag: 'bella-roma-order-' + Date.now()
             };
             
-            event.waitUntil(self.registration.showNotification(title, options));
+            event.waitUntil(
+                Promise.all([
+                    self.registration.showNotification(title, options),
+                    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+                        clientList.forEach(function(client) {
+                            client.postMessage({
+                                type: 'PUSH_ORDER_STATUS',
+                                title: title,
+                                body: body,
+                                status: status
+                            });
+                        });
+                    })
+                ])
+            );
         } catch (e) {
             console.error("Eroare la parsarea notificării push", e);
         }

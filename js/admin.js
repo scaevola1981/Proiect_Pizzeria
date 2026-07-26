@@ -1,4 +1,92 @@
-// Funcții pentru administrarea meniului
+// ==========================================
+// ADMIN.JS — Panou Administrare Meniu
+// Autentificare cu Supabase Auth + Securitate
+// ==========================================
+
+// ==========================================
+// AUTENTIFICARE ADMIN
+// ==========================================
+
+window.handleAdminLogin = async function () {
+    const pinInput = document.getElementById('admin-pin');
+    const pin = pinInput ? pinInput.value.trim() : '';
+    const err = document.getElementById('login-error');
+    const btn = document.getElementById('btn-login');
+
+    if (!pin) {
+        err.style.display = 'block';
+        err.innerText = 'Introduceți PIN-ul Admin (4 cifre).';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Se deblochează...';
+
+    // Verificăm dacă există deja o sesiune Supabase (de pe owner.html)
+    let { authenticated } = await window.getAuthSession();
+
+    // Dacă nu este autentificat deloc, cerem email + parolă
+    if (!authenticated) {
+        const credentialsFields = document.getElementById('credentials-fields');
+        if (credentialsFields) credentialsFields.style.display = 'block';
+
+        const email = document.getElementById('admin-email').value.trim();
+        const pwd = document.getElementById('admin-password').value;
+
+        if (!email || !pwd) {
+            err.style.display = 'block';
+            err.innerText = 'Autentificați-vă cu Email și Parolă mai sus, apoi puneți PIN-ul.';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-unlock"></i> Deblochează Meniu';
+            return;
+        }
+
+        const loginResult = await window.loginAdmin(email, pwd);
+        if (!loginResult.success) {
+            err.style.display = 'block';
+            err.innerText = 'Email sau parolă incorectă: ' + (loginResult.error || 'Verificați datele.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-unlock"></i> Deblochează Meniu';
+            return;
+        }
+        authenticated = true;
+    }
+
+    // Verificare PIN admin
+    try {
+        const pinResult = await window.verifyAdminPin(pin);
+
+        if (pinResult.valid) {
+            // Curățăm orice blocare veche din localStorage
+            if (typeof window.resetLoginAttempts === 'function') {
+                window.resetLoginAttempts();
+            }
+
+            sessionStorage.setItem('admin_pin_verified', 'true');
+            err.style.display = 'none';
+            document.getElementById('login-overlay').style.display = 'none';
+            loadAdminProducts();
+        } else {
+            err.style.display = 'block';
+            err.innerText = 'PIN Admin incorect. Încercați din nou (sau folosiți parola veche "bella").';
+        }
+    } catch (e) {
+        console.error('Eroare la verificare PIN:', e);
+        err.style.display = 'block';
+        err.innerText = 'Eroare la verificarea PIN-ului. Încercați din nou.';
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-unlock"></i> Deblochează Meniu';
+};
+
+// ==========================================
+// ÎNCĂRCARE PRODUSE
+// ==========================================
+
+let allAdminProducts = [];
+let adminCurrentTab = 'restaurant';
+
 async function loadAdminProducts() {
     const container = document.getElementById('admin-products-container');
     container.innerHTML = '<p style="text-align:center; width:100%;">Se încarcă meniul...</p>';
@@ -16,41 +104,59 @@ async function loadAdminProducts() {
         return;
     }
 
-    renderAdminProducts(data || []);
+    allAdminProducts = data || [];
+    renderAdminProducts();
 }
 
 function getDefaultProductImage() {
-    // Imagine generică cu o pizza pentru produsele care nu au primit poză de la Admin
     return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80';
 }
 
-function renderAdminProducts(produse) {
+function renderAdminProducts() {
     const container = document.getElementById('admin-products-container');
+    if (!container) return;
     container.innerHTML = '';
 
-    if (produse.length === 0) {
+    if (allAdminProducts.length === 0) {
         container.innerHTML = '<p style="text-align:center; width:100%;">Meniul este momentan gol.</p>';
         return;
     }
 
-    produse.forEach(p => {
+    let count = 0;
+
+    allAdminProducts.forEach(p => {
+        const catStr = ((p.categorie || '') + ' ' + (p.nume || '')).toLowerCase();
+        const isBautura = p.categorie === 'bar' || catStr.includes('bautur') || catStr.includes('băutur') || catStr.includes('suc') || catStr.includes('apa') || catStr.includes('apă') || catStr.includes('coca') || catStr.includes('cola') || catStr.includes('pepsi') || catStr.includes('fanta') || catStr.includes('sprite') || catStr.includes('cafea') || catStr.includes('bere') || catStr.includes('vin');
+
+        if (adminCurrentTab === 'bar' && !isBautura) return;
+        if (adminCurrentTab === 'restaurant' && isBautura) return;
+
         const imageUrl = p.imagine_url || getDefaultProductImage();
         const div = document.createElement('div');
         div.className = 'product-card';
-        // Suprascriem fundalul cu glass-panel light pt contrast
         div.style.background = 'rgba(255, 255, 255, 0.1)';
         div.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-        
+
+        // XSS Protection — escapăm toate datele din DB
         div.innerHTML = `
-            <img src="${imageUrl}" alt="${p.nume}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
-            <h3 style="color: #fff;">${p.nume}</h3>
-            <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px;">${p.descriere || '-'}</p>
-            <h4 style="color: #f5b041; margin-bottom: 15px;">${p.pret} Lei</h4>
-            <button onclick="window.deleteProduct(${p.id})" style="margin-top:auto; background:#e74c3c; color:white;"><i class="fas fa-trash"></i> Șterge Produs</button>
+            <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(p.nume)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
+            <h3 style="color: #fff;">${escapeHTML(p.nume)}</h3>
+            <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px;">${escapeHTML(p.descriere || '-')}</p>
+            <h4 style="color: #f5b041; margin-bottom: 15px;">${escapeHTML(String(p.pret))} Lei <small style="font-size:0.8rem; opacity:0.7;">(${isBautura ? 'Bar' : 'Restaurant'})</small></h4>
+            <button onclick="window.deleteProduct(${parseInt(p.id)})" style="margin-top:auto; background:#e74c3c; color:white;"><i class="fas fa-trash"></i> Șterge Produs</button>
         `;
         container.appendChild(div);
+        count++;
     });
+
+    if (count === 0) {
+        container.innerHTML = '<p style="text-align:center; width:100%; margin-top: 20px;">Niciun produs în această categorie.</p>';
+    }
 }
+
+// ==========================================
+// FORMULAR ADĂUGARE PRODUS
+// ==========================================
 
 const form = document.getElementById('add-product-form');
 const imageInput = document.getElementById('imagine_upload');
@@ -58,11 +164,19 @@ const imagePreview = document.getElementById('image-preview');
 const previewPlaceholder = document.getElementById('preview-placeholder');
 
 if (imageInput) {
-    imageInput.addEventListener('change', function(e) {
+    imageInput.addEventListener('change', function (e) {
         const file = e.target.files[0];
         if (file) {
+            // Validare fișier înainte de preview
+            const validation = window.validateFileUpload(file);
+            if (!validation.valid) {
+                alert(validation.error);
+                imageInput.value = '';
+                return;
+            }
+
             const reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = function (evt) {
                 imagePreview.src = evt.target.result;
                 imagePreview.style.display = 'block';
                 previewPlaceholder.style.display = 'none';
@@ -79,14 +193,38 @@ if (imageInput) {
 if (form) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const nume = document.getElementById('nume').value;
-        const descriere = document.getElementById('descriere').value;
+
+        // Verificăm autentificarea la fiecare operațiune
+        const { authenticated } = await window.getAuthSession();
+        if (!authenticated) {
+            alert('Sesiunea a expirat. Te rugăm să te autentifici din nou.');
+            window.location.reload();
+            return;
+        }
+
+        const nume = document.getElementById('nume').value.trim();
+        const descriere = document.getElementById('descriere').value.trim();
         const pret = parseFloat(document.getElementById('pret').value);
+        const categorieSelect = document.getElementById('categorie');
+        const categorie = categorieSelect ? categorieSelect.value : 'restaurant';
         const fileInput = document.getElementById('imagine_upload');
 
         if (!nume || !pret) {
             alert("Completați numele și prețul!");
+            return;
+        }
+
+        // Validare lungime
+        if (nume.length > 100) {
+            alert("Numele produsului nu poate depăși 100 de caractere.");
+            return;
+        }
+        if (descriere.length > 500) {
+            alert("Descrierea nu poate depăși 500 de caractere.");
+            return;
+        }
+        if (pret <= 0 || pret > 9999) {
+            alert("Prețul trebuie să fie între 1 și 9999 Lei.");
             return;
         }
 
@@ -96,10 +234,19 @@ if (form) {
 
         let imagine_url = null;
 
-        // Dacă utilizatorul a selectat un fișier, îl uploadăm
         if (fileInput.files && fileInput.files.length > 0) {
             const file = fileInput.files[0];
-            const fileExt = file.name.split('.').pop();
+
+            // Validare fișier
+            const validation = window.validateFileUpload(file);
+            if (!validation.valid) {
+                alert(validation.error);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Adaugă în Meniu';
+                return;
+            }
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
             const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
             const { data: uploadData, error: uploadError } = await window.supabaseClient.storage
@@ -110,18 +257,17 @@ if (form) {
                 console.error("Eroare la upload poză:", uploadError);
                 alert("Nu s-a putut încărca poza. Se va salva produsul fără poză.");
             } else {
-                // Obținem URL-ul public
                 const { data: publicUrlData } = window.supabaseClient.storage
                     .from('imagini_produse')
                     .getPublicUrl(fileName);
-                
+
                 imagine_url = publicUrlData.publicUrl;
             }
         }
 
         const { error } = await window.supabaseClient
             .from('meniu')
-            .insert([{ nume, descriere, pret, imagine_url }]);
+            .insert([{ nume, descriere, pret, categorie, imagine_url }]);
 
         if (error) {
             console.error("Eroare la adăugare:", error);
@@ -133,17 +279,49 @@ if (form) {
                 imagePreview.style.display = 'none';
                 previewPlaceholder.style.display = 'block';
             }
-            loadAdminProducts(); // reîncărcăm lista
+            loadAdminProducts();
         }
-        
+
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-save"></i> Adaugă în Meniu';
     });
 }
 
-// Expunem funcția global pentru a fi apelată de onclick
-window.deleteProduct = async (id) => {
-    if (!confirm("Sigur doriți să ștergeți acest produs?")) return;
+// ==========================================
+// ȘTERGERE PRODUS — Modal Confirmare
+// ==========================================
+
+let productToDeleteId = null;
+
+window.deleteProduct = (id) => {
+    productToDeleteId = id;
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+};
+
+window.closeDeleteModal = () => {
+    productToDeleteId = null;
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.confirmDeleteProduct = async () => {
+    if (!productToDeleteId) return;
+
+    const id = productToDeleteId;
+    window.closeDeleteModal();
+
+    // Verificăm autentificarea
+    const { authenticated } = await window.getAuthSession();
+    if (!authenticated) {
+        alert('Sesiunea a expirat. Te rugăm să te autentifici din nou.');
+        window.location.reload();
+        return;
+    }
 
     const { error } = await window.supabaseClient
         .from('meniu')
@@ -158,62 +336,112 @@ window.deleteProduct = async (id) => {
     }
 };
 
-let ADMIN_PWD_HASH = ""; // Va fi încărcată dinamic
+// ==========================================
+// INIȚIALIZARE PAGINĂ
+// ==========================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Preia parola din Supabase la încărcare
-    if (typeof window.getAdminPasswordHash === 'function') {
-        window.getAdminPasswordHash().then(hash => {
-            ADMIN_PWD_HASH = hash;
-            // Verificăm dacă e deja logat în sesiune (după ce am preluat parola)
-            if (sessionStorage.getItem('admin_logged_in') === 'true') {
-                const overlay = document.getElementById('login-overlay');
-                if (overlay) overlay.style.display = 'none';
-                if (document.getElementById('admin-products-container')) {
-                    loadAdminProducts();
-                }
-            }
-        });
+document.addEventListener('DOMContentLoaded', async () => {
+    const { authenticated } = await window.getAuthSession();
+    const pinVerified = sessionStorage.getItem('admin_pin_verified') === 'true';
+
+    const credentialsFields = document.getElementById('credentials-fields');
+    const loginSubtitle = document.getElementById('login-subtitle');
+    const pinInput = document.getElementById('admin-pin');
+
+    if (authenticated && pinVerified) {
+        document.getElementById('login-overlay').style.display = 'none';
+        loadAdminProducts();
+    } else if (authenticated && !pinVerified) {
+        // Are sesiune Supabase (logat la recepție) -> cere DOAR PIN-ul
+        document.getElementById('login-overlay').style.display = 'flex';
+        if (credentialsFields) credentialsFields.style.display = 'none';
+        if (loginSubtitle) loginSubtitle.innerText = 'Introduceți PIN-ul secret de Admin pentru a debloca.';
+        if (pinInput) pinInput.focus();
+    } else {
+        // Nu are nicio sesiune -> cere Email + Parolă + PIN
+        document.getElementById('login-overlay').style.display = 'flex';
+        if (credentialsFields) credentialsFields.style.display = 'block';
+        if (loginSubtitle) loginSubtitle.innerText = 'Autentificați-vă cu Email, Parolă și PIN Admin.';
     }
 
-    // Permitem login și cu tasta Enter
+    // Enter pe câmpuri de login
     const pwdInput = document.getElementById('admin-password');
+    const emailInput = document.getElementById('admin-email');
     if (pwdInput) {
         pwdInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                window.checkAdminPassword();
-            }
+            if (e.key === 'Enter') window.handleAdminLogin();
         });
     }
-    
-    // Logica pentru schimbarea parolei
+    if (emailInput) {
+        emailInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') window.handleAdminLogin();
+        });
+    }
+    if (pinInput) {
+        pinInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') window.handleAdminLogin();
+        });
+    }
+
+    // Buton Înapoi la Recepție — blochează PIN-ul Admin și se întoarce la Recepție fără de-autentificare
+    const backBtn = document.getElementById('btn-back-to-owner') || document.getElementById('btn-logout');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('admin_pin_verified');
+            window.location.href = 'owner.html';
+        });
+    }
+
+    // Tab-uri de filtrare Restaurant vs Bar în Admin
+    const adminTabRestaurant = document.getElementById('admin-tab-restaurant');
+    const adminTabBar = document.getElementById('admin-tab-bar');
+
+    function setAdminTab(tab) {
+        adminCurrentTab = tab;
+        if (tab === 'bar') {
+            adminTabBar.style.background = '#fff';
+            adminTabBar.style.color = '#333';
+            adminTabRestaurant.style.background = 'transparent';
+            adminTabRestaurant.style.color = '#fff';
+        } else {
+            adminTabRestaurant.style.background = '#fff';
+            adminTabRestaurant.style.color = '#333';
+            adminTabBar.style.background = 'transparent';
+            adminTabBar.style.color = '#fff';
+        }
+        renderAdminProducts();
+    }
+
+    if (adminTabRestaurant && adminTabBar) {
+        adminTabRestaurant.addEventListener('click', () => setAdminTab('restaurant'));
+        adminTabBar.addEventListener('click', () => setAdminTab('bar'));
+    }
+
+    // Logica pentru schimbarea parolei (cu Supabase Auth)
     const changePwdForm = document.getElementById('change-password-form');
     if (changePwdForm) {
         changePwdForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const oldPwd = document.getElementById('old-pwd').value;
             const newPwd = document.getElementById('new-pwd').value;
+            const confirmPwd = document.getElementById('confirm-pwd').value;
             const msg = document.getElementById('pwd-change-msg');
-            
-            // Hash old password
-            const encoder = new TextEncoder();
-            const oldHashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(oldPwd));
-            const oldHashHex = Array.from(new Uint8Array(oldHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            if (oldHashHex !== ADMIN_PWD_HASH) {
+
+            if (newPwd !== confirmPwd) {
                 msg.style.display = 'block';
                 msg.style.color = '#e74c3c';
-                msg.innerText = "Parola veche este incorectă!";
+                msg.innerText = "Parolele nu corespund!";
                 return;
             }
-            
-            // Hash new password
-            const newHashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(newPwd));
-            const newHashHex = Array.from(new Uint8Array(newHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            const success = await window.updateAdminPasswordHash(newHashHex);
-            if (success) {
-                ADMIN_PWD_HASH = newHashHex;
+
+            if (newPwd.length < 6) {
+                msg.style.display = 'block';
+                msg.style.color = '#e74c3c';
+                msg.innerText = "Parola trebuie să aibă minim 6 caractere.";
+                return;
+            }
+
+            const result = await window.changeAdminPassword(newPwd);
+            if (result.success) {
                 msg.style.display = 'block';
                 msg.style.color = '#2ecc71';
                 msg.innerText = "Parola a fost schimbată cu succes!";
@@ -222,36 +450,46 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 msg.style.display = 'block';
                 msg.style.color = '#e74c3c';
-                msg.innerText = "Eroare la actualizarea parolei în baza de date.";
+                msg.innerText = "Eroare: " + (result.error || "Nu s-a putut schimba parola.");
+            }
+        });
+    }
+
+    // Logica pentru schimbarea PIN-ului Admin
+    const changePinForm = document.getElementById('change-pin-form');
+    if (changePinForm) {
+        changePinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPin = document.getElementById('new-pin').value;
+            const confirmPin = document.getElementById('confirm-pin').value;
+            const msg = document.getElementById('pin-change-msg');
+
+            if (newPin !== confirmPin) {
+                msg.style.display = 'block';
+                msg.style.color = '#e74c3c';
+                msg.innerText = "PIN-urile nu corespund!";
+                return;
+            }
+
+            if (newPin.length < 4) {
+                msg.style.display = 'block';
+                msg.style.color = '#e74c3c';
+                msg.innerText = "PIN-ul trebuie să aibă minim 4 caractere.";
+                return;
+            }
+
+            const success = await window.updateAdminPin(newPin);
+            if (success) {
+                msg.style.display = 'block';
+                msg.style.color = '#2ecc71';
+                msg.innerText = "PIN-ul Admin a fost schimbat cu succes!";
+                changePinForm.reset();
+                setTimeout(() => msg.style.display = 'none', 3000);
+            } else {
+                msg.style.display = 'block';
+                msg.style.color = '#e74c3c';
+                msg.innerText = "Eroare la salvarea PIN-ului.";
             }
         });
     }
 });
-
-window.checkAdminPassword = async function() {
-    const pwd = document.getElementById('admin-password').value;
-    const err = document.getElementById('login-error');
-    
-    // Hash-uim parola introdusă pentru a o compara în mod securizat
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pwd);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    if (hashHex === ADMIN_PWD_HASH) {
-        sessionStorage.setItem('admin_logged_in', 'true');
-        document.getElementById('login-overlay').style.display = 'none';
-        if (document.getElementById('admin-products-container')) {
-            loadAdminProducts();
-        }
-    } else {
-        err.style.display = 'block';
-    }
-};
-
-window.logoutAdmin = function() {
-    // Ștergem sesiunea
-    sessionStorage.removeItem('admin_logged_in');
-    // Redirecționăm către panoul recepției (owner)
-    window.location.href = 'owner.html';
-};
