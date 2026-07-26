@@ -219,8 +219,16 @@ function renderProducts() {
     let renderedCount = 0;
 
     produse.forEach(p => {
-        const catStr = ((p.categorie || '') + ' ' + (p.nume || '')).toLowerCase();
-        const isBautura = catStr.includes('bautur') || catStr.includes('băutur') || catStr.includes('suc') || catStr.includes('apa') || catStr.includes('apă') || catStr.includes('coca') || catStr.includes('cola') || catStr.includes('pepsi') || catStr.includes('fanta') || catStr.includes('sprite') || catStr.includes('cafea') || catStr.includes('bere') || catStr.includes('vin');
+        const pCat = (p.categorie || '').toLowerCase().trim();
+        let isBautura = false;
+        if (pCat === 'bar' || pCat === 'bautura' || pCat === 'bauturi') {
+            isBautura = true;
+        } else if (pCat === 'restaurant' || pCat === 'mancare') {
+            isBautura = false;
+        } else {
+            const nameAndCat = ((p.nume || '') + ' ' + (p.categorie || '')).toLowerCase();
+            isBautura = /\b(bautura|bauturi|băutură|băuturi|suc|apa|apă|coca|cola|fanta|sprite|pepsi|cafea|bere|vin|fresh|limonada|cocktail|shot)\b/i.test(nameAndCat);
+        }
 
         if (searchQuery) {
             if (!p.nume.toLowerCase().includes(searchQuery) && !(p.descriere || '').toLowerCase().includes(searchQuery)) return;
