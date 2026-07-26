@@ -569,3 +569,65 @@ function showOrderStatusNotification(message, iconClass, color) {
         setTimeout(() => notif.remove(), 500);
     }, 6000);
 }
+
+// ==========================================
+// IN-APP QR SCANNER
+// ==========================================
+
+let html5QrcodeScanner = null;
+
+window.startQRScanner = function() {
+    const scannerModal = document.getElementById('qr-scanner-modal');
+    if (scannerModal) {
+        scannerModal.classList.remove('hidden');
+    }
+
+    if (!html5QrcodeScanner) {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader",
+            { fps: 10, qrbox: {width: 250, height: 250}, aspectRatio: 1.0 },
+            /* verbose= */ false
+        );
+    }
+
+    html5QrcodeScanner.render((decodedText, decodedResult) => {
+        // on success
+        try {
+            const url = new URL(decodedText);
+            const masaParam = url.searchParams.get('masa');
+            if (masaParam) {
+                const masaClean = String(masaParam).replace(/[^0-9a-zA-Z]/g, '').substring(0, 10);
+                numarMasa = masaClean;
+                
+                // Update UI
+                const masaIdElem = document.getElementById('masa-id');
+                if (masaIdElem) {
+                    masaIdElem.innerText = escapeHTML(numarMasa);
+                }
+
+                // Close Scanner
+                window.stopQRScanner();
+
+                showOrderStatusNotification("Masa scanată cu succes! Poți trimite comanda.", "fas fa-check", "#2ecc71");
+            } else {
+                alert("Codul QR scanat nu este valid pentru aplicația noastră.");
+            }
+        } catch (e) {
+            alert("Cod QR invalid. Te rugăm scanează codul de pe masă.");
+        }
+    }, (errorMessage) => {
+        // background parse error, ignore
+    });
+};
+
+window.stopQRScanner = function() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(error => {
+            console.error("Failed to clear scanner. ", error);
+        });
+    }
+    const scannerModal = document.getElementById('qr-scanner-modal');
+    if (scannerModal) {
+        scannerModal.classList.add('hidden');
+    }
+};

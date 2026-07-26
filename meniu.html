@@ -168,10 +168,24 @@
             <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px;">
                 Buna! pentru a inainta o comanda va rugam sa scanati QR codul de pe masa dumneavoastra!
             </p>
-            <button onclick="document.getElementById('qr-error-modal').classList.add('hidden');"
+            <button onclick="document.getElementById('qr-error-modal').classList.add('hidden'); if(typeof window.startQRScanner === 'function') window.startQRScanner();"
                 class="modern-form-btn"
                 style="width: 100%; padding: 12px; background: #f5b041; color: #1e293b; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
-                Am înțeles
+                <i class="fas fa-camera"></i> Scanează Acum
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal QR Scanner -->
+    <div id="qr-scanner-modal" class="modal hidden" style="z-index: 100000; background: rgba(0,0,0,0.9);">
+        <div class="glass-panel"
+            style="max-width: 500px; width: 100%; height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+            <h2 style="color: #f5b041; margin-bottom: 20px;">Scanați Codul QR</h2>
+            <div id="qr-reader" style="width: 100%; max-width: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
+            <button onclick="if(typeof window.stopQRScanner === 'function') window.stopQRScanner();"
+                class="modern-form-btn"
+                style="margin-top: 30px; width: 80%; max-width: 300px; padding: 15px; background: #e74c3c; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
+                Închide Scannerul
             </button>
         </div>
     </div>
@@ -181,6 +195,7 @@
         style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
     </div>
 
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/security.js"></script>
     <script type="module" src="js/supabase.js"></script>
