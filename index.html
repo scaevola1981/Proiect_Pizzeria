@@ -27,7 +27,7 @@
 
     <div class="table-info-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
         <div id="table-info">Masa: <span id="masa-id" style="font-weight: 800;">Scanați QR</span></div>
-        <button id="client-install-app-btn" class="ios-button-banana" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 8px 14px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border: 1px solid #60a5fa;">
+        <button id="client-install-app-btn" class="ios-button-banana" onclick="if(typeof window.openPwaInstallModal==='function'){window.openPwaInstallModal();}else{const m=document.getElementById('pwa-install-modal');if(m)m.classList.remove('hidden');}" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 8px 14px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border: 1px solid #60a5fa; cursor: pointer;">
             <i class="fas fa-download"></i> Descarcă Aplicația
         </button>
     </div>

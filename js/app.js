@@ -74,7 +74,6 @@ if (document.getElementById('produse-container')) {
     }
 
     // Logică buton Instalare Aplicație (PWA) adaptată pentru iOS și Android (Google Chrome)
-    let deferredPromptClient = null;
     const clientInstallBtn = document.getElementById('client-install-app-btn');
 
     // Verificăm dacă aplicația rulează deja ca PWA (Standalone)
@@ -85,32 +84,40 @@ if (document.getElementById('produse-container')) {
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
-        deferredPromptClient = e;
+        window.deferredPromptClient = e;
         if (clientInstallBtn && !isStandalone) {
             clientInstallBtn.style.display = 'inline-flex';
         }
     });
 
-    if (clientInstallBtn) {
-        clientInstallBtn.addEventListener('click', async () => {
-            // Solicităm automat permisiunile pentru notificări și sunete
-            await window.requestNotificationPermissionAndSetup();
+    window.openPwaInstallModal = async function () {
+        // Solicităm automat permisiunile pentru notificări și sunete
+        if (typeof window.requestNotificationPermissionAndSetup === 'function') {
+            window.requestNotificationPermissionAndSetup();
+        }
 
-            if (deferredPromptClient) {
-                // Pentru Google Chrome / Android: prompt nativ cu 1 click
-                deferredPromptClient.prompt();
-                const { outcome } = await deferredPromptClient.userChoice;
-                console.log("Status instalare Chrome:", outcome);
-                if (outcome === 'accepted') {
-                    await window.requestNotificationPermissionAndSetup();
+        if (window.deferredPromptClient) {
+            // Pentru Google Chrome / Android: prompt nativ cu 1 click
+            window.deferredPromptClient.prompt();
+            const { outcome } = await window.deferredPromptClient.userChoice;
+            console.log("Status instalare Chrome:", outcome);
+            if (outcome === 'accepted') {
+                if (typeof window.requestNotificationPermissionAndSetup === 'function') {
+                    window.requestNotificationPermissionAndSetup();
                 }
-                deferredPromptClient = null;
-            } else {
-                // Pentru iOS Safari / browsere fără prompt automat: modalul cu instrucțiuni
-                const modal = document.getElementById('pwa-install-modal');
-                if (modal) modal.classList.remove('hidden');
             }
-        });
+            window.deferredPromptClient = null;
+        } else {
+            // Pentru iOS Safari / Chrome iOS / browsere fără prompt automat: modalul cu instrucțiuni
+            const modal = document.getElementById('pwa-install-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+    };
+
+    if (clientInstallBtn) {
+        clientInstallBtn.addEventListener('click', window.openPwaInstallModal);
     }
 }
 
