@@ -92,22 +92,35 @@ if (document.getElementById('produse-container')) {
         }
     });
 
+    window.requestCameraPermissionAndSetup = async function() {
+        try {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                // We got permission! Now stop the camera immediately so it doesn't stay on.
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                console.log("Permisiune cameră obținută cu succes pentru utilizare viitoare.");
+            }
+        } catch (err) {
+            console.warn("Utilizatorul a refuzat permisiunea pentru cameră sau aceasta nu este disponibilă:", err);
+        }
+    };
+
     window.openPwaInstallModal = async function () {
-        // Solicităm automat permisiunile pentru notificări și sunete
+        // Solicităm automat permisiunile pentru notificări
         if (typeof window.requestNotificationPermissionAndSetup === 'function') {
             window.requestNotificationPermissionAndSetup();
         }
+        
+        // Solicităm automat permisiunea pentru cameră (pentru a fluidiza scanările viitoare)
+        await window.requestCameraPermissionAndSetup();
 
         if (window.deferredPromptClient) {
             // Pentru Google Chrome / Android: prompt nativ cu 1 click
             window.deferredPromptClient.prompt();
             const { outcome } = await window.deferredPromptClient.userChoice;
             console.log("Status instalare Chrome:", outcome);
-            if (outcome === 'accepted') {
-                if (typeof window.requestNotificationPermissionAndSetup === 'function') {
-                    window.requestNotificationPermissionAndSetup();
-                }
-            }
             window.deferredPromptClient = null;
         } else {
             // Pentru iOS Safari / Chrome iOS / browsere fără prompt automat: modalul cu instrucțiuni
