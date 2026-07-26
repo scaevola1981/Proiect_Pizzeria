@@ -171,21 +171,34 @@ async function loadProductsFromSupabase() {
 
     if (container) container.innerHTML = '<p style="text-align:center; width:100%;">Se încarcă meniul...</p>';
 
+    // Așteptăm ca Supabase Client să se inițializeze complet (evită race condition)
+    let attempts = 0;
+    while (!window.supabaseClient && attempts < 30) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+
     if (!window.supabaseClient) {
-        if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare: Clientul bazei de date nu este inițializat.</p>';
+        console.error("Supabase client unavailable.");
+        if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la conexiunea cu baza de date. Reîncărcați pagina.</p>';
         return;
     }
 
-    const { data, error } = await window.supabaseClient.from('meniu').select('*');
+    try {
+        const { data, error } = await window.supabaseClient.from('meniu').select('*');
 
-    if (error) {
-        console.error("Eroare la preluarea meniului din Supabase:", error);
+        if (error) {
+            console.error("Eroare la preluarea meniului din Supabase:", error);
+            if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la încărcarea meniului. Încercați din nou.</p>';
+            return;
+        }
+
+        produse = data || [];
+        renderProducts();
+    } catch (err) {
+        console.error("Eroare neașteptată la încărcarea meniului:", err);
         if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la încărcarea meniului.</p>';
-        return;
     }
-
-    produse = data || [];
-    renderProducts();
 }
 
 function getDefaultProductImage() {

@@ -14,7 +14,8 @@
     <meta name="theme-color" content="#0f172a">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        integrity="sha512-iecdLmaskl0HPNiekfRgJIf+X5ycReBmeByPmIa09Z3S24z0H8w23+bUEuKd5ICxGBe2hPkdWus9VqAeL6cBA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+        integrity="sha512-iecdLmaskl0HPNiekfRgJIf+X5ycReBmeByPmIa09Z3S24z0H8w23+bUEuKd5ICxGBe2hPkdWus9VqAeL6cBA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 
 <body>
@@ -25,11 +26,8 @@
         </div>
     </header>
 
-    <div class="table-info-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <div class="table-info-bar">
         <div id="table-info">Masa: <span id="masa-id" style="font-weight: 800;">Scanați QR</span></div>
-        <button id="client-install-app-btn" class="ios-button-banana" onclick="if(typeof window.openPwaInstallModal==='function'){window.openPwaInstallModal();}else{const m=document.getElementById('pwa-install-modal');if(m)m.classList.remove('hidden');}" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 8px 14px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border: 1px solid #60a5fa; cursor: pointer;">
-            <i class="fas fa-download"></i> Descarcă Aplicația
-        </button>
     </div>
 
     <div class="content-wrapper">
@@ -37,12 +35,19 @@
             <!-- Search & Tabs -->
             <div class="menu-controls" style="margin-bottom: 25px;">
                 <div class="search-bar" style="margin-bottom: 15px; position: relative;">
-                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666;"></i>
-                    <input type="text" id="search-input" placeholder="Caută" style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; box-sizing: border-box;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666;"></i>
+                    <input type="text" id="search-input" placeholder="Caută"
+                        style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; box-sizing: border-box;">
                 </div>
-                <div class="menu-tabs" style="display: flex; background: rgba(255, 255, 255, 0.15); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.3);">
-                    <button id="tab-bar" class="tab-btn" style="flex: 1; padding: 12px; border: none; background: transparent; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s; border-right: 1px solid rgba(255, 255, 255, 0.2);">Meniu Bar</button>
-                    <button id="tab-restaurant" class="tab-btn active" style="flex: 1; padding: 12px; border: none; background: #fff; color: #333; font-weight: bold; cursor: pointer; transition: all 0.3s;">Meniu Restaurant</button>
+                <div class="menu-tabs"
+                    style="display: flex; background: rgba(255, 255, 255, 0.15); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <button id="tab-bar" class="tab-btn"
+                        style="flex: 1; padding: 12px; border: none; background: transparent; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s; border-right: 1px solid rgba(255, 255, 255, 0.2);">Meniu
+                        Bar</button>
+                    <button id="tab-restaurant" class="tab-btn active"
+                        style="flex: 1; padding: 12px; border: none; background: #fff; color: #333; font-weight: bold; cursor: pointer; transition: all 0.3s;">Meniu
+                        Restaurant</button>
                 </div>
             </div>
 
@@ -65,41 +70,20 @@
 
     <!-- Modal Personalizare Produs -->
     <div id="customize-modal" class="modal hidden">
-        <div style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+        <div
+            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
             <h2 id="customize-product-name" style="color: #f5b041; margin-bottom: 10px;">Personalizează</h2>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vreo alergie? Scrie mai
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vreo
+                alergie? Scrie mai
                 jos:</p>
             <textarea id="customize-notes" rows="3" placeholder="ex: fără ceapă, extra sos, alergic la alune..."
                 class="modern-input" style="margin-bottom: 20px; resize: none;" maxlength="200"></textarea>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-secondary" onclick="window.closeCustomizeModal()" style="border-radius: 10px; padding: 12px;">Anulează</button>
-                <button onclick="window.confirmCustomizeAndAdd()" style="border-radius: 10px; padding: 12px; font-weight: bold;">Alegerea mea</button>
+                <button class="btn-secondary" onclick="window.closeCustomizeModal()"
+                    style="border-radius: 10px; padding: 12px;">Anulează</button>
+                <button onclick="window.confirmCustomizeAndAdd()"
+                    style="border-radius: 10px; padding: 12px; font-weight: bold;">Alegerea mea</button>
             </div>
-        </div>
-    <!-- Modal Instrucțiuni Instalare Aplicație -->
-    <div id="pwa-install-modal" class="modal hidden" style="z-index: 99999;">
-        <div class="glass-panel" style="max-width: 450px; width: 90%; text-align: center; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); background: rgba(15, 23, 42, 0.95); padding: 30px; border-radius: 20px;">
-            <h2 style="color: #f5b041; margin-bottom: 15px; font-size: 1.4rem;">
-                <i class="fas fa-download"></i> Instalare Aplicație Bella Roma
-            </h2>
-            <p style="color: #cbd5e1; font-size: 1rem; margin-bottom: 20px; line-height: 1.5;">
-                Pentru o experiență mai rapidă și notificări instantanee pe ecranul blocat:
-            </p>
-            <div style="background: rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: left; margin-bottom: 25px; color: #fff; font-size: 0.95rem; line-height: 1.6;">
-                <div style="margin-bottom: 6px;"><strong style="color: #4ade80;"><i class="fab fa-chrome"></i> Chrome pe iPhone / iPad (iOS):</strong></div>
-                1. Apasă pe iconița <strong>Partajare</strong> <i class="fas fa-arrow-up-from-bracket" style="color: #60a5fa;"></i> din bara dreapta-sus din Chrome.<br>
-                2. Selectează <strong>Adaugă pe ecranul principal</strong> <i class="far fa-plus-square" style="color: #4ade80;"></i>.
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 10px 0;">
-                <div style="margin-bottom: 6px;"><strong style="color: #38bdf8;"><i class="fab fa-safari"></i> Safari pe iPhone / iPad (iOS):</strong></div>
-                1. Apasă pe <strong>Partajare</strong> <i class="fas fa-share-square" style="color: #38bdf8;"></i> în josul ecranului.<br>
-                2. Alege <strong>Adaugă pe ecranul principal</strong> <i class="far fa-plus-square" style="color: #4ade80;"></i>.
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 10px 0;">
-                <div style="margin-bottom: 6px;"><strong style="color: #f5b041;"><i class="fab fa-android"></i> Android / PC (Chrome):</strong></div>
-                Apasă pe cele 3 puncte <i class="fas fa-ellipsis-v"></i> sus ➔ <strong>Instalează aplicația</strong>.
-            </div>
-            <button onclick="document.getElementById('pwa-install-modal').classList.add('hidden'); if(typeof window.requestNotificationPermissionAndSetup === 'function') window.requestNotificationPermissionAndSetup();" class="modern-form-btn" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); font-weight: bold; border-radius: 10px; cursor: pointer;">
-                <i class="fas fa-bell"></i> Am înțeles & Permite Notificările
-            </button>
         </div>
     </div>
 
