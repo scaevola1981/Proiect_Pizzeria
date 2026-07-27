@@ -751,8 +751,13 @@ async function checkStoreStatus() {
             });
         }
         evaluateStoreStatus();
+        const appLoader = document.getElementById('app-loading');
+        if (appLoader) appLoader.style.opacity = '0';
+        setTimeout(() => { if (appLoader) appLoader.style.display = 'none'; }, 300);
     } catch (e) {
         console.error("Eroare la verificarea statusului magazinului:", e);
+        const appLoader = document.getElementById('app-loading');
+        if (appLoader) appLoader.style.display = 'none';
     }
 }
 
