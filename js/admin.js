@@ -346,11 +346,12 @@ if (form) {
                 imagePreview.style.display = 'none';
                 previewPlaceholder.style.display = 'block';
             }
-            if (document.getElementById('has-variants').checked) {
-                document.getElementById('has-variants').checked = false;
-                window.toggleVariantsUI();
-                document.getElementById('variants-list').innerHTML = '';
-            }
+            
+            // Asigurăm resetarea UI-ului pentru variante (form.reset() debifează checkbox-ul fără să declanșeze onchange)
+            document.getElementById('has-variants').checked = false;
+            window.toggleVariantsUI();
+            document.getElementById('variants-list').innerHTML = '';
+
             loadAdminProducts();
         }
 
