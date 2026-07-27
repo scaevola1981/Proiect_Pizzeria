@@ -138,12 +138,19 @@ function renderAdminProducts() {
         div.style.background = 'rgba(255, 255, 255, 0.1)';
         div.style.border = '1px solid rgba(255, 255, 255, 0.2)';
 
+        let priceHTML = `<h4 style="color: #f5b041; margin-bottom: 15px;">${escapeHTML(String(p.pret))} Lei <small style="font-size:0.8rem; opacity:0.7;">(${isBautura ? 'Bar' : 'Restaurant'})</small></h4>`;
+        
+        if (p.variante && p.variante.length > 0) {
+            let variantsStr = p.variante.map(v => `${escapeHTML(v.nume)}: ${escapeHTML(String(v.pret))} Lei`).join('<br>');
+            priceHTML = `<h4 style="color: #f5b041; margin-bottom: 5px; font-size: 0.9rem;">Variante:</h4><p style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 15px;">${variantsStr}</p>`;
+        }
+
         // XSS Protection — escapăm toate datele din DB
         div.innerHTML = `
             <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(p.nume)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
             <h3 style="color: #fff;">${escapeHTML(p.nume)}</h3>
-            <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px;">${escapeHTML(p.descriere || '-')}</p>
-            <h4 style="color: #f5b041; margin-bottom: 15px;">${escapeHTML(String(p.pret))} Lei <small style="font-size:0.8rem; opacity:0.7;">(${isBautura ? 'Bar' : 'Restaurant'})</small></h4>
+            <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px; font-size: 0.9rem;">${escapeHTML(p.descriere || '-')}</p>
+            ${priceHTML}
             <button onclick="window.deleteProduct(${parseInt(p.id)})" style="margin-top:auto; background:#e74c3c; color:white;"><i class="fas fa-trash"></i> Șterge Produs</button>
         `;
         container.appendChild(div);
@@ -158,6 +165,40 @@ function renderAdminProducts() {
 // ==========================================
 // FORMULAR ADĂUGARE PRODUS
 // ==========================================
+
+window.toggleVariantsUI = function() {
+    const hasVariants = document.getElementById('has-variants').checked;
+    const pretContainer = document.getElementById('pret-container');
+    const pretInput = document.getElementById('pret');
+    const variantsContainer = document.getElementById('variants-container');
+
+    if (hasVariants) {
+        pretContainer.style.display = 'none';
+        pretInput.removeAttribute('required');
+        variantsContainer.style.display = 'block';
+        if (document.getElementById('variants-list').children.length === 0) {
+            window.addVariantRow();
+        }
+    } else {
+        pretContainer.style.display = 'block';
+        pretInput.setAttribute('required', 'true');
+        variantsContainer.style.display = 'none';
+    }
+};
+
+window.addVariantRow = function() {
+    const list = document.getElementById('variants-list');
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.gap = '10px';
+    row.className = 'variant-row';
+    row.innerHTML = `
+        <input type="text" class="modern-input variant-name" placeholder="ex: Mică (26cm)" required style="flex: 2; padding: 8px;">
+        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="flex: 1; padding: 8px;">
+        <button type="button" onclick="this.parentElement.remove()" class="btn-secondary" style="padding: 8px; border-radius: 8px;"><i class="fas fa-trash"></i></button>
+    `;
+    list.appendChild(row);
+};
 
 const form = document.getElementById('add-product-form');
 const imageInput = document.getElementById('imagine_upload');
@@ -209,9 +250,39 @@ if (form) {
         const categorieSelect = document.getElementById('categorie');
         const categorie = categorieSelect ? categorieSelect.value : 'restaurant';
         const fileInput = document.getElementById('imagine_upload');
+        const hasVariants = document.getElementById('has-variants').checked;
 
-        if (!nume || !pret) {
-            alert("Completați numele și prețul!");
+        let pret = 0;
+        let variante = [];
+
+        if (hasVariants) {
+            const rows = document.querySelectorAll('.variant-row');
+            if (rows.length === 0) {
+                alert("Adăugați cel puțin o mărime/variantă!");
+                return;
+            }
+            rows.forEach(row => {
+                const vName = row.querySelector('.variant-name').value.trim();
+                const vPrice = parseFloat(row.querySelector('.variant-price').value);
+                if (vName && vPrice > 0) {
+                    variante.push({ nume: vName, pret: vPrice });
+                }
+            });
+            if (variante.length === 0) {
+                alert("Completați corect numele și prețul pentru variante!");
+                return;
+            }
+            pret = variante[0].pret; // Prețul de bază e cel al primei variante
+        } else {
+            pret = parseFloat(document.getElementById('pret').value);
+            if (!pret || pret <= 0 || pret > 9999) {
+                alert("Prețul trebuie să fie între 1 și 9999 Lei.");
+                return;
+            }
+        }
+
+        if (!nume) {
+            alert("Completați numele!");
             return;
         }
 
@@ -222,10 +293,6 @@ if (form) {
         }
         if (descriere.length > 500) {
             alert("Descrierea nu poate depăși 500 de caractere.");
-            return;
-        }
-        if (pret <= 0 || pret > 9999) {
-            alert("Prețul trebuie să fie între 1 și 9999 Lei.");
             return;
         }
 
@@ -268,7 +335,7 @@ if (form) {
 
         const { error } = await window.supabaseClient
             .from('meniu')
-            .insert([{ nume, descriere, pret, categorie, imagine_url }]);
+            .insert([{ nume, descriere, pret, categorie, imagine_url, variante }]);
 
         if (error) {
             console.error("Eroare la adăugare:", error);
@@ -279,6 +346,11 @@ if (form) {
                 imagePreview.src = '';
                 imagePreview.style.display = 'none';
                 previewPlaceholder.style.display = 'block';
+            }
+            if (document.getElementById('has-variants').checked) {
+                document.getElementById('has-variants').checked = false;
+                window.toggleVariantsUI();
+                document.getElementById('variants-list').innerHTML = '';
             }
             loadAdminProducts();
         }

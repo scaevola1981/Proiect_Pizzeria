@@ -259,17 +259,25 @@ function renderProducts() {
         // XSS Protection — escapăm toate datele din DB
         const safeName = escapeHTML(p.nume);
         const safeDesc = escapeHTML(p.descriere || '');
-        const safePrice = escapeHTML(String(p.pret));
         const safeImage = escapeHTML(imageUrl);
+        
+        let priceDisplay = `${escapeHTML(String(p.pret))} Lei`;
+        let actionButton = `<button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea</button>`;
+
+        if (p.variante && p.variante.length > 0) {
+            const minPrice = Math.min(...p.variante.map(v => v.pret));
+            priceDisplay = `de la ${minPrice} Lei`;
+            actionButton = `<button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3; background: #3498db; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);" onclick="window.openVariantModal(${parseInt(p.id)})">Alege Mărime</button>`;
+        }
 
         div.innerHTML = `
             <img src="${safeImage}" alt="${safeName}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
             <h3>${safeName}</h3>
             <p>${safeDesc}</p>
-            <h4>${safePrice} Lei</h4>
+            <h4>${priceDisplay}</h4>
             <div style="display: flex; gap: 10px; margin-top: auto; padding-top: 15px;">
                 <button class="btn-customize" style="flex: 1;" onclick="window.openCustomizeModal(${parseInt(p.id)}, '${safeName.replace(/'/g, "\\'")}')" title="Personalizează"><i class="fas fa-edit"></i> ✏️</button>
-                <button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea</button>
+                ${actionButton}
             </div>
         `;
 
@@ -309,11 +317,64 @@ window.confirmCustomizeAndAdd = function () {
     window.closeCustomizeModal();
 };
 
-window.addToCart = function (productId, notes = '') {
+let currentVariantProductId = null;
+
+window.openVariantModal = function(productId) {
+    currentVariantProductId = productId;
     const product = produse.find(p => p.id === productId);
+    if (!product || !product.variante || product.variante.length === 0) return;
+
+    document.getElementById('variant-modal-title').innerText = "Mărime " + escapeHTML(product.nume);
+    
+    const optionsContainer = document.getElementById('variant-modal-options');
+    optionsContainer.innerHTML = '';
+    
+    product.variante.forEach((v, index) => {
+        optionsContainer.innerHTML += `
+            <label style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; align-items: center;">
+                    <input type="radio" name="variant-selection" value="${index}" ${index === 0 ? 'checked' : ''} style="margin-right: 10px; width: 18px; height: 18px;">
+                    <span style="color: white; font-weight: bold; font-size: 1.1rem;">${escapeHTML(v.nume)}</span>
+                </div>
+                <span style="color: #f5b041; font-weight: bold; font-size: 1.1rem;">${escapeHTML(String(v.pret))} Lei</span>
+            </label>
+        `;
+    });
+
+    document.getElementById('btn-confirm-variant').onclick = function() {
+        const selectedRadio = document.querySelector('input[name="variant-selection"]:checked');
+        if (selectedRadio) {
+            const variantIndex = parseInt(selectedRadio.value);
+            const variant = product.variante[variantIndex];
+            window.addToCart(productId, '', variant);
+            window.closeVariantModal();
+        }
+    };
+
+    document.getElementById('variant-modal').classList.remove('hidden');
+};
+
+window.closeVariantModal = function() {
+    document.getElementById('variant-modal').classList.add('hidden');
+    currentVariantProductId = null;
+};
+
+window.addToCart = function (productId, notes = '', variant = null) {
+    let product = produse.find(p => p.id === productId);
     if (!product) return;
 
-    const existingItem = cart.find(item => item.product.id === productId && item.notes === notes);
+    if (variant) {
+        // Clone object so we don't modify the global array
+        product = {
+            ...product,
+            nume: `${product.nume} (${variant.nume})`,
+            pret: variant.pret,
+            originalId: product.id
+        };
+    }
+
+    const checkId = variant ? product.originalId : productId;
+    const existingItem = cart.find(item => item.product.id === checkId && item.notes === notes && item.product.nume === product.nume);
 
     if (existingItem) {
         existingItem.quantity++;
@@ -372,7 +433,7 @@ function updateCartUI() {
     const allButtons = document.querySelectorAll('.btn-alegere');
     allButtons.forEach(btn => {
         const pId = parseInt(btn.getAttribute('data-product-id'));
-        if (cart.some(item => item.product.id === pId)) {
+        if (cart.some(item => (item.product.originalId || item.product.id) === pId)) {
             btn.classList.add('selected');
             btn.innerHTML = '✅ Selectat';
         } else {

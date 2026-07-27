@@ -73,12 +73,27 @@
                                 <option value="bar">🍹 Băutură (Bar)</option>
                             </select>
                         </div>
-                        <div style="flex: 1; min-width: 100px;">
+                        <div style="flex: 1; min-width: 100px;" id="pret-container">
                             <label for="pret"
                                 style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Preț (Lei)
                                 *</label>
                             <input type="number" id="pret" required min="1" max="9999" step="0.5" placeholder="ex: 35"
                                 class="modern-input">
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #f5b041; font-weight: bold;">
+                            <input type="checkbox" id="has-variants" onchange="window.toggleVariantsUI()" style="width: 18px; height: 18px;">
+                            Acest produs are mărimi/variante multiple (ex: Mică, Medie)
+                        </label>
+                        
+                        <div id="variants-container" style="display: none; margin-top: 15px;">
+                            <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 0;">Adăugați mărimile și prețurile. Prețul standard de sus va fi ignorat.</p>
+                            <div id="variants-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
+                                <!-- Variants will be added here dynamically -->
+                            </div>
+                            <button type="button" onclick="window.addVariantRow()" class="btn-secondary" style="font-size: 0.9rem; padding: 8px 15px;"><i class="fas fa-plus"></i> Adaugă Mărime</button>
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; flex: 1;">
