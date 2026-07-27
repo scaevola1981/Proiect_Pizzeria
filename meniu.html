@@ -190,6 +190,29 @@
         </div>
     </div>
 
+    <!-- Modal Restaurant Închis -->
+    <div id="store-closed-overlay" class="modal hidden" style="z-index: 999999; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+        <div style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;">
+            <i class="fas fa-store-alt-slash"></i>
+        </div>
+        <h1 style="color: #f5b041; font-size: 2.2rem; margin-bottom: 20px; font-family: 'Georgia', serif; letter-spacing: 2px;">BELLA ROMA<br><span style="font-size: 1.2rem; color: #e74c3c;">ÎNCHIS</span></h1>
+        <p id="store-closed-message" style="color: rgba(255,255,255,0.9); font-size: 1.2rem; line-height: 1.6; max-width: 400px; margin-bottom: 30px;">
+            Ne pare rău, programul restaurantului s-a încheiat. Nu putem prelua comenzi în acest moment. Vă așteptăm cu drag mâine!
+        </p>
+    </div>
+    <div id="qr-scanner-modal" class="modal hidden" style="z-index: 100000; background: rgba(0,0,0,0.9);">
+        <div class="glass-panel"
+            style="max-width: 500px; width: 100%; height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+            <h2 style="color: #f5b041; margin-bottom: 20px;">Scanați Codul QR</h2>
+            <div id="qr-reader" style="width: 100%; max-width: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
+            <button onclick="if(typeof window.stopQRScanner === 'function') window.stopQRScanner();"
+                class="modern-form-btn"
+                style="margin-top: 30px; width: 80%; max-width: 300px; padding: 15px; background: #e74c3c; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
+                Închide Scannerul
+            </button>
+        </div>
+    </div>
+
     <!-- Notificări Custom -->
     <div id="notification-container"
         style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">

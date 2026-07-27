@@ -66,6 +66,7 @@ window.handleAdminLogin = async function () {
             err.style.display = 'none';
             document.getElementById('login-overlay').style.display = 'none';
             loadAdminProducts();
+            window.loadStoreSchedule();
         } else {
             err.style.display = 'block';
             err.innerText = 'PIN Admin incorect. Încercați din nou (sau folosiți parola veche "bella").';
@@ -337,7 +338,54 @@ window.confirmDeleteProduct = async () => {
 };
 
 // ==========================================
-// INIȚIALIZARE PAGINĂ
+// PROGRAM DE FUNCȚIONARE (STORE SCHEDULE)
+// ==========================================
+
+window.loadStoreSchedule = async function() {
+    try {
+        const { data: openData } = await window.supabaseClient.from('setari').select('value').eq('key', 'store_open_time').maybeSingle();
+        const { data: closeData } = await window.supabaseClient.from('setari').select('value').eq('key', 'store_close_time').maybeSingle();
+        const { data: forceData } = await window.supabaseClient.from('setari').select('value').eq('key', 'store_force_close').maybeSingle();
+
+        if (openData && openData.value) document.getElementById('store-open-time').value = openData.value;
+        if (closeData && closeData.value) document.getElementById('store-close-time').value = closeData.value;
+        if (forceData && forceData.value === 'true') document.getElementById('store-force-close').checked = true;
+    } catch (e) {
+        console.error("Eroare la încărcarea programului", e);
+    }
+};
+
+window.saveStoreSchedule = async function() {
+    const btn = document.getElementById('btn-save-schedule');
+    const openTime = document.getElementById('store-open-time').value;
+    const closeTime = document.getElementById('store-close-time').value;
+    const forceClose = document.getElementById('store-force-close').checked ? 'true' : 'false';
+
+    if (!openTime || !closeTime) {
+        alert("Vă rugăm să setați ambele ore (Deschidere și Închidere).");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Se salvează...';
+
+    try {
+        await window.supabaseClient.from('setari').upsert({ key: 'store_open_time', value: openTime }, { onConflict: 'key' });
+        await window.supabaseClient.from('setari').upsert({ key: 'store_close_time', value: closeTime }, { onConflict: 'key' });
+        await window.supabaseClient.from('setari').upsert({ key: 'store_force_close', value: forceClose }, { onConflict: 'key' });
+
+        alert("Programul a fost salvat cu succes! Aplicațiile clienților vor respecta acum noul program.");
+    } catch (e) {
+        console.error("Eroare la salvarea programului", e);
+        alert("Eroare la salvare. Încercați din nou.");
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> Salvează Programul';
+};
+
+// ==========================================
+// PREVIZUALIZARE IMAGINE UPLOAD
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async () => {

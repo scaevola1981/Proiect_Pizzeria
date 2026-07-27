@@ -45,7 +45,7 @@
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; flex-direction: column;">
-                <h1 style="margin: 0;">Panou Recepție</h1>
+                <h1 style="margin: 0;color:#010d2d">Panou Recepție</h1>
                 <span
                     style="font-family: 'Georgia', serif; color: #010d2d; font-weight: bold; font-size: 1.1rem; letter-spacing: 2px; margin-top: 5px;">BELLA
                     ROMA - PUB &amp; PIZZERIE</span>
@@ -94,6 +94,12 @@
             <p style="color: rgba(255,255,255,0.7); margin-bottom: 15px; font-size: 0.95rem;">
                 <i class="fas fa-lock" style="color: #f5b041;"></i> Sunteți autentificat. Confirmați închiderea zilei.
             </p>
+            <div style="margin-bottom: 20px; text-align: left; background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(231, 76, 60, 0.3);">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff;">
+                    <input type="checkbox" id="cb-force-close" checked style="width: 20px; height: 20px;">
+                    <span style="font-size: 0.9rem;">Forțează oprirea aplicației pentru clienți (Blochează comenzi noi acum)</span>
+                </label>
+            </div>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn-secondary" onclick="window.closeEndDayModal()"
                     style="border-radius: 10px; padding: 12px;">Anulează</button>

@@ -390,11 +390,24 @@ window.confirmEndDay = async function () {
 
     window.closeEndDayModal();
 
+    // Setare Force Close dacă e bifat
+    const forceCloseCheckbox = document.getElementById('cb-force-close');
+    let wasForcedClosed = false;
+    if (forceCloseCheckbox && forceCloseCheckbox.checked) {
+        try {
+            await window.supabaseClient.from('setari').upsert({ key: 'store_force_close', value: 'true' }, { onConflict: 'key' });
+            wasForcedClosed = true;
+        } catch (e) {
+            console.error("Nu s-a putut forța închiderea:", e);
+        }
+    }
+
     if (errors === 0) {
         const totalRevenue = allOrders
             .filter(o => new Date(o.created_at) >= today)
             .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
-        alert(`✅ Ziua de muncă a fost închisă cu succes!\n\nTotal încasări: ${totalRevenue.toFixed(2)} Lei\nComenzi finalizate: ${activeToday.length}\n\nToate comenzile au fost mutate în Istoric.`);
+        let extraMsg = wasForcedClosed ? "\n\n⚠️ NOTĂ: Preluarea comenzilor a fost blocată (Forțare Închidere). Nu uitați să debifați din Admin mâine!" : "";
+        alert(`✅ Ziua de muncă a fost închisă cu succes!\n\nTotal încasări: ${totalRevenue.toFixed(2)} Lei\nComenzi finalizate: ${activeToday.length}\n\nToate comenzile au fost mutate în Istoric.${extraMsg}`);
     } else {
         alert(`Ziua a fost închisă, dar ${errors} comenzi au avut erori. Verificați istoricul.`);
     }

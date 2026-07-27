@@ -660,3 +660,115 @@ window.stopQRScanner = function() {
         scannerModal.classList.add('hidden');
     }
 };
+
+// ==========================================
+// STORE SCHEDULE & STATUS LOGIC
+// ==========================================
+
+let storeSettings = {
+    openTime: '10:00',
+    closeTime: '23:30',
+    forceClose: false
+};
+
+async function checkStoreStatus() {
+    if (!document.getElementById('produse-container')) return; // Doar pe meniu.html
+
+    try {
+        const { data, error } = await window.supabaseClient.from('setari').select('*');
+        if (data) {
+            data.forEach(item => {
+                if (item.key === 'store_open_time') storeSettings.openTime = item.value;
+                if (item.key === 'store_close_time') storeSettings.closeTime = item.value;
+                if (item.key === 'store_force_close') storeSettings.forceClose = (item.value === 'true');
+            });
+        }
+        evaluateStoreStatus();
+    } catch (e) {
+        console.error("Eroare la verificarea statusului magazinului:", e);
+    }
+}
+
+function evaluateStoreStatus() {
+    const overlay = document.getElementById('store-closed-overlay');
+    if (!overlay) return;
+
+    let isClosed = false;
+    const msgEl = document.getElementById('store-closed-message');
+
+    if (storeSettings.forceClose) {
+        isClosed = true;
+        if (msgEl) msgEl.innerText = "Ne pare rău, restaurantul s-a închis temporar. Nu putem prelua comenzi în acest moment.";
+    } else if (storeSettings.openTime && storeSettings.closeTime) {
+        const now = new Date();
+        const currentHours = now.getHours();
+        const currentMinutes = now.getMinutes();
+        const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+
+        const [openH, openM] = storeSettings.openTime.split(':').map(Number);
+        const openTimeInMinutes = openH * 60 + openM;
+
+        const [closeH, closeM] = storeSettings.closeTime.split(':').map(Number);
+        let closeTimeInMinutes = closeH * 60 + closeM;
+
+        // Dacă închiderea e a doua zi (ex: 02:00)
+        let isOvernight = closeTimeInMinutes < openTimeInMinutes;
+
+        if (isOvernight) {
+            // E deschis dacă (ora > open) SAU (ora < close)
+            if (!(currentTimeInMinutes >= openTimeInMinutes || currentTimeInMinutes < closeTimeInMinutes)) {
+                isClosed = true;
+            }
+        } else {
+            // Program normal în aceeași zi
+            if (currentTimeInMinutes < openTimeInMinutes || currentTimeInMinutes >= closeTimeInMinutes) {
+                isClosed = true;
+            }
+        }
+
+        if (isClosed && msgEl) {
+            msgEl.innerText = `Ne pare rău, programul restaurantului (${storeSettings.openTime} - ${storeSettings.closeTime}) s-a încheiat. Vă așteptăm cu drag mâine!`;
+        }
+    }
+
+    if (isClosed) {
+        overlay.classList.remove('hidden');
+        const cartBtn = document.getElementById('btn-trimite-comanda');
+        if (cartBtn) {
+            cartBtn.disabled = true;
+            cartBtn.style.opacity = '0.5';
+            cartBtn.innerText = "Restaurant Închis";
+        }
+    } else {
+        overlay.classList.add('hidden');
+        const cartBtn = document.getElementById('btn-trimite-comanda');
+        if (cartBtn) {
+            cartBtn.style.opacity = '1';
+            cartBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Trimite Comanda';
+        }
+        updateCartUI(); // Restore original checkout button state based on cart empty/not empty
+    }
+}
+
+function subscribeToStoreStatus() {
+    if (!window.supabaseClient) return;
+    
+    window.supabaseClient.channel('store-status-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'setari' }, payload => {
+            const row = payload.new;
+            if (row.key === 'store_open_time') storeSettings.openTime = row.value;
+            if (row.key === 'store_close_time') storeSettings.closeTime = row.value;
+            if (row.key === 'store_force_close') storeSettings.forceClose = (row.value === 'true');
+            evaluateStoreStatus();
+        })
+        .subscribe();
+}
+
+// Inițializare verificare program doar pe meniu.html
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('store-closed-overlay')) {
+        checkStoreStatus();
+        subscribeToStoreStatus();
+        setInterval(evaluateStoreStatus, 60000); // Verificăm la fiecare minut dacă s-a schimbat ora
+    }
+});
