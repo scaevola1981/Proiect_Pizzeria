@@ -201,9 +201,9 @@ window.addVariantRow = function() {
     topRow.style.display = 'flex';
     topRow.style.gap = '10px';
     topRow.innerHTML = `
-        <input type="text" class="modern-input variant-name" placeholder="Nume (ex: Mică)" required style="flex: 1; min-width: 100px; padding: 10px;">
-        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="width: 100px; padding: 10px;">
-        <button type="button" onclick="this.parentElement.parentElement.remove()" style="padding: 10px 12px; border-radius: 8px; background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 0.85rem;" title="Șterge Mărimea"><i class="fas fa-trash"></i></button>
+        <input type="text" class="modern-input variant-name" placeholder="Nume (ex: Mică)" required style="flex: 1; min-width: 0; padding: 10px;">
+        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="flex: 1; min-width: 0; padding: 10px;">
+        <button type="button" onclick="this.parentElement.parentElement.remove()" style="flex: 1; min-width: 0; padding: 10px; border-radius: 8px; background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 0.9rem;" title="Șterge Mărimea"><i class="fas fa-trash"></i> Șterge</button>
     `;
     
     const bottomRow = document.createElement('div');
