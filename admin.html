@@ -173,11 +173,12 @@
                 <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px; background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 10px; border: 1px solid rgba(231, 76, 60, 0.3);">
                     <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
                         <input type="checkbox" id="store-force-close" style="opacity: 0; width: 0; height: 0;">
-                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+                        <span class="slider round slider-force-close" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 34px;"></span>
                         <style>
-                            .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-                            input:checked + .slider { background-color: #e74c3c; }
-                            input:checked + .slider:before { transform: translateX(26px); }
+                            .slider-force-close { background-color: #2ecc71; }
+                            .slider-force-close:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+                            input:checked + .slider-force-close { background-color: #e74c3c !important; }
+                            input:checked + .slider-force-close:before { transform: translateX(26px); }
                         </style>
                     </label>
                     <div style="display: flex; flex-direction: column;">
