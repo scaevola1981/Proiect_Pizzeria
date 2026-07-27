@@ -193,9 +193,9 @@ window.addVariantRow = function() {
     row.style.gap = '10px';
     row.className = 'variant-row';
     row.innerHTML = `
-        <input type="text" class="modern-input variant-name" placeholder="Nume (ex: Mică)" required style="flex: 2; min-width: 100px; padding: 10px;">
-        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="flex: 1; min-width: 70px; padding: 10px;">
-        <button type="button" onclick="this.parentElement.remove()" style="padding: 10px 15px; border-radius: 8px; background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 0.9rem;" title="Șterge Mărimea">X</button>
+        <input type="text" class="modern-input variant-name" placeholder="Nume (ex: Mică)" required style="flex: 1; min-width: 100px; padding: 10px;">
+        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="flex: 1; min-width: 100px; padding: 10px;">
+        <button type="button" onclick="this.parentElement.remove()" style="padding: 10px 12px; border-radius: 8px; background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 0.85rem; white-space: nowrap;" title="Șterge Mărimea"><i class="fas fa-trash" style="margin-right: 5px;"></i>Șterge</button>
     `;
     list.appendChild(row);
 };
