@@ -193,9 +193,9 @@ window.addVariantRow = function() {
     row.style.gap = '10px';
     row.className = 'variant-row';
     row.innerHTML = `
-        <input type="text" class="modern-input variant-name" placeholder="ex: Mică (26cm)" required style="flex: 2; padding: 8px;">
-        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="flex: 1; padding: 8px;">
-        <button type="button" onclick="this.parentElement.remove()" class="btn-secondary" style="padding: 8px; border-radius: 8px;"><i class="fas fa-trash"></i></button>
+        <input type="text" class="modern-input variant-name" placeholder="ex: Mică (26cm)" required style="flex: 2; min-width: 120px; padding: 8px;">
+        <input type="number" class="modern-input variant-price" placeholder="Preț (Lei)" required min="1" step="0.5" style="flex: 1; min-width: 80px; padding: 8px;">
+        <button type="button" onclick="this.parentElement.remove()" class="btn-secondary" style="padding: 8px 15px; border-radius: 8px;"><i class="fas fa-trash"></i></button>
     `;
     list.appendChild(row);
 };
