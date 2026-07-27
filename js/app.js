@@ -831,5 +831,12 @@ document.addEventListener('DOMContentLoaded', () => {
         checkStoreStatus();
         subscribeToStoreStatus();
         setInterval(evaluateStoreStatus, 60000); // Verificăm la fiecare minut dacă s-a schimbat ora
+        
+        // Re-verificăm programul și statusul imediat ce aplicația revine în prim-plan (iOS/Android PWA)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                checkStoreStatus();
+            }
+        });
     }
 });
