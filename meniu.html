@@ -198,14 +198,16 @@
     </div>
 
     <!-- Modal Restaurant Închis -->
-    <div id="store-closed-overlay" class="modal hidden" style="z-index: 999999; background: rgba(15, 23, 42, 0.98); flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
-        <div style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;">
-            <i class="fas fa-store-alt-slash"></i>
+    <div id="store-closed-overlay" class="modal hidden" style="z-index: 999999; background: rgba(10, 15, 30, 1);">
+        <div class="glass-panel" style="max-width: 500px; width: 90%; text-align: center; border: 1px solid rgba(231, 76, 60, 0.3); box-shadow: 0 10px 40px rgba(231, 76, 60, 0.2); background: rgba(15, 23, 42, 0.98); padding: 40px 30px; border-radius: 20px;">
+            <div style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;">
+                <i class="fas fa-store-alt-slash"></i>
+            </div>
+            <h1 style="color: #f5b041; font-size: 2.2rem; margin-bottom: 20px; font-family: 'Georgia', serif; letter-spacing: 2px;">BELLA ROMA<br><span style="font-size: 1.2rem; color: #e74c3c;">ÎNCHIS</span></h1>
+            <p id="store-closed-message" style="color: rgba(255,255,255,0.9); font-size: 1.2rem; line-height: 1.6; margin-bottom: 0;">
+                Ne pare rău, programul restaurantului s-a încheiat. Nu putem prelua comenzi în acest moment. Vă așteptăm cu drag mâine!
+            </p>
         </div>
-        <h1 style="color: #f5b041; font-size: 2.2rem; margin-bottom: 20px; font-family: 'Georgia', serif; letter-spacing: 2px;">BELLA ROMA<br><span style="font-size: 1.2rem; color: #e74c3c;">ÎNCHIS</span></h1>
-        <p id="store-closed-message" style="color: rgba(255,255,255,0.9); font-size: 1.2rem; line-height: 1.6; max-width: 400px; margin-bottom: 30px;">
-            Ne pare rău, programul restaurantului s-a încheiat. Nu putem prelua comenzi în acest moment. Vă așteptăm cu drag mâine!
-        </p>
     </div>
 
     <!-- App Loading Screen to prevent FOUC -->

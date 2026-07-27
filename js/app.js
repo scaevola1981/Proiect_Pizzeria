@@ -811,6 +811,8 @@ function evaluateStoreStatus() {
             cartBtn.style.opacity = '0.5';
             cartBtn.innerText = "Restaurant Închis";
         }
+        const qrModal = document.getElementById('qr-error-modal');
+        if (qrModal) qrModal.classList.add('hidden');
     } else {
         overlay.classList.add('hidden');
         const cartBtn = document.getElementById('btn-trimite-comanda');
