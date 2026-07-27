@@ -190,13 +190,29 @@ window.addVariantRow = function() {
     const list = document.getElementById('variants-list');
     const row = document.createElement('div');
     row.style.display = 'flex';
-    row.style.gap = '10px';
+    row.style.flexDirection = 'column';
+    row.style.gap = '5px';
     row.className = 'variant-row';
-    row.innerHTML = `
+    row.style.background = 'rgba(255,255,255,0.03)';
+    row.style.padding = '10px';
+    row.style.borderRadius = '8px';
+    row.style.border = '1px solid rgba(255,255,255,0.1)';
+    const topRow = document.createElement('div');
+    topRow.style.display = 'flex';
+    topRow.style.gap = '10px';
+    topRow.innerHTML = `
         <input type="text" class="modern-input variant-name" placeholder="Nume (ex: Mică)" required style="flex: 1; min-width: 100px; padding: 10px;">
-        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="flex: 1; min-width: 100px; padding: 10px;">
-        <button type="button" onclick="this.parentElement.remove()" style="padding: 10px 12px; border-radius: 8px; background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 0.85rem; white-space: nowrap;" title="Șterge Mărimea"><i class="fas fa-trash" style="margin-right: 5px;"></i>Șterge</button>
+        <input type="number" class="modern-input variant-price" placeholder="Preț" required min="1" step="0.5" style="width: 100px; padding: 10px;">
+        <button type="button" onclick="this.parentElement.parentElement.remove()" style="padding: 10px 12px; border-radius: 8px; background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 0.85rem;" title="Șterge Mărimea"><i class="fas fa-trash"></i></button>
     `;
+    
+    const bottomRow = document.createElement('div');
+    bottomRow.innerHTML = `
+        <input type="text" class="modern-input variant-desc" placeholder="Ingrediente și Cantități (opțional, ex: Aluat 180g, Sos 60g)" style="width: 100%; padding: 10px; font-size: 0.9rem;">
+    `;
+    
+    row.appendChild(topRow);
+    row.appendChild(bottomRow);
     list.appendChild(row);
 };
 
@@ -263,8 +279,9 @@ if (form) {
             rows.forEach(row => {
                 const vName = row.querySelector('.variant-name').value.trim();
                 const vPrice = parseFloat(row.querySelector('.variant-price').value);
+                const vDesc = row.querySelector('.variant-desc').value.trim();
                 if (vName && vPrice > 0) {
-                    variante.push({ nume: vName, pret: vPrice });
+                    variante.push({ nume: vName, pret: vPrice, descriere: vDesc });
                 }
             });
             if (variante.length === 0) {

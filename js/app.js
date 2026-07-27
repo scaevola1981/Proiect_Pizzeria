@@ -331,12 +331,15 @@ window.openVariantModal = function(productId) {
     
     product.variante.forEach((v, index) => {
         optionsContainer.innerHTML += `
-            <label style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);">
-                <div style="display: flex; align-items: center;">
-                    <input type="radio" name="variant-selection" value="${index}" ${index === 0 ? 'checked' : ''} style="margin-right: 10px; width: 18px; height: 18px;">
-                    <span style="color: white; font-weight: bold; font-size: 1.1rem;">${escapeHTML(v.nume)}</span>
+            <label style="display: flex; flex-direction: column; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center;">
+                        <input type="radio" name="variant-selection" value="${index}" ${index === 0 ? 'checked' : ''} style="margin-right: 10px; width: 18px; height: 18px;">
+                        <span style="color: white; font-weight: bold; font-size: 1.1rem;">${escapeHTML(v.nume)}</span>
+                    </div>
+                    <span style="color: #f5b041; font-weight: bold; font-size: 1.1rem;">${escapeHTML(String(v.pret))} Lei</span>
                 </div>
-                <span style="color: #f5b041; font-weight: bold; font-size: 1.1rem;">${escapeHTML(String(v.pret))} Lei</span>
+                ${v.descriere ? `<div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 8px; margin-left: 28px; line-height: 1.4; white-space: pre-wrap;">${escapeHTML(v.descriere)}</div>` : ''}
             </label>
         `;
     });
