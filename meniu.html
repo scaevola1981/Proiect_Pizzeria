@@ -168,11 +168,18 @@
             <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px;">
                 Buna! pentru a inainta o comanda va rugam sa scanati QR codul de pe masa dumneavoastra!
             </p>
-            <button onclick="document.getElementById('qr-error-modal').classList.add('hidden'); if(typeof window.startQRScanner === 'function') window.startQRScanner();"
-                class="modern-form-btn"
-                style="width: 100%; padding: 12px; background: #f5b041; color: #1e293b; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
-                <i class="fas fa-camera"></i> Scanează Acum
-            </button>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="document.getElementById('qr-error-modal').classList.add('hidden'); if(typeof window.startQRScanner === 'function') window.startQRScanner();"
+                    class="modern-form-btn"
+                    style="width: 100%; padding: 12px; background: #f5b041; color: #1e293b; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
+                    <i class="fas fa-camera"></i> Scanează Acum
+                </button>
+                <button onclick="document.getElementById('qr-error-modal').classList.add('hidden');"
+                    class="btn-secondary"
+                    style="width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 0.95rem;">
+                    Vreau doar să văd meniul
+                </button>
+            </div>
         </div>
     </div>
 

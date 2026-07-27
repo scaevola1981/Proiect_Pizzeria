@@ -704,6 +704,9 @@ window.startQRScanner = function() {
         }
     ).catch(err => {
         alert("Eroare la accesarea camerei. Te rugăm să permiți accesul la cameră din setările browserului. Detalii: " + err);
+        if (scannerModal) {
+            scannerModal.classList.add('hidden');
+        }
     });
 };
 
