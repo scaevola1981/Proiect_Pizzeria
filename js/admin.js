@@ -208,7 +208,7 @@ window.addVariantRow = function() {
     
     const bottomRow = document.createElement('div');
     bottomRow.innerHTML = `
-        <input type="text" class="modern-input variant-desc" placeholder="Ingrediente și Cantități (opțional, ex: Aluat 180g, Sos 60g)" style="width: 100%; padding: 10px; font-size: 0.9rem;">
+        <textarea class="modern-input variant-desc" placeholder="Ingrediente și Cantități (opțional, ex: Aluat 180g, Sos 60g)" rows="3" style="width: 100%; padding: 10px; font-size: 0.9rem; resize: vertical; min-height: 80px;"></textarea>
     `;
     
     row.appendChild(topRow);
