@@ -246,7 +246,6 @@ if (form) {
 
         const nume = document.getElementById('nume').value.trim();
         const descriere = document.getElementById('descriere').value.trim();
-        const pret = parseFloat(document.getElementById('pret').value);
         const categorieSelect = document.getElementById('categorie');
         const categorie = categorieSelect ? categorieSelect.value : 'restaurant';
         const fileInput = document.getElementById('imagine_upload');
