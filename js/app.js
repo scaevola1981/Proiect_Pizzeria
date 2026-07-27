@@ -339,7 +339,7 @@ window.openVariantModal = function(productId) {
                     </div>
                     <span style="color: #f5b041; font-weight: bold; font-size: 1.1rem;">${escapeHTML(String(v.pret))} Lei</span>
                 </div>
-                ${v.descriere ? `<div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 8px; margin-left: 28px; line-height: 1.4; white-space: pre-wrap;">${escapeHTML(v.descriere)}</div>` : ''}
+                ${v.descriere ? `<div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px; margin-left: 28px; line-height: 1.25; white-space: pre-wrap;">${escapeHTML(v.descriere.replace(/\\n\\s*\\n/g, '\\n'))}</div>` : ''}
             </label>
         `;
     });
