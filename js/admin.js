@@ -491,12 +491,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (authenticated && !pinVerified) {
         // Are sesiune Supabase (logat la recepție) -> cere DOAR PIN-ul
         document.getElementById('login-overlay').style.display = 'flex';
+        const loadingSpinner = document.getElementById('auth-loading');
+        const loginForm = document.getElementById('login-form-content');
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'block';
+
         if (credentialsFields) credentialsFields.style.display = 'none';
         if (loginSubtitle) loginSubtitle.innerText = 'Introduceți PIN-ul secret de Admin pentru a debloca.';
         if (pinInput) pinInput.focus();
     } else {
         // Nu are nicio sesiune -> cere Email + Parolă + PIN
         document.getElementById('login-overlay').style.display = 'flex';
+        const loadingSpinner = document.getElementById('auth-loading');
+        const loginForm = document.getElementById('login-form-content');
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'block';
+
         if (credentialsFields) credentialsFields.style.display = 'block';
         if (loginSubtitle) loginSubtitle.innerText = 'Autentificați-vă cu Email, Parolă și PIN Admin.';
     }

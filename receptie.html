@@ -21,7 +21,15 @@
     <!-- Login Overlay — Autentificare cu Supabase Auth -->
     <div id="login-overlay"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <div class="glass-panel" style="max-width: 400px; width: 90%; text-align: center;">
+        
+        <!-- Spinner de încărcare cât timp se verifică sesiunea -->
+        <div id="auth-loading" style="color: #f5b041; text-align: center;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="margin-bottom: 15px;"></i>
+            <p>Se verifică accesul...</p>
+        </div>
+
+        <!-- Formularul efectiv (ascuns inițial) -->
+        <div id="login-form-content" class="glass-panel" style="max-width: 400px; width: 90%; text-align: center; display: none;">
             <h2 style="color: #f5b041; margin-bottom: 20px;"><i class="fas fa-lock"></i> Panou Recepție</h2>
             <p style="color: #cbd5e1; margin-bottom: 20px;">Autentificați-vă pentru a accesa comenzile.</p>
             <input type="email" id="owner-email" placeholder="Email"

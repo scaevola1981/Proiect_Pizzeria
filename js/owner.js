@@ -22,6 +22,11 @@ async function initOwnerAuth() {
     if (authenticated) {
         loginOverlay.style.display = 'none';
         loadOwnerOrders();
+    } else {
+        const loadingSpinner = document.getElementById('auth-loading');
+        const loginForm = document.getElementById('login-form-content');
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'block';
     }
 
     // Handler login
@@ -91,6 +96,10 @@ async function loadOwnerOrders() {
     const { authenticated } = await window.getAuthSession();
     if (!authenticated) {
         document.getElementById('login-overlay').style.display = 'flex';
+        const loadingSpinner = document.getElementById('auth-loading');
+        const loginForm = document.getElementById('login-form-content');
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'block';
         return;
     }
 
