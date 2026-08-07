@@ -437,7 +437,8 @@ function urlBase64ToUint8Array(base64String) {
 const btnTrimite = document.getElementById('btn-trimite-comanda');
 if (btnTrimite) {
     btnTrimite.addEventListener('click', async () => {
-        if (!numarMasa) {
+        // Dacă e client normal și nu are masă -> modal QR
+        if (!numarMasa && !isWaiterMode) {
             const qrModal = document.getElementById('qr-error-modal');
             if (qrModal) {
                 qrModal.classList.remove('hidden');
@@ -447,29 +448,43 @@ if (btnTrimite) {
             return;
         }
 
-        btnTrimite.disabled = true;
-        btnTrimite.innerText = "Se verifică locația...";
-
-        // ============================
-        // GEOFENCING CHECK — OBLIGATORIU
-        // ============================
-        const geoResult = await window.checkGeolocation();
-
-        if (!geoResult.allowed) {
-            // Afișăm eroarea într-un mod vizual
-            const geoModal = document.getElementById('geo-error-modal');
-            if (geoModal) {
-                geoModal.classList.remove('hidden');
-            } else {
-                showOrderStatusNotification(
-                    geoResult.error || "Nu poți comanda din această locație.",
-                    "fas fa-map-marker-alt",
-                    "#e74c3c"
-                );
+        // Dacă e ospătar și nu s-a setat numărul mesei încă -> cere numărul mesei
+        if (isWaiterMode && !numarMasa) {
+            let masaInput = prompt("Introduceți numărul mesei pentru această comandă (ex: 1, 2, 3...):", "1");
+            if (!masaInput || masaInput.trim() === "") {
+                return;
             }
-            btnTrimite.disabled = false;
-            btnTrimite.innerText = "Trimite Comanda";
-            return;
+            numarMasa = masaInput.trim();
+            const masaEl = document.getElementById('masa-id');
+            if (masaEl) masaEl.innerText = escapeHTML(numarMasa);
+        }
+
+        btnTrimite.disabled = true;
+        btnTrimite.innerText = "Se procesează...";
+
+        // ============================
+        // GEOFENCING CHECK — Bypassed pentru Ospătar
+        // ============================
+        let geoResult = { allowed: true, coords: null, distance: 0 };
+        if (!isWaiterMode) {
+            btnTrimite.innerText = "Se verifică locația...";
+            geoResult = await window.checkGeolocation();
+
+            if (!geoResult.allowed) {
+                const geoModal = document.getElementById('geo-error-modal');
+                if (geoModal) {
+                    geoModal.classList.remove('hidden');
+                } else {
+                    showOrderStatusNotification(
+                        geoResult.error || "Nu poți comanda din această locație.",
+                        "fas fa-map-marker-alt",
+                        "#e74c3c"
+                    );
+                }
+                btnTrimite.disabled = false;
+                btnTrimite.innerText = "Trimite Comanda";
+                return;
+            }
         }
 
         btnTrimite.innerText = "Se trimite...";
