@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bella Roma - Panou Ospătar</title>
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://cdnjs.cloudflare.com; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="apple-touch-icon" href="/img/icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script type="module" crossorigin src="/assets/ospatar-BAowWMm8.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-D3kzC76g.js">
+  <link rel="modulepreload" crossorigin href="/assets/security-Bv09CpAF.js">
+  <link rel="stylesheet" crossorigin href="/assets/supabase-DTRQcM_n.css">
+</head>
+
+<body>
+    <header class="bella-roma-hero" style="height: 120px; margin-bottom: 15px;">
+        <div class="hero-overlay" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <h1 class="hero-title" style="font-size: 2rem; margin: 0;">BELLA ROMA</h1>
+            <p class="hero-subtitle" style="font-size: 1rem; margin: 0; color: #2ecc71; font-weight: bold;"><i class="fas fa-user-tie"></i> PANOU OSPĂTAR TABLETĂ</p>
+        </div>
+    </header>
+
+    <!-- Selector Rapid Masă -->
+    <div class="glass-panel" style="margin-bottom: 20px; padding: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+            <label style="color: #f5b041; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-utensils"></i> Selectează Masa:
+            </label>
+            <div id="ospatar-active-table-badge" style="background: #2ecc71; color: #1e293b; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 1rem;">
+                Masa 1
+            </div>
+        </div>
+
+        <div id="table-chips-grid" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <!-- Mesele 1-12 vor fi generate dinamic -->
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <main class="glass-panel products-area">
+            <!-- Search & Tabs -->
+            <div class="menu-controls" style="margin-bottom: 20px;">
+                <div class="search-bar" style="margin-bottom: 12px; position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666;"></i>
+                    <input type="text" id="search-input" placeholder="Caută preparat..."
+                        style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <div class="menu-tabs"
+                    style="display: flex; background: rgba(255, 255, 255, 0.15); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <button id="tab-restaurant" class="tab-btn active" onclick="window.setTab('restaurant');"
+                        style="flex: 1; padding: 12px; border: none; background: #fff; color: #333; font-weight: bold; cursor: pointer; transition: all 0.3s;">Meniu Restaurant</button>
+                    <button id="tab-bar" class="tab-btn" onclick="window.setTab('bar');"
+                        style="flex: 1; padding: 12px; border: none; background: transparent; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s;">Meniu Bar</button>
+                </div>
+            </div>
+
+            <div id="produse-container" class="products-grid">
+                <p style="text-align:center; width:100%;">Meniul se încarcă...</p>
+            </div>
+        </main>
+
+        <aside class="glass-panel cart-area">
+            <h2 id="cart-title">Comandă Ospătar</h2>
+
+            <div style="margin-bottom: 15px;">
+                <label style="color: #f5b041; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-users"></i> Adaugi pentru:
+                </label>
+
+                <!-- Pastile Persoane (2 pe rând) -->
+                <div id="person-chips-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+                    <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
+                        style="grid-column: span 2; padding: 12px; border-radius: 12px; border: 1px solid #f5b041; background: #f5b041; color: #1e293b; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        👥 Comandă Împreună
+                    </button>
+                    <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')"
+                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        👤 Persoana 1
+                    </button>
+                    <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')"
+                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        👤 Persoana 2
+                    </button>
+                    <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')"
+                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        👤 Persoana 3
+                    </button>
+                    <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')"
+                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        👤 Persoana 4
+                    </button>
+                    <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')"
+                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        👤 Persoana 5
+                    </button>
+                    <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')"
+                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        👤 Persoana 6
+                    </button>
+                </div>
+            </div>
+
+            <div id="cart-items">
+                <p class="empty-cart">Alegeți preparatele pentru masa selectată.</p>
+            </div>
+            
+            <div class="cart-summary">
+                <h3>Total: <span id="cart-total">0.00</span> Lei</h3>
+                <button id="btn-trimite-comanda-ospatar" disabled style="background: #2ecc71; color: #1e293b; font-weight: 800; font-size: 1.1rem; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
+                    <i class="fas fa-paper-plane"></i> Trimite la Recepție
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Notificări Custom -->
+    <div id="notification-container"
+        style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+
+</html>

@@ -28,16 +28,7 @@
 
     <div class="table-info-bar"
         style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <div style="display: flex; flex-direction: column;">
-            <div id="table-info">Masa: <span id="masa-id" style="font-weight: 800;">Scanați QR</span></div>
-            <div id="device-id-badge" style="font-size: 0.8rem; color: rgba(255,255,255,0.8); margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span><i class="fas fa-tablet-alt"></i> ID Dispozitiv: <strong id="my-device-id-text" style="color: #f5b041;">...</strong></span>
-                <button type="button" onclick="window.promptWaiterPinActivation()"
-                    style="background: rgba(245, 176, 65, 0.2); color: #f5b041; border: 1px solid #f5b041; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">
-                    <i class="fas fa-key"></i> Activare cu PIN
-                </button>
-            </div>
-        </div>
+        <div id="table-info">Masa: <span id="masa-id" style="font-weight: 800;">Scanați QR</span></div>
         <button id="client-install-app-btn" class="ios-button-banana"
             onclick="if(typeof window.openPwaInstallModal==='function'){window.openPwaInstallModal();}else{const m=document.getElementById('pwa-install-modal');if(m)m.classList.remove('hidden');}"
             style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 8px 14px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border: 1px solid #60a5fa; cursor: pointer;">
@@ -75,7 +66,7 @@
 
         <aside class="glass-panel cart-area">
             <h2 id="cart-title">Comanda mea</h2>
-            <div id="waiter-customer-selector" style="display: none; margin-bottom: 15px;">
+            <div id="waiter-customer-selector" style="margin-bottom: 15px; display: block;">
                 <label style="color: #f5b041; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
                     <i class="fas fa-users"></i> Comanzi pentru:
                 </label>
@@ -238,27 +229,6 @@
                     Vreau doar să văd meniul
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Notificare Activare Mod Ospătar pe Tabletă -->
-    <div id="waiter-activated-modal" class="modal hidden" style="z-index: 999999; background: rgba(0,0,0,0.85);">
-        <div class="glass-panel" style="max-width: 450px; width: 90%; text-align: center; border: 2px solid #2ecc71; box-shadow: 0 10px 40px rgba(46, 204, 113, 0.4); background: rgba(15, 23, 42, 0.98); padding: 35px 25px; border-radius: 20px;">
-            <div style="font-size: 4rem; color: #2ecc71; margin-bottom: 15px;">
-                <i class="fas fa-user-tie"></i>
-            </div>
-            <h2 style="color: #2ecc71; font-size: 1.6rem; margin-bottom: 10px;">Mod Ospătar Activat!</h2>
-            <p style="color: #fff; font-size: 1.1rem; margin-bottom: 15px; line-height: 1.5;">
-                Această tabletă a fost aprobată cu succes de la recepție.
-            </p>
-            <div style="background: rgba(255,255,255,0.08); padding: 12px; border-radius: 10px; margin-bottom: 25px;">
-                <span style="color: #cbd5e1; font-size: 0.9rem;">Nume Dispozitiv:</span><br>
-                <strong id="waiter-modal-device-name" style="color: #f5b041; font-size: 1.2rem;">-</strong>
-            </div>
-            <button onclick="document.getElementById('waiter-activated-modal').classList.add('hidden');"
-                style="width: 100%; padding: 14px; background: #2ecc71; color: #1e293b; font-weight: bold; font-size: 1.1rem; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
-                <i class="fas fa-check"></i> Am Înțeles (Începe Preluarea)
-            </button>
         </div>
     </div>
 
