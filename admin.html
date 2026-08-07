@@ -85,30 +85,6 @@
                         </div>
                     </div>
 
-                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0;">
-                                <input type="checkbox" id="has-variants" onchange="window.toggleVariantsUI()" style="opacity: 0; width: 0; height: 0;">
-                                <span class="slider round slider-variants" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 34px;"></span>
-                                <style>
-                                    .slider-variants { background-color: #2ecc71; }
-                                    .slider-variants:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-                                    input:checked + .slider-variants { background-color: #3498db !important; }
-                                    input:checked + .slider-variants:before { transform: translateX(26px); }
-                                </style>
-                            </label>
-                            <span style="color: #f5b041; font-weight: bold; cursor: pointer;" onclick="document.getElementById('has-variants').click()">Acest produs are mărimi/variante multiple (ex: Mică, Medie)</span>
-                        </div>
-                        
-                        <div id="variants-container" style="display: none; margin-top: 15px;">
-                            <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 0; line-height: 1.4;">
-                                Adăugați AICI <b>toate</b> mărimile disponibile (ex: Mică, Medie, Mare). Apăsați butonul verde pentru a adăuga mai multe. Clientul va alege mărimea dorită dintr-o singură fereastră.
-                            </p>
-                            <div id="variants-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
-                                <!-- Variants will be added here dynamically -->
-                            </div>
-                            <button type="button" onclick="window.addVariantRow()" class="btn-secondary" style="font-size: 1rem; padding: 10px 15px; background: #2ecc71; color: white; border: none; font-weight: bold; width: 100%; text-align: center;"><i class="fas fa-plus"></i> Adaugă Mărime</button>
-                        </div>
                     </div>
                     <div style="display: flex; flex-direction: column; flex: 1;">
                         <label for="descriere"

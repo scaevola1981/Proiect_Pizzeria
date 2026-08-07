@@ -9,6 +9,12 @@ let numarMasa = null;
 
 let currentTab = 'restaurant';
 let searchQuery = '';
+let isWaiterMode = false;
+let myDeviceId = localStorage.getItem('device_id');
+if (!myDeviceId) {
+    myDeviceId = 'DEV-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    localStorage.setItem('device_id', myDeviceId);
+}
 
 // Preluare număr masă din URL (ex: ?masa=5)
 function getTableNumber() {
@@ -24,15 +30,21 @@ function getTableNumber() {
 
 // Inițializare pagină meniu.html
 if (document.getElementById('produse-container')) {
+    
+    // Așteptăm ca Supabase să fie încărcat pentru a verifica device-ul
+    setTimeout(initDeviceManager, 1000);
+
     numarMasa = getTableNumber();
     if (numarMasa) {
         document.getElementById('masa-id').innerText = escapeHTML(numarMasa);
     } else {
         document.getElementById('masa-id').innerText = "Necunoscută";
         setTimeout(() => {
-            const qrModal = document.getElementById('qr-error-modal');
-            if (qrModal) qrModal.classList.remove('hidden');
-        }, 500);
+            if (!isWaiterMode) {
+                const qrModal = document.getElementById('qr-error-modal');
+                if (qrModal) qrModal.classList.remove('hidden');
+            }
+        }, 1500); // Mărit delay-ul pentru a lăsa timp device manager-ului
     }
 
     const tabBar = document.getElementById('tab-bar');
@@ -264,12 +276,6 @@ function renderProducts() {
         let priceDisplay = `${escapeHTML(String(p.pret))} Lei`;
         let actionButton = `<button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea</button>`;
 
-        if (p.variante && p.variante.length > 0) {
-            const minPrice = Math.min(...p.variante.map(v => v.pret));
-            priceDisplay = `de la ${minPrice} Lei`;
-            actionButton = `<button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3; background: #3498db; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);" onclick="window.openVariantModal(${parseInt(p.id)})">Alege Mărime</button>`;
-        }
-
         div.innerHTML = `
             <img src="${safeImage}" alt="${safeName}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
             <h3>${safeName}</h3>
@@ -317,72 +323,22 @@ window.confirmCustomizeAndAdd = function () {
     window.closeCustomizeModal();
 };
 
-let currentVariantProductId = null;
-
-window.openVariantModal = function(productId) {
-    currentVariantProductId = productId;
-    const product = produse.find(p => p.id === productId);
-    if (!product || !product.variante || product.variante.length === 0) return;
-
-    document.getElementById('variant-modal-title').innerText = "Mărime " + escapeHTML(product.nume);
-    
-    const optionsContainer = document.getElementById('variant-modal-options');
-    optionsContainer.innerHTML = '';
-    
-    product.variante.forEach((v, index) => {
-        optionsContainer.innerHTML += `
-            <label style="display: flex; flex-direction: column; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center;">
-                        <input type="radio" name="variant-selection" value="${index}" ${index === 0 ? 'checked' : ''} style="margin-right: 10px; width: 18px; height: 18px;">
-                        <span style="color: white; font-weight: bold; font-size: 1.1rem;">${escapeHTML(v.nume)}</span>
-                    </div>
-                    <span style="color: #f5b041; font-weight: bold; font-size: 1.1rem;">${escapeHTML(String(v.pret))} Lei</span>
-                </div>
-                ${v.descriere ? `<div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px; margin-left: 28px; line-height: 1.25; white-space: pre-wrap;">${escapeHTML(v.descriere.replace(/\\n\\s*\\n/g, '\\n'))}</div>` : ''}
-            </label>
-        `;
-    });
-
-    document.getElementById('btn-confirm-variant').onclick = function() {
-        const selectedRadio = document.querySelector('input[name="variant-selection"]:checked');
-        if (selectedRadio) {
-            const variantIndex = parseInt(selectedRadio.value);
-            const variant = product.variante[variantIndex];
-            window.addToCart(productId, '', variant);
-            window.closeVariantModal();
-        }
-    };
-
-    document.getElementById('variant-modal').classList.remove('hidden');
-};
-
-window.closeVariantModal = function() {
-    document.getElementById('variant-modal').classList.add('hidden');
-    currentVariantProductId = null;
-};
-
-window.addToCart = function (productId, notes = '', variant = null) {
+window.addToCart = function (productId, notes = '') {
     let product = produse.find(p => p.id === productId);
     if (!product) return;
 
-    if (variant) {
-        // Clone object so we don't modify the global array
-        product = {
-            ...product,
-            nume: `${product.nume} (${variant.nume})`,
-            pret: variant.pret,
-            originalId: product.id
-        };
+    let currentCustomer = "Masa";
+    const selector = document.getElementById('current-customer-name');
+    if (isWaiterMode && selector) {
+        currentCustomer = selector.value;
     }
 
-    const checkId = variant ? product.originalId : productId;
-    const existingItem = cart.find(item => item.product.id === checkId && item.notes === notes && item.product.nume === product.nume);
+    const existingItem = cart.find(item => item.product.id === productId && item.notes === notes && item.customer_name === currentCustomer);
 
     if (existingItem) {
         existingItem.quantity++;
     } else {
-        cart.push({ product, quantity: 1, notes });
+        cart.push({ product, quantity: 1, notes, customer_name: currentCustomer });
     }
 
     updateCartUI();
@@ -405,28 +361,44 @@ function updateCartUI() {
     let total = 0;
 
     if (cart.length === 0) {
-        if (cartTitle) cartTitle.innerText = "Coșul meu";
+        if (cartTitle) cartTitle.innerText = "Comanda mea";
         cartContainer.innerHTML = '<p class="empty-cart">Nu ati comandat inca nimic</p>';
         sendBtn.disabled = true;
     } else {
-        if (cartTitle) cartTitle.innerText = "Ati facut o alegere perfecta!";
+        if (cartTitle) cartTitle.innerText = "Comanda mea";
+        
+        // Group by customer_name
+        const groupedCart = {};
         cart.forEach((item, index) => {
-            total += item.product.pret * item.quantity;
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            // XSS Protection
-            div.innerHTML = `
-                <div style="flex: 1; text-align: left;">
-                    <strong>${escapeHTML(String(item.quantity))}x ${escapeHTML(item.product.nume)}</strong>
-                    ${item.notes ? `<div style="font-size: 0.85rem; color: #f5b041; margin-top: 3px;"><em>* ${escapeHTML(item.notes)}</em></div>` : ''}
-                </div>
-                <div style="display: flex; align-items: center; justify-content: flex-end; min-width: 80px;">
-                    <span style="font-weight: bold;">${(item.product.pret * item.quantity).toFixed(2)}</span>
-                    <button class="btn-secondary" style="width: auto; padding: 5px 10px; margin-left: 10px;" onclick="removeFromCart(${index})">X</button>
-                </div>
-            `;
-            cartContainer.appendChild(div);
+            const cName = item.customer_name || "Masa";
+            if (!groupedCart[cName]) groupedCart[cName] = [];
+            groupedCart[cName].push({ ...item, originalIndex: index });
         });
+
+        for (const [cName, items] of Object.entries(groupedCart)) {
+            if (cName !== "Masa") {
+                const headerDiv = document.createElement('div');
+                headerDiv.style = "color: #f5b041; font-weight: bold; font-size: 0.9rem; margin: 10px 0 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;";
+                headerDiv.innerText = cName;
+                cartContainer.appendChild(headerDiv);
+            }
+            items.forEach((item) => {
+                total += item.product.pret * item.quantity;
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div style="flex: 1; text-align: left;">
+                        <strong>${escapeHTML(String(item.quantity))}x ${escapeHTML(item.product.nume)}</strong>
+                        ${item.notes ? `<div style="font-size: 0.85rem; color: #f5b041; margin-top: 3px;"><em>* ${escapeHTML(item.notes)}</em></div>` : ''}
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; min-width: 80px;">
+                        <span style="font-weight: bold;">${(item.product.pret * item.quantity).toFixed(2)}</span>
+                        <button class="btn-secondary" style="width: auto; padding: 5px 10px; margin-left: 10px;" onclick="removeFromCart(${item.originalIndex})">X</button>
+                    </div>
+                `;
+                cartContainer.appendChild(div);
+            });
+        }
         sendBtn.disabled = false;
     }
 
@@ -853,3 +825,170 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ==========================================
+// GESTIONARE DISPOZITIVE (Mod Ospătar vs Client)
+// ==========================================
+
+async function initDeviceManager() {
+    if (!window.supabaseClient) return;
+
+    // Afișăm ID-ul tehnic al acestui dispozitiv pe ecran
+    const deviceIdEl = document.getElementById('my-device-id-text');
+    if (deviceIdEl) deviceIdEl.innerText = myDeviceId;
+
+    // Funcție de verificare status în DB
+    const checkDeviceStatus = async () => {
+        try {
+            const { data: existingDevice } = await window.supabaseClient
+                .from('active_devices')
+                .select('status, custom_name')
+                .eq('device_id', myDeviceId)
+                .maybeSingle();
+
+            if (existingDevice) {
+                handleDeviceStatus(existingDevice.status, existingDevice.custom_name);
+            } else {
+                // Nu există, îl inserăm ca pending
+                await window.supabaseClient.from('active_devices').insert([
+                    { device_id: myDeviceId, status: 'pending' }
+                ]);
+                handleDeviceStatus('pending');
+            }
+        } catch (e) {
+            console.warn("Eroare la verificarea device-ului:", e);
+        }
+    };
+
+    // Verificăm imediat
+    await checkDeviceStatus();
+
+    // 1. Verificare periodică (polling fallback la 3 secunde ca să fim 100% siguri pe mobil)
+    setInterval(checkDeviceStatus, 3000);
+
+    // 2. Ascultăm schimbările Realtime pe acest device_id
+    window.supabaseClient.channel(`device_${myDeviceId}`)
+        .on('postgres_changes', { 
+            event: '*', 
+            schema: 'public', 
+            table: 'active_devices',
+            filter: `device_id=eq.${myDeviceId}`
+        }, (payload) => {
+            if (payload.new) {
+                handleDeviceStatus(payload.new.status, payload.new.custom_name);
+            }
+        }).subscribe();
+}
+
+function handleDeviceStatus(status, customName) {
+    const prevMode = isWaiterMode;
+    isWaiterMode = (status === 'active');
+    const nameDisplay = customName || myDeviceId;
+    
+    if (isWaiterMode) {
+        console.log(`[Device Manager] Mod OSPĂTAR Activat! ID: ${myDeviceId} (${nameDisplay})`);
+        
+        // Ascundem modal QR
+        const qrModal = document.getElementById('qr-error-modal');
+        if (qrModal) qrModal.classList.add('hidden');
+        
+        // Ascundem modal Geolocație dacă era vizibil
+        const geoModal = document.getElementById('geo-error-modal');
+        if (geoModal) geoModal.classList.add('hidden');
+        
+        // Afișăm selectorul de Persoană
+        const waiterSelector = document.getElementById('waiter-customer-selector');
+        if (waiterSelector) waiterSelector.style.display = 'block';
+
+        // Actualizăm sau creăm indiciul vizual pentru ospătar
+        let waiterIndicator = document.getElementById('waiter-indicator');
+        if (!waiterIndicator) {
+            waiterIndicator = document.createElement('div');
+            waiterIndicator.id = 'waiter-indicator';
+            waiterIndicator.style = 'background: #2ecc71; color: #1e293b; padding: 6px 14px; font-weight: bold; border-radius: 20px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);';
+            const titleElement = document.querySelector('.table-info-bar');
+            if (titleElement) titleElement.appendChild(waiterIndicator);
+        }
+        waiterIndicator.innerHTML = `<i class="fas fa-user-tie"></i> Mod Ospătar (${escapeHTML(nameDisplay)})`;
+        
+        if (!prevMode) {
+            // Afișăm modalul popup mare pe iPad că s-a activat Modul Ospătar!
+            const nameEl = document.getElementById('waiter-modal-device-name');
+            if (nameEl) nameEl.innerText = nameDisplay;
+            const activatedModal = document.getElementById('waiter-activated-modal');
+            if (activatedModal) activatedModal.classList.remove('hidden');
+
+            showOrderStatusNotification(`Mod Ospătar Activat (${nameDisplay})!`, "fas fa-check-circle", "#2ecc71");
+        }
+    } else {
+        console.log(`[Device Manager] Mod Client (Neactivat). ID: ${myDeviceId}`);
+        isWaiterMode = false;
+        
+        const waiterSelector = document.getElementById('waiter-customer-selector');
+        if (waiterSelector) waiterSelector.style.display = 'none';
+
+        const waiterIndicator = document.getElementById('waiter-indicator');
+        if (waiterIndicator) waiterIndicator.remove();
+
+        const activatedModal = document.getElementById('waiter-activated-modal');
+        if (activatedModal) activatedModal.classList.add('hidden');
+        
+        if (prevMode) {
+            showOrderStatusNotification("Mod Ospătar Dezactivat.", "fas fa-info-circle", "#e74c3c");
+            // Dacă nu are masă, arătăm modalul QR la loc
+            if (!numarMasa) {
+                const qrModal = document.getElementById('qr-error-modal');
+                if (qrModal) qrModal.classList.remove('hidden');
+            }
+        }
+    }
+}
+
+window.promptWaiterPinActivation = async function () {
+    const pin = prompt("Introduceți PIN-ul de autorizare Ospătar (ex: bella):");
+    if (!pin) return;
+
+    let isValid = false;
+    if (typeof window.verifyAdminPin === 'function') {
+        const res = await window.verifyAdminPin(pin);
+        isValid = res.valid;
+    } else if (pin.toLowerCase() === 'bella' || pin === '1234') {
+        isValid = true;
+    }
+
+    if (isValid) {
+        const waiterName = `Tableta ${myDeviceId}`;
+        const { error } = await window.supabaseClient
+            .from('active_devices')
+            .upsert({ device_id: myDeviceId, status: 'active', custom_name: waiterName }, { onConflict: 'device_id' });
+
+        if (error) {
+            alert("Eroare la activare: " + error.message);
+        } else {
+            handleDeviceStatus('active', waiterName);
+        }
+    } else {
+        alert("PIN incorect!");
+    }
+};
+
+window.selectPersonChip = function (btnElement, personValue) {
+    const sel = document.getElementById('current-customer-name');
+    if (sel) sel.value = personValue;
+
+    document.querySelectorAll('.person-chip').forEach(btn => {
+        btn.style.background = 'rgba(0,0,0,0.3)';
+        btn.style.color = 'white';
+        btn.style.border = '1px solid rgba(255,255,255,0.2)';
+        btn.style.fontWeight = '500';
+    });
+
+    if (btnElement) {
+        btnElement.style.background = '#f5b041';
+        btnElement.style.color = '#1e293b';
+        btnElement.style.border = '1px solid #f5b041';
+        btnElement.style.fontWeight = 'bold';
+    }
+};
+
+

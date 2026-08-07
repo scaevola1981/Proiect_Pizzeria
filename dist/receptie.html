@@ -14,17 +14,25 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest-owner.json">
-  <script type="module" crossorigin src="/assets/owner-BURYrRLc.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/supabase-L-nUdf_m.js">
-  <link rel="modulepreload" crossorigin href="/assets/app-DhsRuZpH.js">
-  <link rel="stylesheet" crossorigin href="/assets/supabase-Bxc2sZ3H.css">
+  <script type="module" crossorigin src="/assets/receptie-DRPyxZra.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-D3kzC76g.js">
+  <link rel="modulepreload" crossorigin href="/assets/app-B_1OaVgQ.js">
+  <link rel="stylesheet" crossorigin href="/assets/supabase-DTRQcM_n.css">
 </head>
 
 <body>
     <!-- Login Overlay — Autentificare cu Supabase Auth -->
     <div id="login-overlay"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <div class="glass-panel" style="max-width: 400px; width: 90%; text-align: center;">
+        
+        <!-- Spinner de încărcare cât timp se verifică sesiunea -->
+        <div id="auth-loading" style="color: #f5b041; text-align: center;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="margin-bottom: 15px;"></i>
+            <p>Se verifică accesul...</p>
+        </div>
+
+        <!-- Formularul efectiv (ascuns inițial) -->
+        <div id="login-form-content" class="glass-panel" style="max-width: 400px; width: 90%; text-align: center; display: none;">
             <h2 style="color: #f5b041; margin-bottom: 20px;"><i class="fas fa-lock"></i> Panou Recepție</h2>
             <p style="color: #cbd5e1; margin-bottom: 20px;">Autentificați-vă pentru a accesa comenzile.</p>
             <input type="email" id="owner-email" placeholder="Email"
@@ -48,7 +56,7 @@
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; flex-direction: column;">
-                <h1 style="margin: 0;">Panou Recepție</h1>
+                <h1 style="margin: 0;color:#010d2d">Panou Recepție</h1>
                 <span
                     style="font-family: 'Georgia', serif; color: #010d2d; font-weight: bold; font-size: 1.1rem; letter-spacing: 2px; margin-top: 5px;">BELLA
                     ROMA - PUB &amp; PIZZERIE</span>
@@ -57,12 +65,15 @@
                 <button onclick="window.location.href='admin.html'"
                     style="background: #2c3e50; color: #e74c3c; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
                         class="fas fa-cogs"></i> Admin Meniu</button>
+                <button onclick="window.openTableteModal()"
+                    style="background: #2c3e50; color: #f5b041; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
+                        class="fas fa-tablet-alt"></i> Gestionare Tablete</button>
                 <button onclick="window.toggleHistory(true)" class="btn-secondary"
                     style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;background:#2c3e50;color:rgb(10, 175, 245)"><i
                         class="fas fa-history"></i> Vezi Istoric</button>
                 <button id="btn-owner-logout"
-                    style="background: #e74c3c; color: white; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
-                        class="fas fa-sign-out-alt"></i> IESIRE DIN CONT</button>
+                    style="background: #2c3e50; color: #e74c3c; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
+                        class="fas fa-sign-out-alt"></i> Iesire din cont</button>
                 <button id="install-app-btn" class="ios-button-banana"
                     style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 1rem; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border: 1px solid #60a5fa; border-radius: 8px; font-weight: bold; cursor: pointer; color: white;">
                     <i class="fas fa-download"></i> Descarcă Aplicația
@@ -97,12 +108,36 @@
             <p style="color: rgba(255,255,255,0.7); margin-bottom: 15px; font-size: 0.95rem;">
                 <i class="fas fa-lock" style="color: #f5b041;"></i> Sunteți autentificat. Confirmați închiderea zilei.
             </p>
+            <div style="margin-bottom: 20px; text-align: left; background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(231, 76, 60, 0.3);">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff;">
+                    <input type="checkbox" id="cb-force-close" checked style="width: 20px; height: 20px;">
+                    <span style="font-size: 0.9rem;">Forțează oprirea aplicației pentru clienți (Blochează comenzi noi acum)</span>
+                </label>
+            </div>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn-secondary" onclick="window.closeEndDayModal()"
                     style="border-radius: 10px; padding: 12px;">Anulează</button>
                 <button onclick="window.confirmEndDay()"
                     style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 10px; padding: 12px; font-weight: bold;"><i
                         class="fas fa-check"></i> Confirmă Închiderea</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gestionare Tablete -->
+    <div id="tablete-modal" class="modal hidden">
+        <div
+            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <h2 style="color: #f5b041; margin-bottom: 20px; font-size: 1.4rem;"><i
+                    class="fas fa-tablet-alt"></i> Gestionare Tablete Ospătari</h2>
+            
+            <div id="active-devices-container" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: 20px;">
+                <p style="color: #fff; text-align: center;">Se încarcă lista de tablete...</p>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-secondary" onclick="window.closeTableteModal()"
+                    style="border-radius: 10px; padding: 12px; width: 100%;">Închide</button>
             </div>
         </div>
     </div>

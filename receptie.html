@@ -62,6 +62,9 @@
                 <button onclick="window.location.href='admin.html'"
                     style="background: #2c3e50; color: #e74c3c; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
                         class="fas fa-cogs"></i> Admin Meniu</button>
+                <button onclick="window.openTableteModal()"
+                    style="background: #2c3e50; color: #f5b041; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;"><i
+                        class="fas fa-tablet-alt"></i> Gestionare Tablete</button>
                 <button onclick="window.toggleHistory(true)" class="btn-secondary"
                     style="width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem;background:#2c3e50;color:rgb(10, 175, 245)"><i
                         class="fas fa-history"></i> Vezi Istoric</button>
@@ -114,6 +117,24 @@
                 <button onclick="window.confirmEndDay()"
                     style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border-radius: 10px; padding: 12px; font-weight: bold;"><i
                         class="fas fa-check"></i> Confirmă Închiderea</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gestionare Tablete -->
+    <div id="tablete-modal" class="modal hidden">
+        <div
+            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <h2 style="color: #f5b041; margin-bottom: 20px; font-size: 1.4rem;"><i
+                    class="fas fa-tablet-alt"></i> Gestionare Tablete Ospătari</h2>
+            
+            <div id="active-devices-container" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: 20px;">
+                <p style="color: #fff; text-align: center;">Se încarcă lista de tablete...</p>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-secondary" onclick="window.closeTableteModal()"
+                    style="border-radius: 10px; padding: 12px; width: 100%;">Închide</button>
             </div>
         </div>
     </div>

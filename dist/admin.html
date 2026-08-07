@@ -10,16 +10,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         integrity="sha512-iecdLmaskl0HPNiekfRgJIf+X5ycReBmeByPmIa09Z3S24z0H8w23+bUEuKd5ICxGBe2hPkdWus9VqAeL6cBA=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
-  <script type="module" crossorigin src="/assets/admin-DDGXRq1X.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/supabase-L-nUdf_m.js">
-  <link rel="stylesheet" crossorigin href="/assets/supabase-Bxc2sZ3H.css">
+  <script type="module" crossorigin src="/assets/admin-Df3_ojAY.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-D3kzC76g.js">
+  <link rel="stylesheet" crossorigin href="/assets/supabase-DTRQcM_n.css">
 </head>
 
 <body>
     <!-- Login Overlay — Acces cu PIN Admin -->
     <div id="login-overlay"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <div class="glass-panel" style="max-width: 400px; width: 90%; text-align: center;">
+        
+        <div id="auth-loading" style="color: #e74c3c; text-align: center;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="margin-bottom: 15px;"></i>
+            <p>Se verifică accesul...</p>
+        </div>
+
+        <div id="login-form-content" class="glass-panel" style="max-width: 400px; width: 90%; text-align: center; display: none;">
             <h2 style="color: #e74c3c; margin-bottom: 10px;"><i class="fas fa-shield-alt"></i> Acces Administrare Meniu
             </h2>
             <p style="color: #cbd5e1; margin-bottom: 20px;" id="login-subtitle">
@@ -69,19 +75,18 @@
                             <label for="categorie"
                                 style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Categorie
                                 *</label>
-                            <select id="categorie" class="modern-input"
-                                style="background: rgba(15, 23, 42, 0.9); color: white;">
-                                <option value="restaurant">🍕 Mâncare (Restaurant)</option>
-                                <option value="bar">🍹 Băutură (Bar)</option>
-                            </select>
+                            <input type="text" id="categorie" required placeholder="ex: Pizza, Desert, Băutură..."
+                                class="modern-input" maxlength="50">
                         </div>
-                        <div style="flex: 1; min-width: 100px;">
+                        <div style="flex: 1; min-width: 100px;" id="pret-container">
                             <label for="pret"
                                 style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Preț (Lei)
                                 *</label>
                             <input type="number" id="pret" required min="1" max="9999" step="0.5" placeholder="ex: 35"
                                 class="modern-input">
                         </div>
+                    </div>
+
                     </div>
                     <div style="display: flex; flex-direction: column; flex: 1;">
                         <label for="descriere"
@@ -130,6 +135,43 @@
             </div>
             <div id="admin-products-container" class="products-grid">
                 <p>Se încarcă meniul...</p>
+            </div>
+        </main>
+
+        <main class="glass-panel" style="margin-top: 30px;">
+            <h2 style="color: #3498db; margin-bottom: 25px;"><i class="fas fa-clock"></i> Program de Funcționare (Prevenire Comenzi Fantomă)</h2>
+            <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; gap: 20px;">
+                <p style="color: #cbd5e1; font-size: 0.95rem; margin-top: 0;">Setați orele între care restaurantul primește comenzi. În afara acestui program, aplicația clienților se blochează automat. Apăsarea "Forțează Închidere" blochează instant aplicația până când debifați opțiunea.</p>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label for="store-open-time" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Ora Deschidere *</label>
+                        <input type="time" id="store-open-time" class="modern-input" style="background: rgba(15, 23, 42, 0.9);">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label for="store-close-time" style="display: block; margin-bottom: 8px; font-weight: bold; color: #fff;">Ora Închidere *</label>
+                        <input type="time" id="store-close-time" class="modern-input" style="background: rgba(15, 23, 42, 0.9);">
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px; background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <label class="toggle-switch" style="position: relative; display: inline-block; width: 60px; height: 34px;">
+                        <input type="checkbox" id="store-force-close" style="opacity: 0; width: 0; height: 0;">
+                        <span class="slider round slider-force-close" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 34px;"></span>
+                        <style>
+                            .slider-force-close { background-color: #2ecc71; }
+                            .slider-force-close:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+                            input:checked + .slider-force-close { background-color: #e74c3c !important; }
+                            input:checked + .slider-force-close:before { transform: translateX(26px); }
+                        </style>
+                    </label>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="color: #e74c3c; font-weight: bold; font-size: 1.1rem;">Forțează Închiderea Acum!</span>
+                        <span style="color: #cbd5e1; font-size: 0.85rem;">Închide manual restaurantul ignorând programul (Ex: plecați mai devreme).</span>
+                    </div>
+                </div>
+
+                <button id="btn-save-schedule" onclick="window.saveStoreSchedule()" class="modern-form-btn" style="background: #3498db; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4); margin-top: 10px;"><i class="fas fa-save"></i> Salvează Programul</button>
             </div>
         </main>
 
