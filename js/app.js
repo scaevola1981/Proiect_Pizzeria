@@ -280,7 +280,8 @@ function renderProducts() {
         const safeImage = escapeHTML(imageUrl);
         
         let priceDisplay = `${escapeHTML(String(p.pret))} Lei`;
-        let actionButton = `<button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea</button>`;
+        const displayPersonTag = currentPersonClient === "Masa" ? "Împreună" : currentPersonClient;
+        let actionButton = `<button class="btn-alegere" data-product-id="${parseInt(p.id)}" style="flex: 3;" onclick="addToCart(${parseInt(p.id)})">Alegerea mea (${escapeHTML(displayPersonTag)})</button>`;
 
         div.innerHTML = `
             <img src="${safeImage}" alt="${safeName}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
@@ -301,6 +302,28 @@ function renderProducts() {
         container.innerHTML = '<p style="text-align:center; width:100%; margin-top: 30px;">Niciun produs aici încă. 🤔</p>';
     }
 }
+
+let currentPersonClient = "Masa";
+
+window.selectPersonChip = function (btnElement, personValue) {
+    currentPersonClient = personValue;
+
+    document.querySelectorAll('.person-chip').forEach(btn => {
+        btn.style.background = 'rgba(0,0,0,0.3)';
+        btn.style.color = 'white';
+        btn.style.border = '1px solid rgba(255,255,255,0.2)';
+        btn.style.fontWeight = '500';
+    });
+
+    if (btnElement) {
+        btnElement.style.background = '#f5b041';
+        btnElement.style.color = '#1e293b';
+        btnElement.style.border = '1px solid #f5b041';
+        btnElement.style.fontWeight = 'bold';
+    }
+
+    renderProducts();
+};
 
 let currentCustomizeProductId = null;
 
@@ -333,11 +356,7 @@ window.addToCart = function (productId, notes = '') {
     let product = produse.find(p => p.id === productId);
     if (!product) return;
 
-    let currentCustomer = "Masa";
-    const selector = document.getElementById('current-customer-name');
-    if (isWaiterMode && selector) {
-        currentCustomer = selector.value;
-    }
+    let currentCustomer = currentPersonClient || "Masa";
 
     const existingItem = cart.find(item => item.product.id === productId && item.notes === notes && item.customer_name === currentCustomer);
 
