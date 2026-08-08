@@ -268,9 +268,18 @@
 
     <!-- App Loading Screen to prevent FOUC -->
     <div id="app-loading"
-        style="position: fixed; inset: 0; background: #0f172a; z-index: 9999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease;">
+        style="position: fixed; inset: 0; background: #0f172a; z-index: 9999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease; pointer-events: none;">
         <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #f5b041;"></i>
     </div>
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('app-loading');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(function() { loader.style.display = 'none'; }, 300);
+            }
+        }, 500);
+    </script>
 
     <!-- Notificări Custom -->
     <div id="notification-container"

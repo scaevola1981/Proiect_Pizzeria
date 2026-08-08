@@ -28,23 +28,35 @@ function getTableNumber() {
     return null;
 }
 
+// Funcție sigură pentru ascunderea ecranului de încărcare pe mobil
+function hideAppLoader() {
+    const appLoader = document.getElementById('app-loading');
+    if (appLoader) {
+        appLoader.style.opacity = '0';
+        setTimeout(() => {
+            if (appLoader) appLoader.style.display = 'none';
+        }, 300);
+    }
+}
+window.hideAppLoader = hideAppLoader;
+
 // Inițializare pagină meniu.html
 if (document.getElementById('produse-container')) {
     
-    // Așteptăm ca Supabase să fie încărcat pentru a verifica device-ul
-    setTimeout(initDeviceManager, 1000);
+    // Ascundem loader-ul automat pe mobil după 400ms (evită ecran blocat pe mobil)
+    setTimeout(hideAppLoader, 400);
 
     numarMasa = getTableNumber();
     if (numarMasa) {
-        document.getElementById('masa-id').innerText = escapeHTML(numarMasa);
+        const masaEl = document.getElementById('masa-id');
+        if (masaEl) masaEl.innerText = escapeHTML(numarMasa);
     } else {
-        document.getElementById('masa-id').innerText = "Necunoscută";
+        const masaEl = document.getElementById('masa-id');
+        if (masaEl) masaEl.innerText = "Necunoscută";
         setTimeout(() => {
-            if (!isWaiterMode) {
-                const qrModal = document.getElementById('qr-error-modal');
-                if (qrModal) qrModal.classList.remove('hidden');
-            }
-        }, 1500); // Mărit delay-ul pentru a lăsa timp device manager-ului
+            const qrModal = document.getElementById('qr-error-modal');
+            if (qrModal) qrModal.classList.remove('hidden');
+        }, 800);
     }
 
     const tabBar = document.getElementById('tab-bar');

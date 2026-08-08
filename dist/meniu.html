@@ -17,7 +17,7 @@
         crossorigin="anonymous" referrerpolicy="no-referrer">
   <script type="module" crossorigin src="/assets/supabase-D3kzC76g.js"></script>
   <script type="module" crossorigin src="/assets/security-Bv09CpAF.js"></script>
-  <script type="module" crossorigin src="/assets/app-Df2xJvpg.js"></script>
+  <script type="module" crossorigin src="/assets/app-DnO65b_Y.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/supabase-DTRQcM_n.css">
 </head>
 
@@ -271,9 +271,18 @@
 
     <!-- App Loading Screen to prevent FOUC -->
     <div id="app-loading"
-        style="position: fixed; inset: 0; background: #0f172a; z-index: 9999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease;">
+        style="position: fixed; inset: 0; background: #0f172a; z-index: 9999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease; pointer-events: none;">
         <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #f5b041;"></i>
     </div>
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('app-loading');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(function() { loader.style.display = 'none'; }, 300);
+            }
+        }, 500);
+    </script>
 
     <!-- Notificări Custom -->
     <div id="notification-container"
