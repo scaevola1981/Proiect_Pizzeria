@@ -495,21 +495,7 @@ function renderOrderItemsGroupedByPerson(detaliiComanda) {
         grouped[person].push(item);
     });
 
-    const keys = Object.keys(grouped);
-    // Dacă toate produsele sunt comandate împreună la "Masa"
-    if (keys.length === 1 && keys[0] === 'Masa') {
-        return grouped['Masa'].map(i => {
-            const price = parseFloat(i.product.pret || 0);
-            const qty = parseInt(i.quantity || 1);
-            const lineTotal = price * qty;
-            const noteHtml = i.notes ? `<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(i.notes)}</small>` : '';
-            return `<div style="margin-bottom: 6px; font-size: 0.95rem; color: #fff;">
-                <b style="color: #f5b041;">${qty}x</b> ${escapeHTML(i.product.nume)} 
-                <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">(${lineTotal.toFixed(2)} Lei)</span>
-                ${noteHtml}
-            </div>`;
-        }).join('');
-    }
+
 
     // Dacă sunt defalcate pe persoane
     let html = '';
