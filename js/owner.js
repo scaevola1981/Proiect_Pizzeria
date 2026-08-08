@@ -684,16 +684,39 @@ function printReceiptForOrder(order) {
     </body>
     </html>`;
 
-    const printWindow = window.open('', '_blank', 'width=320,height=600');
-    if (printWindow) {
-        printWindow.document.write(receiptHtml);
-        printWindow.document.close();
-        printWindow.onload = () => {
-            printWindow.print();
-            // Închide fereastra după ce utilizatorul a dat print sau a anulat
-            printWindow.onafterprint = () => printWindow.close();
-        };
+    // Folosim un iframe ascuns pentru printare silențioasă (fără popup blocker)
+    let printFrame = document.getElementById('receipt-print-frame');
+    if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'receipt-print-frame';
+        printFrame.style.cssText = 'position: fixed; top: -10000px; left: -10000px; width: 80mm; height: 0; border: none; visibility: hidden;';
+        document.body.appendChild(printFrame);
     }
+
+    const frameDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(receiptHtml);
+    frameDoc.close();
+
+    // Așteptăm încărcarea completă, apoi printăm
+    printFrame.onload = () => {
+        try {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+        } catch (e) {
+            console.warn('Printare automată blocată, se deschide fereastra manuală:', e);
+            // Fallback: deschidem fereastră separată dacă iframe-ul nu merge
+            const printWindow = window.open('', '_blank', 'width=320,height=600');
+            if (printWindow) {
+                printWindow.document.write(receiptHtml);
+                printWindow.document.close();
+                printWindow.onload = () => {
+                    printWindow.print();
+                    printWindow.onafterprint = () => printWindow.close();
+                };
+            }
+        }
+    };
 }
 
 // Funcție globală pentru print manual de pe card
