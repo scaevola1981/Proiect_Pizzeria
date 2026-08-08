@@ -120,6 +120,8 @@ async function loadOwnerOrders() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'comenzi' }, (payload) => {
             if (payload.eventType === 'INSERT') {
                 allOrders.unshift(payload.new);
+                // Printare automată bon termic la comandă nouă
+                printReceiptForOrder(payload.new);
             } else if (payload.eventType === 'UPDATE') {
                 const idx = allOrders.findIndex(o => o.id === payload.new.id);
                 if (idx > -1) allOrders[idx] = payload.new;
@@ -216,6 +218,7 @@ window.renderOwnerOrders = function () {
                 </div>
             </div>
             ${buttonHtml}
+            <button class="modern-card-btn" style="background: #2c3e50; margin-top: 0;" onclick="window.printOrderReceipt(${parseInt(order.id)})"><i class="fas fa-print"></i> Printează Bon</button>
         `;
         container.appendChild(div);
     });
@@ -540,6 +543,166 @@ function renderOrderItemsGroupedByPerson(detaliiComanda) {
 
     return html;
 }
+
+// ==========================================
+// PRINTARE BON TERMIC — OCPP-80K (80mm)
+// ==========================================
+
+function printReceiptForOrder(order) {
+    if (!order) return;
+
+    const detalii = order.detalii_comanda || [];
+    const masaStr = String(order.numar_masa || '?');
+    const totalStr = parseFloat(order.total || 0).toFixed(2);
+    const dateObj = new Date(order.created_at);
+    const dateStr = dateObj.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = dateObj.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+
+    // Grupare pe persoane
+    const grouped = {};
+    detalii.forEach(item => {
+        const person = item.customer_name && item.customer_name.trim() !== '' ? item.customer_name : 'Masa';
+        if (!grouped[person]) grouped[person] = [];
+        grouped[person].push(item);
+    });
+
+    let itemsHtml = '';
+    for (const [person, items] of Object.entries(grouped)) {
+        const displayLabel = person === 'Masa' ? '👥 Împreună' : `👤 ${person}`;
+        let personTotal = 0;
+
+        itemsHtml += `<div style="border-top: 1px dashed #000; padding: 4px 0 2px; margin-top: 4px;">
+            <b>${displayLabel}</b>
+        </div>`;
+
+        items.forEach(item => {
+            const qty = parseInt(item.quantity || 1);
+            const price = parseFloat(item.product?.pret || 0);
+            const lineTotal = qty * price;
+            personTotal += lineTotal;
+            const notes = item.notes ? `<br><small><i>* ${item.notes}</i></small>` : '';
+            itemsHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; padding: 1px 0;">
+                <span>${qty}x ${item.product?.nume || 'Produs'}</span>
+                <span>${lineTotal.toFixed(2)}</span>
+            </div>${notes}`;
+        });
+
+        itemsHtml += `<div style="text-align: right; font-size: 11px; font-weight: bold; padding-top: 2px;">Subtotal: ${personTotal.toFixed(2)} Lei</div>`;
+    }
+
+    const receiptHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Bon Bella Roma</title>
+        <style>
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Courier New', monospace;
+                width: 80mm;
+                padding: 5mm;
+                font-size: 12px;
+                color: #000;
+            }
+            .header {
+                text-align: center;
+                border-bottom: 2px solid #000;
+                padding-bottom: 6px;
+                margin-bottom: 6px;
+            }
+            .header h1 {
+                font-size: 18px;
+                letter-spacing: 2px;
+                margin-bottom: 2px;
+            }
+            .header p {
+                font-size: 10px;
+            }
+            .info {
+                display: flex;
+                justify-content: space-between;
+                font-size: 12px;
+                font-weight: bold;
+                padding: 4px 0;
+                border-bottom: 1px dashed #000;
+            }
+            .total-section {
+                border-top: 2px solid #000;
+                margin-top: 8px;
+                padding-top: 6px;
+                text-align: center;
+            }
+            .total-section .total {
+                font-size: 18px;
+                font-weight: bold;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 10px;
+                padding-top: 6px;
+                border-top: 1px dashed #000;
+                font-size: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>BELLA ROMA</h1>
+            <p>PUB & PIZZERIE</p>
+        </div>
+
+        <div class="info">
+            <span>Masa: ${masaStr}</span>
+            <span>#${parseInt(order.id)}</span>
+        </div>
+        <div class="info" style="border-bottom: none; font-weight: normal;">
+            <span>${dateStr}</span>
+            <span>${timeStr}</span>
+        </div>
+
+        <div style="margin-top: 4px;">
+            ${itemsHtml}
+        </div>
+
+        <div class="total-section">
+            <div class="total">TOTAL: ${totalStr} Lei</div>
+        </div>
+
+        <div class="footer">
+            <p>Vă mulțumim!</p>
+            <p>www.bella-roma.ro</p>
+        </div>
+    </body>
+    </html>`;
+
+    const printWindow = window.open('', '_blank', 'width=320,height=600');
+    if (printWindow) {
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+        printWindow.onload = () => {
+            printWindow.print();
+            // Închide fereastra după ce utilizatorul a dat print sau a anulat
+            printWindow.onafterprint = () => printWindow.close();
+        };
+    }
+}
+
+// Funcție globală pentru print manual de pe card
+window.printOrderReceipt = function(orderId) {
+    const order = allOrders.find(o => o.id === orderId);
+    if (order) {
+        printReceiptForOrder(order);
+    }
+};
 
 // ==========================================
 // INIȚIALIZARE
