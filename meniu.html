@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pizzerie - Comandă Online</title>
+    <title>Bella Roma - Meniu Comandă</title>
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://cdnjs.cloudflare.com; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
     <link rel="manifest" href="/manifest.json">
@@ -15,7 +15,6 @@
     <meta name="theme-color" content="#0f172a">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        integrity="sha512-iecdLmaskl0HPNiekfRgJIf+X5ycReBmeByPmIa09Z3S24z0H8w23+bUEuKd5ICxGBe2hPkdWus9VqAeL6cBA=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 
@@ -75,8 +74,42 @@
             </button>
         </div>
     </div>
-    <div id="cart-items">
-                <p class="empty-cart">Nu ati comandat inca nimic!</p>
+
+    <div class="content-wrapper">
+        <main class="glass-panel products-area">
+            <!-- Search & Tabs -->
+            <div class="menu-controls" style="margin-bottom: 25px;">
+                <div class="search-bar" style="margin-bottom: 15px; position: relative;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666;"></i>
+                    <input type="text" id="search-input" placeholder="Caută preparat sau băutură..."
+                        style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <div class="menu-tabs"
+                    style="display: flex; background: rgba(255, 255, 255, 0.15); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.3);">
+                    <button id="tab-restaurant" class="tab-btn active"
+                        onclick="if(typeof window.setTab==='function') window.setTab('restaurant');"
+                        style="flex: 1; padding: 12px; border: none; background: #fff; color: #333; font-weight: bold; cursor: pointer; transition: all 0.3s; border-right: 1px solid rgba(255, 255, 255, 0.2);">
+                        🍕 Meniu Restaurant
+                    </button>
+                    <button id="tab-bar" class="tab-btn"
+                        onclick="if(typeof window.setTab==='function') window.setTab('bar');"
+                        style="flex: 1; padding: 12px; border: none; background: transparent; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s;">
+                        🍹 Meniu Bar
+                    </button>
+                </div>
+            </div>
+
+            <div id="produse-container" class="products-grid">
+                <p style="text-align:center; width:100%;">Meniul se încarcă...</p>
+            </div>
+        </main>
+
+        <aside class="glass-panel cart-area">
+            <h2 id="cart-title">Comanda mea</h2>
+
+            <div id="cart-items">
+                <p class="empty-cart">Nu ați comandat încă nimic.</p>
             </div>
             <div class="cart-summary">
                 <h3>Total: <span id="cart-total">0.00</span> Lei</h3>
@@ -90,9 +123,7 @@
         <div
             style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
             <h2 id="customize-product-name" style="color: #f5b041; margin-bottom: 10px;">Personalizează</h2>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vre-o
-                alergie? Scrie mai
-                jos:</p>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vreo alergie? Scrie mai jos:</p>
             <textarea id="customize-notes" rows="3" placeholder="ex: fără ceapă, extra sos, alergic la alune..."
                 class="modern-input" style="margin-bottom: 20px; resize: none;" maxlength="200"></textarea>
             <div style="display: flex; gap: 10px;">
@@ -104,126 +135,50 @@
         </div>
     </div>
 
-    <!-- Modal Instrucțiuni Instalare Aplicație -->
-    <div id="pwa-install-modal" class="modal hidden" style="z-index: 99999;">
-        <div class="glass-panel"
-            style="max-width: 450px; width: 90%; text-align: center; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); background: rgba(15, 23, 42, 0.95); padding: 30px; border-radius: 20px;">
-            <h2 style="color: #f5b041; margin-bottom: 15px; font-size: 1.4rem;">
-                <i class="fas fa-download"></i> Instalare Aplicație Bella Roma
-            </h2>
-            <p style="color: #cbd5e1; font-size: 1rem; margin-bottom: 20px; line-height: 1.5;">
-                Pentru o experiență mai rapidă și notificări instantanee pe ecranul blocat:
+    <!-- Modal Eroare Locație / Geofencing -->
+    <div id="geo-error-modal" class="modal hidden">
+        <div
+            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <i class="fas fa-map-marker-alt" style="font-size: 3.5rem; color: #e74c3c; margin-bottom: 20px;"></i>
+            <h2 style="color: #e74c3c; margin-bottom: 15px;">Comanda nu poate fi procesată</h2>
+            <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 25px;">
+                Se pare că vă aflați în afara restaurantului Bella Roma. Comenzile online la masă sunt permise doar pentru clienții aflați în locație.
             </p>
-            <div
-                style="background: rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; text-align: left; margin-bottom: 25px; color: #fff; font-size: 0.95rem; line-height: 1.6;">
-                <div style="margin-bottom: 6px;"><strong style="color: #4ade80;"><i class="fab fa-chrome"></i> Chrome pe
-                        iPhone / iPad (iOS):</strong></div>
-                1. Apasă pe iconița <strong>Partajare</strong> <i class="fas fa-arrow-up-from-bracket"
-                    style="color: #60a5fa;"></i> din bara dreapta-sus din Chrome.<br>
-                2. Selectează <strong>Adaugă pe ecranul principal</strong> <i class="far fa-plus-square"
-                    style="color: #4ade80;"></i>.
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 10px 0;">
-                <div style="margin-bottom: 6px;"><strong style="color: #38bdf8;"><i class="fab fa-safari"></i> Safari pe
-                        iPhone / iPad (iOS):</strong></div>
-                1. Apasă pe <strong>Partajare</strong> <i class="fas fa-share-square" style="color: #38bdf8;"></i> în
-                josul ecranului.<br>
-                2. Alege <strong>Adaugă pe ecranul principal</strong> <i class="far fa-plus-square"
-                    style="color: #4ade80;"></i>.
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 10px 0;">
-                <div style="margin-bottom: 6px;"><strong style="color: #f5b041;"><i class="fab fa-android"></i> Android
-                        / PC (Chrome):</strong></div>
-                Apasă pe cele 3 puncte <i class="fas fa-ellipsis-v"></i> sus ➔ <strong>Instalează aplicația</strong>.
-            </div>
-            <button
-                onclick="document.getElementById('pwa-install-modal').classList.add('hidden'); if(typeof window.requestNotificationPermissionAndSetup === 'function') window.requestNotificationPermissionAndSetup();"
-                class="modern-form-btn"
-                style="width: 100%; padding: 12px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); font-weight: bold; border-radius: 10px; cursor: pointer;">
-                <i class="fas fa-bell"></i> Am înțeles & Permite Notificările
-            </button>
+            <button class="btn-secondary"
+                onclick="document.getElementById('geo-error-modal').classList.add('hidden')"
+                style="width: 100%; border-radius: 10px; padding: 12px; font-weight: bold;">Închide</button>
         </div>
     </div>
 
-    <!-- Modal Geolocation Error -->
-    <div id="geo-error-modal" class="modal hidden" style="z-index: 99999;">
-        <div class="glass-panel"
-            style="max-width: 450px; width: 90%; text-align: center; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); background: rgba(15, 23, 42, 0.95); padding: 30px; border-radius: 20px;">
-            <div style="font-size: 3rem; color: #e74c3c; margin-bottom: 15px;">
-                <i class="fas fa-map-marker-alt"></i>
-            </div>
-            <h2 style="color: #f5b041; margin-bottom: 15px; font-size: 1.4rem;">
-                Comandă Interzisă
-            </h2>
-            <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px;">
-                Ne pare rau, dar nu puteti efectua o comanda din afara zonei restaurantului nostru !
+    <!-- Modal Eroare QR (fără număr masă) -->
+    <div id="qr-error-modal" class="modal hidden">
+        <div
+            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <i class="fas fa-qrcode" style="font-size: 3.5rem; color: #f5b041; margin-bottom: 20px;"></i>
+            <h2 style="color: #f5b041; margin-bottom: 15px;">Scanați Codul QR de pe Masă</h2>
+            <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 25px;">
+                Pentru a plasa o comandă, vă rugăm să scanați codul QR fizic de pe masa la care sunteți așezat.
             </p>
-            <button onclick="document.getElementById('geo-error-modal').classList.add('hidden');"
-                class="modern-form-btn"
-                style="width: 100%; padding: 12px; background: #e74c3c; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
-                Am înțeles
-            </button>
-        </div>
-    </div>
-
-    <!-- Modal Lipsa QR / Masa -->
-    <div id="qr-error-modal" class="modal hidden" style="z-index: 99999;">
-        <div class="glass-panel"
-            style="max-width: 450px; width: 90%; text-align: center; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.5); background: rgba(15, 23, 42, 0.95); padding: 30px; border-radius: 20px;">
-            <div style="font-size: 3rem; color: #f5b041; margin-bottom: 15px;">
-                <i class="fas fa-qrcode"></i>
-            </div>
-            <h2 style="color: #f5b041; margin-bottom: 15px; font-size: 1.4rem;">
-                Atenție
-            </h2>
-            <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px;">
-                Buna! pentru a inainta o comanda va rugam sa scanati QR codul de pe masa dumneavoastra!
-            </p>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button
-                    onclick="document.getElementById('qr-error-modal').classList.add('hidden'); if(typeof window.startQRScanner === 'function') window.startQRScanner();"
-                    class="modern-form-btn"
-                    style="width: 100%; padding: 12px; background: #f5b041; color: #1e293b; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
-                    <i class="fas fa-camera"></i> Scanează Acum
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+                <button onclick="window.startQRScanner()"
+                    style="width: 100%; background: #2ecc71; color: #1e293b; border-radius: 10px; padding: 14px; font-weight: bold; font-size: 1.1rem; border: none; cursor: pointer;">
+                    <i class="fas fa-camera"></i> Deshide Scanner QR
                 </button>
-                <button onclick="document.getElementById('qr-error-modal').classList.add('hidden');"
-                    class="btn-secondary"
-                    style="width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 0.95rem;">
-                    Vreau doar să văd meniul
-                </button>
+                <button class="btn-secondary"
+                    onclick="document.getElementById('qr-error-modal').classList.add('hidden')"
+                    style="width: 100%; border-radius: 10px; padding: 12px; margin-top: 5px;">Răsfoiește doar Meniul</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal QR Scanner -->
-    <div id="qr-scanner-modal" class="modal hidden" style="z-index: 100000; background: rgba(0,0,0,0.9);">
-        <div class="glass-panel"
-            style="max-width: 500px; width: 100%; height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
-            <h2 style="color: #f5b041; margin-bottom: 20px;">Scanați Codul QR</h2>
-            <div id="qr-reader"
-                style="width: 100%; max-width: 400px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            </div>
-            <button onclick="if(typeof window.stopQRScanner === 'function') window.stopQRScanner();"
-                class="modern-form-btn"
-                style="margin-top: 30px; width: 80%; max-width: 300px; padding: 15px; background: #e74c3c; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; border: none;">
-                Închide Scannerul
-            </button>
-        </div>
-    </div>
-
-    <!-- Modal Restaurant Închis -->
-    <div id="store-closed-overlay" class="modal hidden" style="z-index: 999999; background: rgba(10, 15, 30, 1);">
-        <div class="glass-panel"
-            style="max-width: 500px; width: 90%; text-align: center; border: 1px solid rgba(231, 76, 60, 0.3); box-shadow: 0 10px 40px rgba(231, 76, 60, 0.2); background: rgba(15, 23, 42, 0.98); padding: 40px 30px; border-radius: 20px;">
-            <div style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;">
-                <i class="fas fa-store-alt-slash"></i>
-            </div>
-            <h1
-                style="color: #f5b041; font-size: 2.2rem; margin-bottom: 20px; font-family: 'Georgia', serif; letter-spacing: 2px;">
-                BELLA ROMA<br><span style="font-size: 1.2rem; color: #e74c3c;">ÎNCHIS</span></h1>
-            <p id="store-closed-message"
-                style="color: rgba(255,255,255,0.9); font-size: 1.2rem; line-height: 1.6; margin-bottom: 0;">
-                Ne pare rău, programul restaurantului s-a încheiat. Nu putem prelua comenzi în acest moment. Vă așteptăm
-                cu drag mâine!
-            </p>
+    <!-- Modal Scanare QR În-Aplicație -->
+    <div id="qr-scanner-modal" class="modal hidden">
+        <div
+            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
+            <h2 style="color: #f5b041; margin-bottom: 15px;"><i class="fas fa-camera"></i> Scanați Codul QR de pe Masă</h2>
+            <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px;"></div>
+            <button onclick="window.stopQRScanner()" class="btn-secondary"
+                style="width: 100%; border-radius: 10px; padding: 12px; font-weight: bold;">Anulează Scanarea</button>
         </div>
     </div>
 
