@@ -1,0 +1,26 @@
+{
+  "name": "Bella Roma - Panou Ospătar",
+  "short_name": "Ospătar Bella",
+  "description": "Panou comenzi ospătar Bella Roma Pub & Pizzerie",
+  "start_url": "/ospatar.html",
+  "scope": "/",
+  "id": "/ospatar.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/img/bella-roma.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/bella-roma.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
