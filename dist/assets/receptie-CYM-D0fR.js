@@ -1,0 +1,92 @@
+import"./supabase-D3kzC76g.js";import"./security-Bv09CpAF.js";import"./app-Df2xJvpg.js";let p=[];async function T(){const t=document.getElementById("login-overlay"),n=document.getElementById("btn-owner-login"),o=document.getElementById("btn-owner-logout"),a=document.getElementById("owner-email"),r=document.getElementById("owner-password"),e=document.getElementById("owner-login-error"),{authenticated:c}=await window.getAuthSession();if(c)t.style.display="none",h();else{const i=document.getElementById("auth-loading"),l=document.getElementById("login-form-content");i&&(i.style.display="none"),l&&(l.style.display="block")}async function s(){const i=a.value.trim(),l=r.value,d=window.checkLoginRateLimit();if(d.blocked){e.style.display="block",e.innerText=`Prea multe încercări. Așteptați ${d.remainingSeconds} secunde.`;return}if(!i||!l){e.style.display="block",e.innerText="Completați email-ul și parola.";return}if(n.disabled=!0,n.innerHTML='<i class="fas fa-spinner fa-spin"></i> Se autentifică...',(await window.loginAdmin(i,l)).success)window.resetLoginAttempts(),e.style.display="none",t.style.display="none",h();else{const u=window.recordFailedLogin();e.style.display="block",u.blocked?e.innerText="Cont blocat temporar. Așteptați 5 minute.":e.innerText=`Email sau parolă incorectă. Mai aveți ${u.attemptsLeft} încercări.`}n.disabled=!1,n.innerHTML='<i class="fas fa-sign-in-alt"></i> Autentificare'}n&&n.addEventListener("click",s),r&&r.addEventListener("keypress",i=>{i.key==="Enter"&&s()}),a&&a.addEventListener("keypress",i=>{i.key==="Enter"&&s()}),o&&o.addEventListener("click",async()=>{await window.supabaseClient.auth.signOut(),window.location.reload()})}async function h(){if(!window.supabaseClient)return;const{authenticated:t}=await window.getAuthSession();if(!t){document.getElementById("login-overlay").style.display="flex";const a=document.getElementById("auth-loading"),r=document.getElementById("login-form-content");a&&(a.style.display="none"),r&&(r.style.display="block");return}const{data:n,error:o}=await window.supabaseClient.from("comenzi").select("*").order("created_at",{ascending:!1});if(o){console.error("Eroare:",o);return}p=n||[],renderOwnerOrders(),window.supabaseClient.channel("owner_channel").on("postgres_changes",{event:"*",schema:"public",table:"comenzi"},a=>{if(a.eventType==="INSERT")p.unshift(a.new);else if(a.eventType==="UPDATE"){const r=p.findIndex(e=>e.id===a.new.id);r>-1&&(p[r]=a.new)}else a.eventType==="DELETE"&&(p=p.filter(r=>r.id!==a.old.id));renderOwnerOrders()}).subscribe()}window.renderOwnerOrders=function(){const t=document.getElementById("comenzi-container");if(!t)return;t.innerHTML="";const n=new Date;n.setHours(0,0,0,0);let o=0;if(p.length===0){t.innerHTML="<p>Nicio comandă înregistrată.</p>";return}p.forEach(e=>{const s=new Date(e.created_at)>=n;if(s&&e.status!=="finalizata"&&(o+=parseFloat(e.total)||0),e.status==="finalizata"||!s)return;const i=document.createElement("div");i.className="modern-card",e.status,e.status;let l=L(e.detalii_comanda);const d=new Date(e.created_at).toLocaleDateString("ro-RO",{weekday:"short",day:"numeric",month:"short"}),y=new Date(e.created_at).toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"});let u=e.status.toUpperCase(),m="#f39c12";e.status==="noua"?(u="NOUĂ",m="#f39c12"):e.status==="in_preparare"?(u="ÎN PREPARARE",m="#2ecc71"):e.status==="servita"&&(u="SERVITĂ",m="#95a5a6");let g="";e.status==="noua"?g=`<button class="modern-card-btn" onclick="window.updateOrderStatus(${parseInt(e.id)}, 'in_preparare')"><i class="fas fa-check"></i> Acceptă Comanda</button>`:e.status==="in_preparare"?g=`<button class="modern-card-btn success" onclick="window.updateOrderStatus(${parseInt(e.id)}, 'servita')"><i class="fas fa-flag-checkered"></i> Încheiere Comandă</button>`:e.status==="servita"&&(g='<button class="modern-card-btn disabled" disabled><i class="fas fa-check-circle"></i> Comanda Încheiată</button>'),i.innerHTML=`
+            <div class="modern-card-header" style="background: url('/img/bella-roma.png') center/cover; position: relative;">
+                <div class="modern-card-tab">Masa ${escapeHTML(String(e.numar_masa))}</div>
+                <span class="modern-card-price" style="position: absolute; bottom: 10px; right: 10px;">${escapeHTML(String(e.total))} Lei</span>
+            </div>
+            <div class="modern-card-body">
+                <div class="modern-card-title-row">
+                    <h3>Comanda #${parseInt(e.id)}</h3>
+                </div>
+                <div class="modern-card-desc">
+                    ${l}
+                </div>
+                <div class="modern-card-tags">
+                    <span class="modern-tag">Ora ${escapeHTML(y)}</span>
+                    <span class="modern-tag">${escapeHTML(d)}</span>
+                    <span class="modern-tag" style="background: ${m}; color: white;">${escapeHTML(u)}</span>
+                </div>
+            </div>
+            ${g}
+        `,t.appendChild(i)});const a=p.filter(e=>new Date(e.created_at)>=n&&e.status!=="finalizata");if(a.length>0||o>0){const e=document.createElement("div");e.style.gridColumn="1 / -1",e.innerHTML=`<h2 style="margin-bottom:20px; color:#2ecc71; text-align: center;">Încasări Azi: ${o.toFixed(2)} Lei</h2>`,t.insertBefore(e,t.firstChild)}const r=document.getElementById("btn-incheiere-zi");r&&(r.style.display=a.length>0?"inline-block":"none"),window.renderHistory()};window.renderHistory=function(){const t=document.getElementById("history-content");if(!t)return;const n=new Date;n.setDate(n.getDate()-7);const o=p.filter(e=>new Date(e.created_at)>=n);let a="",r="";if(o.length===0)a='<p style="text-align:center; margin-top:20px;">Nu există comenzi în ultimele 7 zile.</p>';else{const e={};o.forEach(c=>{const s=new Date(c.created_at).toLocaleDateString("ro-RO",{weekday:"long",day:"numeric",month:"long",year:"numeric"});e[s]=(e[s]||0)+(parseFloat(c.total)||0)}),o.forEach(c=>{const s=new Date(c.created_at),i=s.toLocaleDateString("ro-RO",{weekday:"short",day:"numeric",month:"short"}),l=s.toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"}),d=s.toLocaleDateString("ro-RO",{weekday:"long",day:"numeric",month:"long",year:"numeric"});if(d!==r){const u=e[d]?e[d].toFixed(2):"0.00";a+=`<div style="grid-column: 1 / -1; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-top: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                             <h3 style="color: #f1c40f; text-transform: capitalize; margin: 0;">${escapeHTML(d)}</h3>
+                             <h3 style="color: #2ecc71; margin: 0; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 8px;">Total Zi: ${u} Lei</h3>
+                         </div>`,r=d}let y=L(c.detalii_comanda);a+=`
+                <div class="modern-card history-card">
+                    <div class="modern-card-header" style="background: url('/img/bella-roma.png') center/cover; position: relative;">
+                        <div class="modern-card-tab">Masa ${escapeHTML(String(c.numar_masa))}</div>
+                        <span class="modern-card-price" style="position: absolute; bottom: 10px; right: 10px;">${escapeHTML(String(c.total))} Lei</span>
+                    </div>
+                    <div class="modern-card-body">
+                        <div class="modern-card-title-row">
+                            <h3>Comanda #${parseInt(c.id)}</h3>
+                        </div>
+                        <div class="modern-card-desc">
+                            ${y}
+                        </div>
+                        <div class="modern-card-tags">
+                            <span class="modern-tag">Ora ${escapeHTML(l)}</span>
+                            <span class="modern-tag">${escapeHTML(i)}</span>
+                        </div>
+                    </div>
+                </div>
+            `})}t.innerHTML=a};window.showEndDayModal=function(){const t=document.getElementById("end-day-modal"),n=document.getElementById("end-day-summary"),o=new Date;o.setHours(0,0,0,0);const a=p.filter(i=>new Date(i.created_at)>=o),r=a.filter(i=>i.status==="noua"||i.status==="in_preparare"),e=a.filter(i=>i.status==="servita"),c=a.reduce((i,l)=>i+(parseFloat(l.total)||0),0),s=a.length;n.innerHTML=`
+        <p style="color: #f5b041; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;">Sumar Zi de Lucru</p>
+        <p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-receipt" style="width: 20px;"></i> Total comenzi azi: <strong>${s}</strong></p>
+        <p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-check-circle" style="width: 20px;"></i> Comenzi servite: <strong style="color: #2ecc71;">${e.length}</strong></p>
+        ${r.length>0?`<p style="color: #e2e8f0; margin-bottom: 5px;"><i class="fas fa-exclamation-circle" style="width: 20px;"></i> Comenzi încă active: <strong style="color: #e74c3c;">${r.length}</strong></p>`:""}
+        <p style="color: #2ecc71; font-size: 1.3rem; font-weight: bold; margin-top: 10px;"><i class="fas fa-cash-register" style="width: 20px;"></i> Încasări: ${c.toFixed(2)} Lei</p>
+    `,t.classList.remove("hidden")};window.closeEndDayModal=function(){document.getElementById("end-day-modal").classList.add("hidden")};window.confirmEndDay=async function(){const{authenticated:t}=await window.getAuthSession();if(!t){alert("Sesiunea a expirat. Autentificați-vă din nou."),window.location.reload();return}const n=new Date;n.setDate(n.getDate()-7);try{await window.supabaseClient.from("comenzi").delete().lt("created_at",n.toISOString())}catch(s){console.error("Eroare la curățarea istoricului vechi:",s)}const o=new Date;o.setHours(0,0,0,0);const a=p.filter(s=>new Date(s.created_at)>=o&&s.status!=="finalizata");if(a.length===0){alert("Nu există comenzi active de finalizat."),window.closeEndDayModal();return}let r=0;for(const s of a){const{error:i}=await window.supabaseClient.from("comenzi").update({status:"finalizata"}).eq("id",s.id);i&&(console.error("Eroare la finalizare comanda #"+s.id,i),r++)}window.closeEndDayModal();const e=document.getElementById("cb-force-close");let c=!1;if(e&&e.checked)try{await window.supabaseClient.from("setari").upsert({key:"store_force_close",value:"true"},{onConflict:"key"}),c=!0}catch(s){console.error("Nu s-a putut forța închiderea:",s)}if(r===0){const s=p.filter(l=>new Date(l.created_at)>=o).reduce((l,d)=>l+(parseFloat(d.total)||0),0);let i=c?`
+
+⚠️ NOTĂ: Preluarea comenzilor a fost blocată (Forțare Închidere). Nu uitați să debifați din Admin mâine!`:"";alert(`✅ Ziua de muncă a fost închisă cu succes!
+
+Total încasări: ${s.toFixed(2)} Lei
+Comenzi finalizate: ${a.length}
+
+Toate comenzile au fost mutate în Istoric.${i}`)}else alert(`Ziua a fost închisă, dar ${r} comenzi au avut erori. Verificați istoricul.`)};window.toggleHistory=t=>{const n=document.getElementById("receptie-panel"),o=document.getElementById("istoric-panel");t?(n.style.display="none",o.style.display="block"):(n.style.display="block",o.style.display="none")};let w;const f=document.getElementById("install-app-btn");function x(){const t=window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===!0;f&&(t?f.style.display="none":f.style.display="inline-flex")}x();window.addEventListener("beforeinstallprompt",t=>{t.preventDefault(),w=t,x()});window.addEventListener("appinstalled",()=>{console.log("🎉 PWA Recepție instalată cu succes!"),f&&(f.style.display="none")});f&&f.addEventListener("click",async()=>{if(w){w.prompt();const{outcome:t}=await w.userChoice;console.log(`PWA install choice: ${t}`),t==="accepted"&&(f.style.display="none"),w=null}else alert(`Pentru a instala aplicația pe ecranul principal:
+
+• Pe iPhone (Safari): Apasă Partajare ⎋ -> Adaugă pe ecranul principal ➕
+• Pe iPhone (Chrome): Apasă Partajare ⎋ sus -> Adaugă pe ecranul principal ➕
+• Pe Android / PC (Chrome): Apasă Meniu ⁝ -> Instalează aplicația`)});window.openTableteModal=function(){const t=document.getElementById("tablete-modal");t&&t.classList.remove("hidden"),window.loadActiveDevices()};window.closeTableteModal=function(){const t=document.getElementById("tablete-modal");t&&t.classList.add("hidden")};window.loadActiveDevices=async function(){const t=document.getElementById("active-devices-container");if(!t)return;t.innerHTML='<p style="color: #fff; text-align: center;">Se încarcă lista de tablete...</p>';const{data:n,error:o}=await window.supabaseClient.from("active_devices").select("*").order("created_at",{ascending:!1});if(o){console.error("Eroare la preluarea tabletelor:",o),t.innerHTML='<p style="color: #e74c3c; text-align: center;">Eroare la încărcare.</p>';return}if(!n||n.length===0){t.innerHTML='<p style="color: #fff; text-align: center;">Nu există nicio tabletă înregistrată momentan.</p>';return}let a="";n.forEach(r=>{const e=r.status==="pending",c=e?"#e74c3c":"#2ecc71",s=e?"Așteaptă Activarea":"Activă (Ospătar)",i=r.custom_name||r.device_id;a+=`
+            <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; flex-direction: column;">
+                    <strong style="color: #f5b041; font-size: 1.1rem; cursor: pointer;" onclick="window.renameDevice('${r.id}', '${i}')" title="Click pentru a redenumi">${escapeHTML(i)} <i class="fas fa-edit" style="font-size: 0.8rem; margin-left: 5px;"></i></strong>
+                    <span style="color: ${c}; font-size: 0.9rem; margin-top: 5px;"><i class="fas fa-circle" style="font-size: 0.6rem; vertical-align: middle;"></i> ${s}</span>
+                    <span style="color: #95a5a6; font-size: 0.8rem;">ID Tehnic: ${escapeHTML(r.device_id)}</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="window.renameDevice('${r.id}', '${escapeHTML(i).replace(/'/g,"\\'")}')" style="background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem;" title="Schimbă Numele Tabletei">
+                        <i class="fas fa-pen"></i> Redenumește
+                    </button>
+                    ${e?`<button onclick="window.setDeviceStatus('${r.id}', 'active')" style="background: #2ecc71; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem;">Activează</button>`:`<button onclick="window.setDeviceStatus('${r.id}', 'pending')" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem;">Dezactivează</button>`}
+                </div>
+            </div>
+        `}),t.innerHTML=a};window.setDeviceStatus=async function(t,n){const{error:o}=await window.supabaseClient.from("active_devices").update({status:n}).eq("id",t);o?alert("Eroare la actualizarea statusului: "+o.message):window.loadActiveDevices()};window.renameDevice=async function(t,n){const o=prompt("Introduceți un nume nou pentru tabletă (ex: Tableta 1):",n);if(o&&o.trim()!==""){const{error:a}=await window.supabaseClient.from("active_devices").update({custom_name:o.trim()}).eq("id",t);a?alert("Eroare la redenumire: "+a.message):window.loadActiveDevices()}};window.supabaseClient&&window.supabaseClient.channel("active_devices_owner").on("postgres_changes",{event:"*",schema:"public",table:"active_devices"},t=>{const n=document.getElementById("tablete-modal");if(n&&!n.classList.contains("hidden")&&window.loadActiveDevices(),t.eventType==="INSERT"&&t.new){const o=t.new.device_id;showOwnerNotification(`📱 Dispozitiv nou detectat (${o})! Deschideți 'Gestionare Tablete' pentru activare.`,"fas fa-tablet-alt","#f5b041")}}).subscribe();function L(t){if(!t||!Array.isArray(t)||t.length===0)return'<p style="color: #cbd5e1; font-style: italic;">Fără detalii</p>';const n={};t.forEach(c=>{const s=c.customer_name&&c.customer_name.trim()!==""?c.customer_name:"Masa";n[s]||(n[s]=[]),n[s].push(c)});const o=Object.keys(n);if(o.length===1&&o[0]==="Masa")return n.Masa.map(c=>{const s=parseFloat(c.product.pret||0),i=parseInt(c.quantity||1),l=s*i,d=c.notes?`<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(c.notes)}</small>`:"";return`<div style="margin-bottom: 6px; font-size: 0.95rem; color: #fff;">
+                <b style="color: #f5b041;">${i}x</b> ${escapeHTML(c.product.nume)} 
+                <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">(${l.toFixed(2)} Lei)</span>
+                ${d}
+            </div>`}).join("");let a="";const r=["#f5b041","#3498db","#9b59b6","#2ecc71","#e67e22","#1abc9c"];let e=0;for(const[c,s]of Object.entries(n)){let i=0;const l=s.map(m=>{const g=parseFloat(m.product.pret||0),b=parseInt(m.quantity||1),v=g*b;i+=v;const E=m.notes?`<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(m.notes)}</small>`:"";return`<div style="color: #fff; font-size: 0.9rem; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span><b>${b}x</b> ${escapeHTML(m.product.nume)}</span>
+                <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">${v.toFixed(2)} Lei</span>
+            </div>${E}`}).join(""),d=r[e%r.length];e++;const u=c==="Masa"?"👥 Comandă Împreună":`👤 ${escapeHTML(c)}`;a+=`
+            <div style="margin-bottom: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.4); border-radius: 10px; border-left: 4px solid ${d}; border: 1px solid rgba(255,255,255,0.15); border-left-width: 4px; border-left-color: ${d};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.15);">
+                    <span style="color: ${d}; font-weight: 800; font-size: 0.95rem;">
+                        ${u}
+                    </span>
+                    <span style="background: rgba(46, 204, 113, 0.25); color: #2ecc71; font-weight: 800; font-size: 0.85rem; padding: 3px 10px; border-radius: 12px; border: 1px solid #2ecc71;">
+                        De plată: ${i.toFixed(2)} Lei
+                    </span>
+                </div>
+                ${l}
+            </div>
+        `}return a}T();

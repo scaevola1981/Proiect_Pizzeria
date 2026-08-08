@@ -168,12 +168,8 @@ window.renderOwnerOrders = function () {
         if (order.status === 'in_preparare') headerGradient = "linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)";
         if (order.status === 'servita') headerGradient = "linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)";
 
-        // XSS Protection — escapăm toate datele
-        let itemsStr = order.detalii_comanda && Array.isArray(order.detalii_comanda) ? order.detalii_comanda.map(i => {
-            let noteHtml = i.notes ? `<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(i.notes)}</small>` : '';
-            let customerHtml = (i.customer_name && i.customer_name !== "Masa") ? `<br><small style="color: #3498db; font-weight: bold;"><i class="fas fa-user"></i> ${escapeHTML(i.customer_name)}</small>` : '';
-            return `<b>${escapeHTML(String(i.quantity))}x</b> ${escapeHTML(i.product.nume)}${noteHtml}${customerHtml}`;
-        }).join('<br><br>') : 'Fără detalii';
+        // Formatează preparatele grupate pe persoane + suma de plată per persoană
+        let itemsStr = renderOrderItemsGroupedByPerson(order.detalii_comanda);
 
         const dateStr = new Date(order.created_at).toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
         const timeStr = new Date(order.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
@@ -284,11 +280,7 @@ window.renderHistory = function () {
                 lastDate = fullDateStr;
             }
 
-            // XSS Protection
-            let itemsStr = o.detalii_comanda && Array.isArray(o.detalii_comanda) ? o.detalii_comanda.map(i => {
-                let noteHtml = i.notes ? `<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(i.notes)}</small>` : '';
-                return `<b>${escapeHTML(String(i.quantity))}x</b> ${escapeHTML(i.product.nume)}${noteHtml}`;
-            }).join('<br><br>') : 'Fără detalii';
+            let itemsStr = renderOrderItemsGroupedByPerson(o.detalii_comanda);
 
             html += `
                 <div class="modern-card history-card">
@@ -593,6 +585,81 @@ if (window.supabaseClient) {
                 showOwnerNotification(`📱 Dispozitiv nou detectat (${devId})! Deschideți 'Gestionare Tablete' pentru activare.`, "fas fa-tablet-alt", "#f5b041");
             }
         }).subscribe();
+}
+
+// Helper de formatare preparate grupate pe persoane + calcul subtotal per persoană
+function renderOrderItemsGroupedByPerson(detaliiComanda) {
+    if (!detaliiComanda || !Array.isArray(detaliiComanda) || detaliiComanda.length === 0) {
+        return '<p style="color: #cbd5e1; font-style: italic;">Fără detalii</p>';
+    }
+
+    const grouped = {};
+    detaliiComanda.forEach(item => {
+        const person = item.customer_name && item.customer_name.trim() !== '' ? item.customer_name : 'Masa';
+        if (!grouped[person]) {
+            grouped[person] = [];
+        }
+        grouped[person].push(item);
+    });
+
+    const keys = Object.keys(grouped);
+    // Dacă toate produsele sunt comandate împreună la "Masa"
+    if (keys.length === 1 && keys[0] === 'Masa') {
+        return grouped['Masa'].map(i => {
+            const price = parseFloat(i.product.pret || 0);
+            const qty = parseInt(i.quantity || 1);
+            const lineTotal = price * qty;
+            const noteHtml = i.notes ? `<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(i.notes)}</small>` : '';
+            return `<div style="margin-bottom: 6px; font-size: 0.95rem; color: #fff;">
+                <b style="color: #f5b041;">${qty}x</b> ${escapeHTML(i.product.nume)} 
+                <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">(${lineTotal.toFixed(2)} Lei)</span>
+                ${noteHtml}
+            </div>`;
+        }).join('');
+    }
+
+    // Dacă sunt defalcate pe persoane
+    let html = '';
+    const badgeColors = ['#f5b041', '#3498db', '#9b59b6', '#2ecc71', '#e67e22', '#1abc9c'];
+    let colorIdx = 0;
+
+    for (const [person, items] of Object.entries(grouped)) {
+        let personTotal = 0;
+        const itemsHtml = items.map(i => {
+            const price = parseFloat(i.product.pret || 0);
+            const qty = parseInt(i.quantity || 1);
+            const lineTotal = price * qty;
+            personTotal += lineTotal;
+
+            const noteHtml = i.notes ? `<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(i.notes)}</small>` : '';
+            return `<div style="color: #fff; font-size: 0.9rem; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <span><b>${qty}x</b> ${escapeHTML(i.product.nume)}</span>
+                <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem;">${lineTotal.toFixed(2)} Lei</span>
+            </div>${noteHtml}`;
+        }).join('');
+
+        const accentColor = badgeColors[colorIdx % badgeColors.length];
+        colorIdx++;
+
+        const isMasaGroup = (person === 'Masa');
+        const displayLabel = isMasaGroup ? '👥 Comandă Împreună' : `👤 ${escapeHTML(person)}`;
+
+        html += `
+            <div style="margin-bottom: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.4); border-radius: 10px; border-left: 4px solid ${accentColor}; border: 1px solid rgba(255,255,255,0.15); border-left-width: 4px; border-left-color: ${accentColor};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.15);">
+                    <span style="color: ${accentColor}; font-weight: 800; font-size: 0.95rem;">
+                        ${displayLabel}
+                    </span>
+                    <span style="background: rgba(46, 204, 113, 0.25); color: #2ecc71; font-weight: 800; font-size: 0.85rem; padding: 3px 10px; border-radius: 12px; border: 1px solid #2ecc71;">
+                        De plată: ${personTotal.toFixed(2)} Lei
+                    </span>
+                </div>
+                ${itemsHtml}
+            </div>
+        `;
+    }
+
+    return html;
 }
 
 // ==========================================
