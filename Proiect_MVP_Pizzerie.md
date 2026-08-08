@@ -27,6 +27,7 @@ Pagina principală a conducerii restaurantului.
   - Arată separat preparatele comandate la comun (**`👥 Comandă Împreună`**) sau per persoană (**`👤 Persoana 1`**, **`👤 Persoana 2`**...).
   - Calculează și afișează insigna verde **`De plată: XX.XX Lei`** pentru fiecare persoană în parte.
 - **Notificări audio:** Sunet automat de alertă la sosirea unei comenzi noi.
+- **🖨️ Printare Automată Bonuri Termice (POS):** Generare și printare automată a bonurilor la lățime de 80mm la fiecare comandă nouă (compatibil cu imprimante termice precum OCOM OCPP-80K cu tăiere automată). Include buton manual "Printează Bon" pe fiecare card de comandă, cu suport pentru printare silențioasă via Kiosk Mode.
 - **Istoric Încasări:** Vizualizare total încasări zilnice și istoric comenzi finalizate.
 
 ### 📱 2. `ospatar.html` + `js/ospatar.js` — Aplicația Dedicată Ospătarilor
