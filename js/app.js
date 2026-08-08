@@ -1,6 +1,6 @@
 // ==========================================
 // APP.JS — Interfața Client (Meniu + Comandă)
-// Cu Geofencing + XSS Protection
+// Cu Geofencing + XSS Protection + Selecție Persoană
 // ==========================================
 
 let produse = [];
@@ -9,6 +9,7 @@ let numarMasa = null;
 
 let currentTab = 'restaurant';
 let searchQuery = '';
+let currentPersonClient = "Masa";
 
 // Preluare număr masă din URL (ex: ?masa=5)
 function getTableNumber() {
@@ -114,34 +115,28 @@ if (document.getElementById('produse-container')) {
         try {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                // We got permission! Now stop the camera immediately so it doesn't stay on.
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
-                console.log("Permisiune cameră obținută cu succes pentru utilizare viitoare.");
+                console.log("Permisiune cameră obținută cu succes.");
             }
         } catch (err) {
-            console.warn("Utilizatorul a refuzat permisiunea pentru cameră sau aceasta nu este disponibilă:", err);
+            console.warn("Utilizatorul a refuzat permisiunea pentru cameră:", err);
         }
     };
 
     window.openPwaInstallModal = async function () {
-        // Solicităm automat permisiunile pentru notificări
         if (typeof window.requestNotificationPermissionAndSetup === 'function') {
             window.requestNotificationPermissionAndSetup();
         }
-        
-        // Solicităm automat permisiunea pentru cameră (pentru a fluidiza scanările viitoare)
         await window.requestCameraPermissionAndSetup();
 
         if (window.deferredPromptClient) {
-            // Pentru Google Chrome / Android: prompt nativ cu 1 click
             window.deferredPromptClient.prompt();
             const { outcome } = await window.deferredPromptClient.userChoice;
             console.log("Status instalare Chrome:", outcome);
             window.deferredPromptClient = null;
         } else {
-            // Pentru iOS Safari / Chrome iOS / browsere fără prompt automat: modalul cu instrucțiuni
             const modal = document.getElementById('pwa-install-modal');
             if (modal) {
                 modal.classList.remove('hidden');
@@ -157,7 +152,6 @@ if (document.getElementById('produse-container')) {
 // Funcție globală pentru activare permisiuni Notificări ("Allow") și Sunete
 window.requestNotificationPermissionAndSetup = async function () {
     try {
-        // 1. Deblocăm contextul audio pentru redarea sunetului pe mobil
         if (!window.audioCtx) {
             window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
@@ -165,46 +159,71 @@ window.requestNotificationPermissionAndSetup = async function () {
             await window.audioCtx.resume();
         }
 
-        // 2. Solicităm permisiunea nativă de Notificări ("Allow / Permite")
         if ('Notification' in window && Notification.permission !== 'granted') {
             const permission = await Notification.requestPermission();
             console.log("Status permisiune notificări acordată:", permission);
         }
 
-        // 3. Înregistrăm Service Worker-ul pentru notificări în fundal
         if ('serviceWorker' in navigator) {
             await navigator.serviceWorker.register('/sw.js');
         }
     } catch (err) {
-        console.warn("Nu s-au putut inițializa notificările automates:", err);
+        console.warn("Nu s-au putut inițializa notificările automate:", err);
     }
 };
 
-function setTab(tab) {
+window.setTab = function (tab) {
     currentTab = tab;
     const tabBar = document.getElementById('tab-bar');
     const tabRestaurant = document.getElementById('tab-restaurant');
 
     if (tab === 'bar') {
-        tabBar.style.background = '#fff';
-        tabBar.style.color = '#333';
-        tabRestaurant.style.background = 'transparent';
-        tabRestaurant.style.color = '#fff';
+        if (tabBar) {
+            tabBar.style.background = '#fff';
+            tabBar.style.color = '#333';
+        }
+        if (tabRestaurant) {
+            tabRestaurant.style.background = 'transparent';
+            tabRestaurant.style.color = '#fff';
+        }
     } else {
-        tabRestaurant.style.background = '#fff';
-        tabRestaurant.style.color = '#333';
-        tabBar.style.background = 'transparent';
-        tabBar.style.color = '#fff';
+        if (tabRestaurant) {
+            tabRestaurant.style.background = '#fff';
+            tabRestaurant.style.color = '#333';
+        }
+        if (tabBar) {
+            tabBar.style.background = 'transparent';
+            tabBar.style.color = '#fff';
+        }
     }
     renderProducts();
-}
+};
+
+window.selectPersonChip = function (btnElement, personValue) {
+    currentPersonClient = personValue;
+
+    document.querySelectorAll('.person-chip').forEach(btn => {
+        btn.style.background = 'rgba(0,0,0,0.3)';
+        btn.style.color = 'white';
+        btn.style.border = '1px solid rgba(255,255,255,0.2)';
+        btn.style.fontWeight = '500';
+    });
+
+    if (btnElement) {
+        btnElement.style.background = '#f5b041';
+        btnElement.style.color = '#1e293b';
+        btnElement.style.border = '1px solid #f5b041';
+        btnElement.style.fontWeight = 'bold';
+    }
+
+    renderProducts();
+};
 
 async function loadProductsFromSupabase() {
     const container = document.getElementById('produse-container');
 
-    if (container) container.innerHTML = '<p style="text-align:center; width:100%;">Se încarcă meniul...</p>';
+    if (container) container.innerHTML = '<p style="text-align:center; width:100%; color: #fff;">Se încarcă meniul...</p>';
 
-    // Așteptăm ca Supabase Client să se inițializeze complet (evită race condition)
     let attempts = 0;
     while (!window.supabaseClient && attempts < 30) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -245,7 +264,7 @@ function renderProducts() {
     container.innerHTML = '';
 
     if (produse.length === 0) {
-        container.innerHTML = '<p style="text-align:center; width:100%;">Meniul este momentan gol.</p>';
+        container.innerHTML = '<p style="text-align:center; width:100%; color: #fff;">Meniul este momentan gol.</p>';
         return;
     }
 
@@ -274,7 +293,6 @@ function renderProducts() {
         const div = document.createElement('div');
         div.className = 'product-card';
 
-        // XSS Protection — escapăm toate datele din DB
         const safeName = escapeHTML(p.nume);
         const safeDesc = escapeHTML(p.descriere || '');
         const safeImage = escapeHTML(imageUrl);
@@ -299,31 +317,11 @@ function renderProducts() {
     });
 
     if (renderedCount === 0) {
-        container.innerHTML = '<p style="text-align:center; width:100%; margin-top: 30px;">Niciun produs aici încă. 🤔</p>';
+        container.innerHTML = '<p style="text-align:center; width:100%; margin-top: 30px; color: #fff;">Niciun produs aici încă. 🤔</p>';
     }
+
+    updateCartUI();
 }
-
-let currentPersonClient = "Masa";
-
-window.selectPersonChip = function (btnElement, personValue) {
-    currentPersonClient = personValue;
-
-    document.querySelectorAll('.person-chip').forEach(btn => {
-        btn.style.background = 'rgba(0,0,0,0.3)';
-        btn.style.color = 'white';
-        btn.style.border = '1px solid rgba(255,255,255,0.2)';
-        btn.style.fontWeight = '500';
-    });
-
-    if (btnElement) {
-        btnElement.style.background = '#f5b041';
-        btnElement.style.color = '#1e293b';
-        btnElement.style.border = '1px solid #f5b041';
-        btnElement.style.fontWeight = 'bold';
-    }
-
-    renderProducts();
-};
 
 let currentCustomizeProductId = null;
 
@@ -341,7 +339,6 @@ window.closeCustomizeModal = function () {
 
 window.confirmCustomizeAndAdd = function () {
     const notes = document.getElementById('customize-notes').value.trim();
-    // Limitare lungime observații
     if (notes.length > 200) {
         alert('Observațiile nu pot depăși 200 de caractere.');
         return;
@@ -378,7 +375,6 @@ function updateCartUI() {
     const cartContainer = document.getElementById('cart-items');
     const totalSpan = document.getElementById('cart-total');
     const sendBtn = document.getElementById('btn-trimite-comanda');
-    const cartTitle = document.getElementById('cart-title');
 
     if (!cartContainer) return;
 
@@ -386,13 +382,10 @@ function updateCartUI() {
     let total = 0;
 
     if (cart.length === 0) {
-        if (cartTitle) cartTitle.innerText = "Comanda mea";
-        cartContainer.innerHTML = '<p class="empty-cart">Nu ati comandat inca nimic</p>';
-        sendBtn.disabled = true;
+        cartContainer.innerHTML = '<p class="empty-cart">Nu ați adăugat niciun produs în coș.</p>';
+        if (sendBtn) sendBtn.disabled = true;
+        if (totalSpan) totalSpan.innerText = "0.00";
     } else {
-        if (cartTitle) cartTitle.innerText = "Comanda mea";
-        
-        // Group by customer_name
         const groupedCart = {};
         cart.forEach((item, index) => {
             const cName = item.customer_name || "Masa";
@@ -401,12 +394,11 @@ function updateCartUI() {
         });
 
         for (const [cName, items] of Object.entries(groupedCart)) {
-            if (cName !== "Masa") {
-                const headerDiv = document.createElement('div');
-                headerDiv.style = "color: #f5b041; font-weight: bold; font-size: 0.9rem; margin: 10px 0 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;";
-                headerDiv.innerText = cName;
-                cartContainer.appendChild(headerDiv);
-            }
+            const headerDiv = document.createElement('div');
+            headerDiv.style = "color: #f5b041; font-weight: bold; font-size: 0.95rem; margin: 12px 0 6px 0; border-bottom: 1px solid rgba(245, 176, 65, 0.3); padding-bottom: 4px; text-align: left;";
+            headerDiv.innerHTML = `<i class="fas fa-user"></i> ${escapeHTML(cName === "Masa" ? "👥 Comandă Împreună (Plată la Comun)" : "👤 " + cName)}`;
+            cartContainer.appendChild(headerDiv);
+
             items.forEach((item) => {
                 total += item.product.pret * item.quantity;
                 const div = document.createElement('div');
@@ -424,26 +416,27 @@ function updateCartUI() {
                 cartContainer.appendChild(div);
             });
         }
-        sendBtn.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
     }
 
-    totalSpan.innerText = total.toFixed(2);
+    if (totalSpan) totalSpan.innerText = total.toFixed(2);
 
-    // Sync button states
+    // Sync button labels without wiping the selected person tag
+    const displayPersonTag = currentPersonClient === "Masa" ? "Împreună" : currentPersonClient;
     const allButtons = document.querySelectorAll('.btn-alegere');
     allButtons.forEach(btn => {
         const pId = parseInt(btn.getAttribute('data-product-id'));
-        if (cart.some(item => (item.product.originalId || item.product.id) === pId)) {
+        const inCartForCurrent = cart.some(item => item.product.id === pId && item.customer_name === currentPersonClient);
+        if (inCartForCurrent) {
             btn.classList.add('selected');
-            btn.innerHTML = '✅ Selectat';
+            btn.innerHTML = `✅ Adăugat (${escapeHTML(displayPersonTag)})`;
         } else {
             btn.classList.remove('selected');
-            btn.innerHTML = 'Alegerea mea';
+            btn.innerHTML = `Alegerea mea (${escapeHTML(displayPersonTag)})`;
         }
     });
 }
 
-// Helper pentru conversia cheii VAPID
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -462,7 +455,6 @@ function urlBase64ToUint8Array(base64String) {
 const btnTrimite = document.getElementById('btn-trimite-comanda');
 if (btnTrimite) {
     btnTrimite.addEventListener('click', async () => {
-        // Dacă clientul nu are masă detectată -> afișăm modalul QR
         if (!numarMasa) {
             const qrModal = document.getElementById('qr-error-modal');
             if (qrModal) {
@@ -476,21 +468,20 @@ if (btnTrimite) {
         btnTrimite.disabled = true;
         btnTrimite.innerText = "Se procesează...";
 
-        // Verificare Geofencing pentru clienți
         btnTrimite.innerText = "Se verifică locația...";
         const geoResult = await window.checkGeolocation();
 
         if (!geoResult.allowed) {
-                const geoModal = document.getElementById('geo-error-modal');
-                if (geoModal) {
-                    geoModal.classList.remove('hidden');
-                } else {
-                    showOrderStatusNotification(
-                        geoResult.error || "Nu poți comanda din această locație.",
-                        "fas fa-map-marker-alt",
-                        "#e74c3c"
-                    );
-                }
+            const geoModal = document.getElementById('geo-error-modal');
+            if (geoModal) {
+                geoModal.classList.remove('hidden');
+            } else {
+                showOrderStatusNotification(
+                    geoResult.error || "Nu poți comanda din această locație.",
+                    "fas fa-map-marker-alt",
+                    "#e74c3c"
+                );
+            }
             btnTrimite.disabled = false;
             btnTrimite.innerText = "Trimite Comanda";
             return;
@@ -498,14 +489,12 @@ if (btnTrimite) {
 
         btnTrimite.innerText = "Se trimite...";
 
-        // Deblocăm contextul audio imediat pe click pentru iOS
         try {
             window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         } catch (e) {
             console.log("Audio init failed:", e);
         }
 
-        // Cerem permisiuni Push Notifications
         let pushSubscription = null;
         try {
             if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -522,20 +511,18 @@ if (btnTrimite) {
                 }
             }
         } catch (error) {
-            console.log("Eroare la Push Notifications (probabil iOS fara PWA):", error);
+            console.log("Eroare la Push Notifications:", error);
         }
 
-        // Calculăm totalul
         const total = cart.reduce((sum, item) => sum + (item.product.pret * item.quantity), 0);
 
-        // Apelăm funcția din supabase.js — cu coordonatele clientului
         if (typeof window.sendOrderToDatabase === 'function') {
             const placedOrder = await window.sendOrderToDatabase(
                 numarMasa,
                 cart,
                 total,
                 pushSubscription,
-                geoResult.coords  // Trimitem coordonatele pentru audit
+                geoResult.coords
             );
 
             if (placedOrder) {
@@ -549,7 +536,6 @@ if (btnTrimite) {
                 btnTrimite.innerText = "Trimite Comanda";
                 updateCartUI();
 
-                // Ascultăm schimbările de status pentru această comandă
                 if (typeof window.subscribeToOrderStatus === 'function') {
                     window.subscribeToOrderStatus(placedOrder.id, (newStatus) => {
                         if (newStatus === 'in_preparare') {
@@ -571,10 +557,6 @@ if (btnTrimite) {
         }
     });
 }
-
-// ==========================================
-// NOTIFICĂRI VIZUALE
-// ==========================================
 
 function playNotificationSound() {
     try {
@@ -643,234 +625,12 @@ function showOrderStatusNotification(message, iconClass, color) {
     }, 6000);
 }
 
-// ==========================================
-// IN-APP QR SCANNER
-// ==========================================
-
-let html5QrCode = null;
-
-window.startQRScanner = function() {
-    const scannerModal = document.getElementById('qr-scanner-modal');
-    if (scannerModal) {
-        scannerModal.classList.remove('hidden');
-    }
-
-    if (typeof Html5Qrcode === 'undefined') {
-        alert("Modulul pentru scanare nu a putut fi încărcat.");
-        return;
-    }
-
-    if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("qr-reader");
-    }
-
-    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-
-    html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText, decodedResult) => {
-            // on success
-            try {
-                const url = new URL(decodedText);
-                const masaParam = url.searchParams.get('masa');
-                if (masaParam) {
-                    const masaClean = String(masaParam).replace(/[^0-9a-zA-Z]/g, '').substring(0, 10);
-                    numarMasa = masaClean;
-                    
-                    // Update UI
-                    const masaIdElem = document.getElementById('masa-id');
-                    if (masaIdElem) {
-                        masaIdElem.innerText = escapeHTML(numarMasa);
-                    }
-
-                    // Close Scanner
-                    window.stopQRScanner();
-
-                    showOrderStatusNotification("Masa scanată cu succes! Poți trimite comanda.", "fas fa-check", "#2ecc71");
-                } else {
-                    alert("Codul QR scanat nu este valid pentru aplicația noastră.");
-                }
-            } catch (e) {
-                alert("Cod QR invalid. Te rugăm scanează codul de pe masă.");
-            }
-        },
-        (errorMessage) => {
-            // background parse error, ignore
-        }
-    ).catch(err => {
-        alert("Eroare la accesarea camerei. Te rugăm să permiți accesul la cameră din setările browserului. Detalii: " + err);
-        if (scannerModal) {
-            scannerModal.classList.add('hidden');
-        }
-    });
-};
-
-window.stopQRScanner = function() {
-    if (html5QrCode) {
-        try {
-            html5QrCode.stop().then(() => {
-                html5QrCode.clear();
-            }).catch(error => {
-                console.error("Failed to stop scanner. ", error);
-            });
-        } catch (e) {
-            console.error("Error stopping scanner", e);
-        }
-    }
-    const scannerModal = document.getElementById('qr-scanner-modal');
-    if (scannerModal) {
-        scannerModal.classList.add('hidden');
-    }
-};
-
-// ==========================================
-// STORE SCHEDULE & STATUS LOGIC
-// ==========================================
-
-let storeSettings = {
-    openTime: '10:00',
-    closeTime: '23:30',
-    forceClose: false
-};
-
-async function checkStoreStatus() {
-    if (!document.getElementById('produse-container')) return; // Doar pe meniu.html
-
-    try {
-        const { data, error } = await window.supabaseClient.from('setari').select('*');
-        if (data) {
-            data.forEach(item => {
-                if (item.key === 'store_open_time') storeSettings.openTime = item.value;
-                if (item.key === 'store_close_time') storeSettings.closeTime = item.value;
-                if (item.key === 'store_force_close') storeSettings.forceClose = (item.value === 'true');
-            });
-        }
-        evaluateStoreStatus();
-        const appLoader = document.getElementById('app-loading');
-        if (appLoader) appLoader.style.opacity = '0';
-        setTimeout(() => { if (appLoader) appLoader.style.display = 'none'; }, 300);
-    } catch (e) {
-        console.error("Eroare la verificarea statusului magazinului:", e);
-        const appLoader = document.getElementById('app-loading');
-        if (appLoader) appLoader.style.display = 'none';
-    }
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
-
-function evaluateStoreStatus() {
-    const overlay = document.getElementById('store-closed-overlay');
-    if (!overlay) return;
-
-    let isClosed = false;
-    const msgEl = document.getElementById('store-closed-message');
-
-    if (storeSettings.forceClose) {
-        isClosed = true;
-        if (msgEl) msgEl.innerText = "Ne pare rău, restaurantul s-a închis temporar. Nu putem prelua comenzi în acest moment.";
-    } else if (storeSettings.openTime && storeSettings.closeTime) {
-        const now = new Date();
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const currentTimeInMinutes = currentHours * 60 + currentMinutes;
-
-        const [openH, openM] = storeSettings.openTime.split(':').map(Number);
-        const openTimeInMinutes = openH * 60 + openM;
-
-        const [closeH, closeM] = storeSettings.closeTime.split(':').map(Number);
-        let closeTimeInMinutes = closeH * 60 + closeM;
-
-        // Dacă închiderea e a doua zi (ex: 02:00)
-        let isOvernight = closeTimeInMinutes < openTimeInMinutes;
-
-        if (isOvernight) {
-            // E deschis dacă (ora > open) SAU (ora < close)
-            if (!(currentTimeInMinutes >= openTimeInMinutes || currentTimeInMinutes < closeTimeInMinutes)) {
-                isClosed = true;
-            }
-        } else {
-            // Program normal în aceeași zi
-            if (currentTimeInMinutes < openTimeInMinutes || currentTimeInMinutes >= closeTimeInMinutes) {
-                isClosed = true;
-            }
-        }
-
-        if (isClosed && msgEl) {
-            msgEl.innerText = `Ne pare rău, programul restaurantului (${storeSettings.openTime} - ${storeSettings.closeTime}) s-a încheiat. Vă așteptăm cu drag mâine!`;
-        }
-    }
-
-    if (isClosed) {
-        overlay.classList.remove('hidden');
-        const cartBtn = document.getElementById('btn-trimite-comanda');
-        if (cartBtn) {
-            cartBtn.disabled = true;
-            cartBtn.style.opacity = '0.5';
-            cartBtn.innerText = "Restaurant Închis";
-        }
-        const qrModal = document.getElementById('qr-error-modal');
-        if (qrModal) qrModal.classList.add('hidden');
-    } else {
-        overlay.classList.add('hidden');
-        const cartBtn = document.getElementById('btn-trimite-comanda');
-        if (cartBtn) {
-            cartBtn.style.opacity = '1';
-            cartBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Trimite Comanda';
-        }
-        updateCartUI(); // Restore original checkout button state based on cart empty/not empty
-    }
-}
-
-function subscribeToStoreStatus() {
-    if (!window.supabaseClient) return;
-    
-    window.supabaseClient.channel('store-status-channel')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'setari' }, payload => {
-            const row = payload.new;
-            if (row.key === 'store_open_time') storeSettings.openTime = row.value;
-            if (row.key === 'store_close_time') storeSettings.closeTime = row.value;
-            if (row.key === 'store_force_close') storeSettings.forceClose = (row.value === 'true');
-            evaluateStoreStatus();
-        })
-        .subscribe();
-}
-
-// Inițializare verificare program doar pe meniu.html
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('store-closed-overlay')) {
-        checkStoreStatus();
-        subscribeToStoreStatus();
-        setInterval(evaluateStoreStatus, 60000); // Verificăm la fiecare minut dacă s-a schimbat ora
-        
-        // Re-verificăm programul și statusul imediat ce aplicația revine în prim-plan (iOS/Android PWA)
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                checkStoreStatus();
-            }
-        });
-    }
-});
-
-// ==========================================
-// SELECȚIE PERSOANE (Pentru Comandă Defalcată Client)
-// ==========================================
-
-window.selectPersonChip = function (btnElement, personValue) {
-    const sel = document.getElementById('current-customer-name');
-    if (sel) sel.value = personValue;
-
-    document.querySelectorAll('.person-chip').forEach(btn => {
-        btn.style.background = 'rgba(0,0,0,0.3)';
-        btn.style.color = 'white';
-        btn.style.border = '1px solid rgba(255,255,255,0.2)';
-        btn.style.fontWeight = '500';
-    });
-
-    if (btnElement) {
-        btnElement.style.background = '#f5b041';
-        btnElement.style.color = '#1e293b';
-        btnElement.style.border = '1px solid #f5b041';
-        btnElement.style.fontWeight = 'bold';
-    }
-};
-
-
