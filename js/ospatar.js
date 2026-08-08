@@ -1,5 +1,6 @@
 // ==========================================
 // OSPATAR.JS — Interfață Dedicată Tablete Ospătari
+// Cu Gestionare Status Mese (Liberă / Ocupată) în Realtime
 // ==========================================
 
 let produse = [];
@@ -9,14 +10,20 @@ let currentPerson = "Masa";
 let currentTab = 'restaurant';
 let searchQuery = '';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Inițializăm mesele (3 pe latime)
-    renderTableChips();
+// Hartă pentru stocarea meselor ocupate și totalul lor curent
+let activeTableOrdersMap = {};
 
-    // 2. Încărcăm meniul din Supabase
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Încărcăm meniul din Supabase
     await loadMenuProducts();
 
-    // 3. Setăm event listeners pentru căutare
+    // 2. Încărcăm statusul meselor ocupate
+    await loadActiveTableStatus();
+
+    // 3. Inițializăm ascultarea în timp real (Realtime) pentru actualizare instant pe tablete
+    subscribeToRealtimeTableStatus();
+
+    // 4. Setăm event listeners pentru căutare
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -62,6 +69,60 @@ window.setTab = function (tab) {
     renderProducts();
 };
 
+async function loadActiveTableStatus() {
+    // Așteptăm să avem clientul Supabase disponibil
+    let attempts = 0;
+    while (!window.supabaseClient && attempts < 30) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+    }
+
+    if (!window.supabaseClient) return;
+
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('comenzi')
+            .select('*')
+            .neq('status', 'finalizata');
+
+        if (error) {
+            console.error("Eroare la preluarea statusului meselor:", error);
+            return;
+        }
+
+        activeTableOrdersMap = {};
+        (data || []).forEach(order => {
+            const masa = String(order.numar_masa || '').trim();
+            if (!masa) return;
+            if (!activeTableOrdersMap[masa]) {
+                activeTableOrdersMap[masa] = { count: 0, total: 0, orderIds: [] };
+            }
+            activeTableOrdersMap[masa].count += 1;
+            activeTableOrdersMap[masa].total += parseFloat(order.total || 0);
+            activeTableOrdersMap[masa].orderIds.push(order.id);
+        });
+
+        renderTableChips();
+    } catch (e) {
+        console.error("Excepție verificare mese ocupate:", e);
+    }
+}
+
+function subscribeToRealtimeTableStatus() {
+    if (!window.supabaseClient) return;
+
+    try {
+        window.supabaseClient
+            .channel('ospatar_table_status')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'comenzi' }, () => {
+                loadActiveTableStatus();
+            })
+            .subscribe();
+    } catch (e) {
+        console.log("Realtime subscription error:", e);
+    }
+}
+
 function renderTableChips() {
     const container = document.getElementById('table-chips-grid');
     if (!container) return;
@@ -71,36 +132,81 @@ function renderTableChips() {
     for (let i = 1; i <= 12; i++) {
         const masaStr = String(i);
         const isActive = (selectedMasa === masaStr);
-        const bg = isActive ? '#2ecc71' : 'rgba(255,255,255,0.1)';
-        const color = isActive ? '#1e293b' : '#fff';
-        const border = isActive ? '2px solid #2ecc71' : '1px solid rgba(255,255,255,0.2)';
-        const shadow = isActive ? 'box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);' : '';
-        
+        const occupiedInfo = activeTableOrdersMap[masaStr];
+        const isOccupied = !!occupiedInfo;
+
+        let bg, color, border, shadow, statusText;
+
+        if (isOccupied) {
+            // Masă Ocupată
+            bg = isActive ? '#e67e22' : 'rgba(230, 126, 34, 0.25)';
+            color = isActive ? '#ffffff' : '#f39c12';
+            border = isActive ? '2px solid #e67e22' : '1px solid #e67e22';
+            shadow = isActive ? 'box-shadow: 0 0 15px rgba(230, 126, 34, 0.6);' : '';
+            statusText = `<br><small style="font-weight: 800; font-size: 0.8rem; color: ${isActive ? '#fff' : '#f5b041'};">🔴 Ocupată (${occupiedInfo.total.toFixed(0)} L)</small>`;
+        } else {
+            // Masă Liberă
+            bg = isActive ? '#2ecc71' : 'rgba(46, 204, 113, 0.15)';
+            color = isActive ? '#1e293b' : '#2ecc71';
+            border = isActive ? '2px solid #2ecc71' : '1px solid rgba(46, 204, 113, 0.4)';
+            shadow = isActive ? 'box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);' : '';
+            statusText = `<br><small style="font-size: 0.78rem; opacity: 0.9;">🟢 Liberă</small>`;
+        }
+
         html += `
             <button type="button" onclick="window.selectMasa('${masaStr}')"
-                style="padding: 14px 10px; border-radius: 12px; border: ${border}; background: ${bg}; color: ${color}; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s; ${shadow}">
-                <i class="fas fa-utensils"></i> Masa ${i}
+                style="padding: 12px 6px; border-radius: 12px; border: ${border}; background: ${bg}; color: ${color}; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; ${shadow} text-align: center;">
+                <i class="fas fa-utensils"></i> Masa ${i}${statusText}
             </button>
         `;
     }
 
     // Buton masă personalizată
     const isCustomActive = isNaN(selectedMasa) || parseInt(selectedMasa) > 12;
+    const customOccupied = activeTableOrdersMap[selectedMasa];
     const customBg = isCustomActive ? '#f5b041' : 'rgba(245, 176, 65, 0.15)';
     const customColor = isCustomActive ? '#1e293b' : '#f5b041';
-    
+
     html += `
         <button type="button" onclick="window.customMasaPrompt()"
-            style="grid-column: span 3; padding: 14px; border-radius: 12px; border: 1px solid #f5b041; background: ${customBg}; color: ${customColor}; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s;">
-            <i class="fas fa-edit"></i> ${isCustomActive ? 'Masa Selectată: ' + selectedMasa : '+ Altă Masă (Scrie Numărul)'}
+            style="grid-column: span 3; padding: 14px; border-radius: 12px; border: 1px solid #f5b041; background: ${customBg}; color: ${customColor}; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-align: center;">
+            <i class="fas fa-edit"></i> ${isCustomActive ? 'Masa Selectată: ' + selectedMasa + (customOccupied ? ` (🔴 Ocupată ${customOccupied.total.toFixed(0)} Lei)` : ' (🟢 Liberă)') : '+ Altă Masă (Scrie Numărul)'}
         </button>
     `;
-    
+
     container.innerHTML = html;
 
-    // Actualizăm etichetele cu masa selectată
+    // Actualizăm etichetele și butonul de eliberare a mesei
+    const currentOccupied = activeTableOrdersMap[selectedMasa];
     const badge = document.getElementById('ospatar-active-table-badge');
-    if (badge) badge.innerText = `Masa ${selectedMasa}`;
+    const freeBtnContainer = document.getElementById('ospatar-free-table-btn-container');
+
+    if (badge) {
+        if (currentOccupied) {
+            badge.style.background = '#e67e22';
+            badge.style.color = '#fff';
+            badge.style.boxShadow = '0 0 15px rgba(230, 126, 34, 0.5)';
+            badge.innerHTML = `🔴 Masa ${escapeHTML(selectedMasa)} (Ocupată - ${currentOccupied.total.toFixed(2)} Lei)`;
+        } else {
+            badge.style.background = '#2ecc71';
+            badge.style.color = '#1e293b';
+            badge.style.boxShadow = '0 0 15px rgba(46, 204, 113, 0.4)';
+            badge.innerHTML = `🟢 Masa ${escapeHTML(selectedMasa)} (Liberă)`;
+        }
+    }
+
+    if (freeBtnContainer) {
+        if (currentOccupied) {
+            freeBtnContainer.innerHTML = `
+                <button type="button" onclick="window.freeActiveTable('${escapeHTML(selectedMasa)}')"
+                    style="background: #e74c3c; color: white; border: none; padding: 7px 16px; border-radius: 14px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);">
+                    <i class="fas fa-broom"></i> Eliberează Masa ${escapeHTML(selectedMasa)}
+                </button>
+            `;
+        } else {
+            freeBtnContainer.innerHTML = '';
+        }
+    }
 
     const tableDisplay = document.getElementById('cart-table-display');
     if (tableDisplay) tableDisplay.innerText = `Masa ${selectedMasa}`;
@@ -116,6 +222,33 @@ window.customMasaPrompt = function () {
     if (val && val.trim() !== '') {
         selectedMasa = val.trim();
         renderTableChips();
+    }
+};
+
+window.freeActiveTable = async function (masaStr) {
+    if (!confirm(`Sunteți sigur că Masa ${masaStr} a fost eliberată și clienții au plecat?\nMasa va deveni LIBERĂ (disponibilă).`)) {
+        return;
+    }
+
+    if (!window.supabaseClient) return;
+
+    try {
+        const { error } = await window.supabaseClient
+            .from('comenzi')
+            .update({ status: 'finalizata' })
+            .eq('numar_masa', masaStr)
+            .neq('status', 'finalizata');
+
+        if (error) {
+            console.error("Eroare la eliberarea mesei:", error);
+            showNotification("Eroare la eliberarea mesei: " + error.message, "fas fa-exclamation-triangle", "#e74c3c");
+        } else {
+            showNotification(`🧹 Masa ${masaStr} a fost eliberată cu succes!`, "fas fa-check-circle", "#2ecc71");
+            await loadActiveTableStatus();
+        }
+    } catch (e) {
+        console.error("Excepție eliberare masă:", e);
+        showNotification("Eroare la rețea.", "fas fa-exclamation-triangle", "#e74c3c");
     }
 };
 
@@ -172,7 +305,6 @@ function renderProducts() {
     let count = 0;
 
     produse.forEach(p => {
-        // Filtrare inteligentă Meniu Bar vs Meniu Restaurant
         const pCat = (p.categorie || '').toLowerCase().trim();
         let isBautura = false;
         if (pCat === 'bar' || pCat === 'bautura' || pCat === 'bauturi') {
@@ -328,6 +460,7 @@ async function sendWaiterOrder() {
             showNotification(`Comandă trimisă cu succes pentru Masa ${selectedMasa}!`, "fas fa-check-circle", "#2ecc71");
             cart = [];
             updateCartUI();
+            await loadActiveTableStatus();
         }
     } catch (e) {
         console.error("Excepție trimitere comandă:", e);

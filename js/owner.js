@@ -192,9 +192,9 @@ window.renderOwnerOrders = function () {
         if (order.status === 'noua') {
             buttonHtml = `<button class="modern-card-btn" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'in_preparare')"><i class="fas fa-check"></i> Acceptă Comanda</button>`;
         } else if (order.status === 'in_preparare') {
-            buttonHtml = `<button class="modern-card-btn success" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'servita')"><i class="fas fa-flag-checkered"></i> Încheiere Comandă</button>`;
+            buttonHtml = `<button class="modern-card-btn success" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'servita')"><i class="fas fa-flag-checkered"></i> Marchează ca Servită</button>`;
         } else if (order.status === 'servita') {
-            buttonHtml = `<button class="modern-card-btn disabled" disabled><i class="fas fa-check-circle"></i> Comanda Încheiată</button>`;
+            buttonHtml = `<button class="modern-card-btn success" style="background: #e74c3c;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'finalizata')"><i class="fas fa-broom"></i> Eliberează Masa ${escapeHTML(String(order.numar_masa))}</button>`;
         }
 
         div.innerHTML = `
