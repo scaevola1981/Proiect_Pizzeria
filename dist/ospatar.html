@@ -36,20 +36,60 @@
         </div>
     </header>
 
-    <!-- Selector Rapid Masă (3 per rând pe width) -->
-    <div class="glass-panel" style="margin-bottom: 20px; padding: 15px;">
+    <!-- Selector Rapid Masă + Persoană (Imediat după Alege Masa) -->
+    <div class="glass-panel" style="margin-bottom: 20px; padding: 18px;">
+        <!-- Pasul 1: Alege Masa -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-            <label style="color: #f5b041; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-utensils"></i> Alege Masa:
+            <label style="color: #f5b041; font-weight: bold; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-utensils"></i> 1. Alege Masa:
             </label>
             <div id="ospatar-active-table-badge" style="background: #2ecc71; color: #1e293b; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 1rem; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);">
                 Masa 1
             </div>
         </div>
 
-        <!-- Grid 3 pe latime (3 columns) -->
-        <div id="table-chips-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%;">
+        <!-- Grid 3 pe latime (3 columns) pentru Mese -->
+        <div id="table-chips-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 20px;">
             <!-- Mesele vor fi generate dinamic -->
+        </div>
+
+        <!-- Pasul 2: Adaugi preparatele pentru (Persoană) -->
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.15);">
+            <label style="color: #f5b041; font-size: 1.05rem; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-user-friends"></i> 2. Adaugi preparatele pentru:
+            </label>
+
+            <!-- Pastile Persoane -->
+            <div id="person-chips-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; width: 100%;">
+                <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
+                    style="grid-column: 1 / -1; padding: 12px; border-radius: 12px; border: 1px solid #f5b041; background: #f5b041; color: #1e293b; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    👥 Comandă Împreună (Masa)
+                </button>
+                <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')"
+                    style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    👤 Persoana 1
+                </button>
+                <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')"
+                    style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    👤 Persoana 2
+                </button>
+                <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')"
+                    style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    👤 Persoana 3
+                </button>
+                <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')"
+                    style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    👤 Persoana 4
+                </button>
+                <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')"
+                    style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    👤 Persoana 5
+                </button>
+                <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')"
+                    style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    👤 Persoana 6
+                </button>
+            </div>
         </div>
     </div>
 
@@ -84,45 +124,6 @@
             <h2 id="cart-title" style="color: #f5b041; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px;">
                 <i class="fas fa-clipboard-list"></i> Comandă pentru <span id="cart-table-display" style="color: #2ecc71;">Masa 1</span>
             </h2>
-
-            <!-- Logica de persoane odată aleasă masa -->
-            <div style="margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                <label style="color: #f5b041; font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                    <i class="fas fa-user-friends"></i> Adaugi preparatele pentru:
-                </label>
-
-                <!-- Pastile Persoane (2 pe rând) -->
-                <div id="person-chips-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
-                    <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
-                        style="grid-column: span 2; padding: 12px; border-radius: 12px; border: 1px solid #f5b041; background: #f5b041; color: #1e293b; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        👥 Comandă Împreună (Masa)
-                    </button>
-                    <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')"
-                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        👤 Persoana 1
-                    </button>
-                    <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')"
-                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        👤 Persoana 2
-                    </button>
-                    <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')"
-                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        👤 Persoana 3
-                    </button>
-                    <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')"
-                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        👤 Persoana 4
-                    </button>
-                    <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')"
-                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        👤 Persoana 5
-                    </button>
-                    <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')"
-                        style="padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        👤 Persoana 6
-                    </button>
-                </div>
-            </div>
 
             <div id="cart-items">
                 <p class="empty-cart">Alegeți preparatele pentru masa selectată.</p>
