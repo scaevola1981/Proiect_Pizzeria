@@ -90,16 +90,33 @@ async function loadActiveTableStatus() {
             return;
         }
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         activeTableOrdersMap = {};
+
         (data || []).forEach(order => {
-            const masa = String(order.numar_masa || '').trim();
-            if (!masa) return;
-            if (!activeTableOrdersMap[masa]) {
-                activeTableOrdersMap[masa] = { count: 0, total: 0, orderIds: [] };
+            // Filtram doar comenzile din ziua curentă (sau nefinalizate recent)
+            const orderDate = new Date(order.created_at);
+            if (isNaN(orderDate.getTime()) || orderDate < today) {
+                return; // Ignorăm testele vechi din zile anterioare
             }
-            activeTableOrdersMap[masa].count += 1;
-            activeTableOrdersMap[masa].total += parseFloat(order.total || 0);
-            activeTableOrdersMap[masa].orderIds.push(order.id);
+
+            const rawMasa = String(order.numar_masa || '').trim();
+            if (!rawMasa) return;
+
+            // Normalizăm "Masa 1" -> "1" pentru căutare exactă
+            const cleanMasa = rawMasa.replace(/^masa\s*/i, '').trim();
+            const keysToSet = [cleanMasa, rawMasa];
+
+            keysToSet.forEach(k => {
+                if (!activeTableOrdersMap[k]) {
+                    activeTableOrdersMap[k] = { count: 0, total: 0, orderIds: [] };
+                }
+                activeTableOrdersMap[k].count += 1;
+                activeTableOrdersMap[k].total += parseFloat(order.total || 0);
+                activeTableOrdersMap[k].orderIds.push(order.id);
+            });
         });
 
         renderTableChips();
@@ -226,29 +243,50 @@ window.customMasaPrompt = function () {
 };
 
 window.freeActiveTable = async function (masaStr) {
-    if (!confirm(`Sunteți sigur că Masa ${masaStr} a fost eliberată și clienții au plecat?\nMasa va deveni LIBERĂ (disponibilă).`)) {
+    if (!confirm(`Sunteți sigur că Masa ${masaStr} a fost eliberată și clienții au plecat?\nMasa va deveni LIBERĂ.`)) {
         return;
     }
 
     if (!window.supabaseClient) return;
 
     try {
-        const { error } = await window.supabaseClient
+        const targetClean = String(masaStr).replace(/[^0-9a-zA-Z]/g, '').replace(/^masa/i, '').trim();
+
+        // Găsim toate comenzile nefinalizate pentru această masă
+        const { data: activeOrders } = await window.supabaseClient
             .from('comenzi')
-            .update({ status: 'finalizata' })
-            .eq('numar_masa', masaStr)
+            .select('id, numar_masa')
             .neq('status', 'finalizata');
 
-        if (error) {
-            console.error("Eroare la eliberarea mesei:", error);
-            showNotification("Eroare la eliberarea mesei: " + error.message, "fas fa-exclamation-triangle", "#e74c3c");
-        } else {
-            showNotification(`🧹 Masa ${masaStr} a fost eliberată cu succes!`, "fas fa-check-circle", "#2ecc71");
-            await loadActiveTableStatus();
+        if (activeOrders && activeOrders.length > 0) {
+            const idsToFree = activeOrders.filter(o => {
+                const oMasaClean = String(o.numar_masa || '').replace(/[^0-9a-zA-Z]/g, '').replace(/^masa/i, '').trim();
+                return oMasaClean === targetClean || String(o.numar_masa) === String(masaStr);
+            }).map(o => o.id);
+
+            if (idsToFree.length > 0) {
+                const { error } = await window.supabaseClient
+                    .from('comenzi')
+                    .update({ status: 'finalizata' })
+                    .in('id', idsToFree);
+
+                if (error) {
+                    console.error("Eroare la eliberarea mesei:", error);
+                    showNotification("Eroare la eliberarea mesei: " + error.message, "fas fa-exclamation-triangle", "#e74c3c");
+                    return;
+                }
+            }
         }
+
+        // Ștergem din harta locală imediat
+        delete activeTableOrdersMap[masaStr];
+        delete activeTableOrdersMap[targetClean];
+
+        showNotification(`🧹 Masa ${masaStr} a fost eliberată cu succes!`, "fas fa-check-circle", "#2ecc71");
+        await loadActiveTableStatus();
     } catch (e) {
         console.error("Excepție eliberare masă:", e);
-        showNotification("Eroare la rețea.", "fas fa-exclamation-triangle", "#e74c3c");
+        showNotification("Eroare de rețea.", "fas fa-exclamation-triangle", "#e74c3c");
     }
 };
 
