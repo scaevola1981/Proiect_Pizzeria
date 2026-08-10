@@ -1,29 +1,50 @@
-# Bella Roma - Pub & Pizzerie
+# 🍕 Bella Roma - Pub & Pizzerie
 
-Aplicație PWA (Progressive Web App) Serverless pentru preluarea și gestionarea comenzilor la masă, utilizând coduri QR.
+Aplicație PWA (Progressive Web App) Serverless pentru preluarea și gestionarea comenzilor la masă în timp real, concepută pentru performanță maximă, zero costuri fixe de găzduire și utilizare intuitivă pe orice dispozitiv.
 
-## Module Principale
-1. **Meniul Clientului (`index.html`)** - Interfață scanabilă via QR (ex: `?masa=5`), de unde clienții vizualizează meniul, personalizează produsele (fără ceapă, alergii etc.) și trimit comenzile.
-2. **Panoul Recepție (`owner.html`)** - Sistem Realtime pentru gestionarea comenzilor, destinat ospătarilor. Acceptă comenzile, le schimbă statusul și are opțiune securizată de "Încheiere Zi de Muncă" (cu arhivare automată și calcul total încasări).
-3. **Panoul Administrare (`admin.html`)** - Interfață parolatã pentru adăugarea și modificarea produselor în meniu (cu încărcare poze în baza de date).
+## 📱 Structura Proiectului (Aplicații Modulare)
 
-## Tehnologii Folosite
-- **Frontend**: HTML5, CSS3 (Glassmorphism UI), JavaScript ES6 (Vanilla)
-- **Backend**: Supabase (PostgreSQL, Storage, WebSockets Realtime)
-- **Notificări Push**: Web Push API, Service Workers, Vercel Serverless Functions (`api/send-push.js`)
-- **Hosting**: Vercel
-- **Build Tool**: Vite (doar pentru procesare locală și environment)
+1. **Recepție / Panou de Conducere (`receptie.html`)**
+   - Interfața centrală pentru primirea comenzilor în timp real.
+   - Afișează comenzile defalcate pe persoane, calculează totalurile per persoană.
+   - Notificări audio și suport pentru printare automată a bonurilor termice (POS).
+   - *Notă: `owner.html` redirecționează către această pagină.*
 
-## Funcționalități Cheie
-- **Notificări de Fundal (Push)**: Când o comandă este acceptată, telefonul clientului (chiar și cu ecranul blocat) primește o notificare de sistem (Web Push) prin intermediul unui Service Worker și un server Vercel.
-- **Sistem PWA pentru iOS/Android**: Aplicația poate fi instalată pe ecranul principal (Home Screen) pentru a se comporta nativ, inclusiv cu memorarea automată a numărului mesei.
-- **Modul Realtime**: Comenzile apar instant în fața ospătarilor fără ca pagina să fie reîncărcată (Supabase Realtime).
-- **Audio API**: Sunete dinamice generate prin `AudioContext` pentru notificări în aplicație, ocolind restricțiile browserelor mobile.
+2. **Aplicația Ospătarului (`ospatar.html`)**
+   - Harta meselor în timp real (liber/ocupat).
+   - Preluare comenzi direct la masă, grupate pe persoane.
 
-## Mod de Utilizare Locală
-1. Asigurați-vă că aveți `node.js` instalat.
-2. Instalați dependențele: `npm install`
-3. Rulați mediul de dezvoltare: `npm run dev`
-4. Deschideți `http://localhost:5173`
+3. **Meniul Digital al Clientului (`meniu.html`)**
+   - Interfață scanabilă via cod QR (ex: `?masa=5`).
+   - Clienții vizualizează meniul, pot comanda la comun sau defalcat ("Persoana 1", "Persoana 2").
+   - Securitate Geofencing (GPS) și Rate Limiting.
+   - *Notă: `index.html` redirecționează către această pagină preluând datele mesei.*
 
-*Toate datele (inclusiv produsele) sunt preluate din baza de date Supabase.*
+4. **Panoul de Administrare (`admin.html`)**
+   - Interfață protejată pentru gestiunea meniului (adăugare/editare produse, upload imagini în Supabase Storage).
+   - Sincronizare în timp real cu baza de date.
+
+## 🛠 Tehnologii Folosite
+
+- **Frontend**: HTML5, Vanilla CSS (Glassmorphism UI), JavaScript ES6 (ES Modules).
+- **Backend & Bază de Date**: Supabase (PostgreSQL, Storage).
+- **Comunicare**: Supabase Realtime (WebSockets) pentru actualizări instantanee pe toate ecranele.
+- **Securitate**: Rate Limiting, XSS Protection, CSP (Content Security Policy), Geofencing.
+- **Hosting / Deploy**: Vercel (CI/CD automatizat prin GitHub).
+- **Build Tool**: Vite (bundler extrem de rapid).
+
+## 🚀 Mod de Utilizare Locală
+
+1. Asigurați-vă că aveți instalat **Node.js**.
+2. Instalați dependențele proiectului:
+   ```bash
+   npm install
+   ```
+3. Porniți serverul de dezvoltare:
+   ```bash
+   npm run dev
+   ```
+4. Deschideți `http://localhost:5173` în browser (aplicația vă va redirecționa automat spre `/meniu.html`). Puteți naviga manual la `/receptie.html` sau `/ospatar.html`.
+
+---
+*Pentru detalii tehnice aprofundate, arhitectură, schema bazei de date și modificările recente, consultați **[Documentația MVP (Proiect_MVP_Pizzerie.md)](./Proiect_MVP_Pizzerie.md)***.
