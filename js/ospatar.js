@@ -479,26 +479,19 @@ async function sendWaiterOrder() {
     const total = cart.reduce((sum, item) => sum + (item.product.pret * item.quantity), 0);
 
     try {
-        const orderData = {
-            numar_masa: selectedMasa,
-            detalii_comanda: cart,
-            total: total,
-            status: 'noua'
-        };
-
-        const { data, error } = await window.supabaseClient
-            .from('comenzi')
-            .insert([orderData])
-            .select();
-
-        if (error) {
-            console.error("Eroare la salvare comandă ospătar:", error);
-            showNotification("Eroare la trimitere: " + error.message, "fas fa-exclamation-triangle", "#e74c3c");
+        if (typeof window.sendOrderToDatabase === 'function') {
+            const placedOrder = await window.sendOrderToDatabase(selectedMasa, cart, total);
+            if (placedOrder) {
+                showNotification(`Comandă trimisă cu succes pentru Masa ${selectedMasa}!`, "fas fa-check-circle", "#2ecc71");
+                cart = [];
+                updateCartUI();
+                await loadActiveTableStatus();
+            } else {
+                showNotification("Eroare la salvare comandă.", "fas fa-exclamation-triangle", "#e74c3c");
+            }
         } else {
-            showNotification(`Comandă trimisă cu succes pentru Masa ${selectedMasa}!`, "fas fa-check-circle", "#2ecc71");
-            cart = [];
-            updateCartUI();
-            await loadActiveTableStatus();
+            console.error("sendOrderToDatabase nu este definită.");
+            showNotification("Eroare de configurare.", "fas fa-exclamation-triangle", "#e74c3c");
         }
     } catch (e) {
         console.error("Excepție trimitere comandă:", e);
