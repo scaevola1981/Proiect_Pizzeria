@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bella Roma - Meniu Comandă</title>
+    <title>Bella Roma - Meniu Digital</title>
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; font-src https://cdnjs.cloudflare.com; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
     <link rel="manifest" href="/manifest.json">
@@ -26,57 +26,8 @@
         </div>
     </header>
 
-    <div class="table-info-bar"
-        style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <div id="table-info">Masa: <span id="masa-id" style="font-weight: 800;">Scanați QR</span></div>
-        <button id="client-install-app-btn" class="ios-button-banana"
-            onclick="if(typeof window.openPwaInstallModal==='function'){window.openPwaInstallModal();}else{const m=document.getElementById('pwa-install-modal');if(m)m.classList.remove('hidden');}"
-            style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 8px 14px; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border: 1px solid #60a5fa; cursor: pointer;">
-            <i class="fas fa-download"></i> Descarcă Aplicația
-        </button>
-    </div>
-
-    <!-- Selector Persoană Client (Panou Superior Header) -->
-    <div class="glass-panel" style="margin: 0 15px 20px 15px; padding: 16px;">
-        <label style="color: #f5b041; font-size: 1.05rem; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-users"></i> Comanzi preparatele pentru:
-        </label>
-
-        <!-- Pastile Persoane Client -->
-        <div id="person-chips-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; width: 100%;">
-            <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
-                style="grid-column: 1 / -1; padding: 12px; border-radius: 12px; border: 1px solid #f5b041; background: #f5b041; color: #1e293b; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                👥 Comandă Împreună (Plată la Comun)
-            </button>
-            <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')"
-                style="padding: 10px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                👤 Persoana 1
-            </button>
-            <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')"
-                style="padding: 10px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                👤 Persoana 2
-            </button>
-            <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')"
-                style="padding: 10px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                👤 Persoana 3
-            </button>
-            <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')"
-                style="padding: 10px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                👤 Persoana 4
-            </button>
-            <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')"
-                style="padding: 10px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                👤 Persoana 5
-            </button>
-            <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')"
-                style="padding: 10px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-weight: 500; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                👤 Persoana 6
-            </button>
-        </div>
-    </div>
-
     <div class="content-wrapper">
-        <main class="glass-panel products-area">
+        <main class="glass-panel products-area" style="width: 100%;">
             <!-- Search & Tabs -->
             <div class="menu-controls" style="margin-bottom: 25px;">
                 <div class="search-bar" style="margin-bottom: 15px; position: relative;">
@@ -100,86 +51,16 @@
                 </div>
             </div>
 
-            <div id="produse-container" class="products-grid">
+            <!-- Categoriile Orizontale -->
+            <div id="subcategory-nav" class="subcategory-nav-bar hidden">
+                <!-- Se va umple dinamic prin JS -->
+            </div>
+
+            <!-- Zona de Produse (Grupate pe categorii) -->
+            <div id="produse-container" class="products-container">
                 <p style="text-align:center; width:100%;">Meniul se încarcă...</p>
             </div>
         </main>
-
-        <aside class="glass-panel cart-area">
-            <h2 id="cart-title">Comanda mea</h2>
-
-            <div id="cart-items">
-                <p class="empty-cart">Nu ați comandat încă nimic.</p>
-            </div>
-            <div class="cart-summary">
-                <h3>Total: <span id="cart-total">0.00</span> Lei</h3>
-                <button id="btn-trimite-comanda" disabled>Trimite Comanda</button>
-            </div>
-        </aside>
-    </div>
-
-    <!-- Modal Personalizare Produs -->
-    <div id="customize-modal" class="modal hidden">
-        <div
-            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
-            <h2 id="customize-product-name" style="color: #f5b041; margin-bottom: 10px;">Personalizează</h2>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">Dorești să scoți un ingredient sau ai vreo alergie? Scrie mai jos:</p>
-            <textarea id="customize-notes" rows="3" placeholder="ex: fără ceapă, extra sos, alergic la alune..."
-                class="modern-input" style="margin-bottom: 20px; resize: none;" maxlength="200"></textarea>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-secondary" onclick="window.closeCustomizeModal()"
-                    style="border-radius: 10px; padding: 12px;">Anulează</button>
-                <button onclick="window.confirmCustomizeAndAdd()"
-                    style="border-radius: 10px; padding: 12px; font-weight: bold;">Alegerea mea</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Eroare Locație / Geofencing -->
-    <div id="geo-error-modal" class="modal hidden">
-        <div
-            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
-            <i class="fas fa-map-marker-alt" style="font-size: 3.5rem; color: #e74c3c; margin-bottom: 20px;"></i>
-            <h2 style="color: #e74c3c; margin-bottom: 15px;">Comanda nu poate fi procesată</h2>
-            <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 25px;">
-                Se pare că vă aflați în afara restaurantului Bella Roma. Comenzile online la masă sunt permise doar pentru clienții aflați în locație.
-            </p>
-            <button class="btn-secondary"
-                onclick="document.getElementById('geo-error-modal').classList.add('hidden')"
-                style="width: 100%; border-radius: 10px; padding: 12px; font-weight: bold;">Închide</button>
-        </div>
-    </div>
-
-    <!-- Modal Eroare QR (fără număr masă) -->
-    <div id="qr-error-modal" class="modal hidden">
-        <div
-            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
-            <i class="fas fa-qrcode" style="font-size: 3.5rem; color: #f5b041; margin-bottom: 20px;"></i>
-            <h2 style="color: #f5b041; margin-bottom: 15px;">Scanați Codul QR de pe Masă</h2>
-            <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 25px;">
-                Pentru a plasa o comandă, vă rugăm să scanați codul QR fizic de pe masa la care sunteți așezat.
-            </p>
-            <div style="display: flex; gap: 10px; flex-direction: column;">
-                <button onclick="window.startQRScanner()"
-                    style="width: 100%; background: #2ecc71; color: #1e293b; border-radius: 10px; padding: 14px; font-weight: bold; font-size: 1.1rem; border: none; cursor: pointer;">
-                    <i class="fas fa-camera"></i> Deshide Scanner QR
-                </button>
-                <button class="btn-secondary"
-                    onclick="document.getElementById('qr-error-modal').classList.add('hidden')"
-                    style="width: 100%; border-radius: 10px; padding: 12px; margin-top: 5px;">Răsfoiește doar Meniul</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Scanare QR În-Aplicație -->
-    <div id="qr-scanner-modal" class="modal hidden">
-        <div
-            style="max-width: 500px; width: 90%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center;">
-            <h2 style="color: #f5b041; margin-bottom: 15px;"><i class="fas fa-camera"></i> Scanați Codul QR de pe Masă</h2>
-            <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px;"></div>
-            <button onclick="window.stopQRScanner()" class="btn-secondary"
-                style="width: 100%; border-radius: 10px; padding: 12px; font-weight: bold;">Anulează Scanarea</button>
-        </div>
     </div>
 
     <!-- App Loading Screen to prevent FOUC -->
@@ -202,9 +83,8 @@
         style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <!-- Am eliminat html5-qrcode și security.js, deoarece e doar vizualizare meniu -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="js/security.js"></script>
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>

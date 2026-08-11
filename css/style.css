@@ -55,23 +55,64 @@ h3 {
 
 /* Layout index.html: Produse și Coș */
 .content-wrapper {
-    display: flex;
-    gap: 20px;
+    display: block;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .products-area {
-    flex: 2;
+    width: 100%;
 }
 
-.cart-area {
-    flex: 1;
+/* Noua bara de subcategorii (orizontala) */
+.subcategory-nav-bar {
     display: flex;
-    flex-direction: column;
-    max-height: 80vh;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 15px 0;
+    margin-bottom: 25px;
+    white-space: nowrap;
     position: sticky;
-    top: 20px;
+    top: 0;
+    z-index: 100;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    scrollbar-width: none; /* Firefox */
+}
+.subcategory-nav-bar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+.subcategory-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+.subcategory-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+.subcategory-btn.active {
+    background: #f5b041;
+    color: #1e293b;
+    border-color: #f5b041;
+    font-weight: bold;
+}
+.category-section {
+    scroll-margin-top: 80px; /* Offset for sticky header */
+    margin-bottom: 40px;
+}
+.category-section h2 {
+    color: #f5b041;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(245, 176, 65, 0.3);
+    padding-bottom: 5px;
 }
 
 /* Grid Produse */
