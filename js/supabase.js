@@ -172,29 +172,77 @@ window.updateAdminPin = async function (newPin) {
  * Acum include și coordonatele GPS ale clientului
  */
 window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription = null, clientCoords = null) {
-    const order = {
-        numar_masa: masa,
-        detalii_comanda: cart,
-        total: total,
-        status: 'noua'
-    };
+    // Adăugăm flag-ul is_new pe produsele din coșul curent (suplimentarea)
+    const cartWithFlags = cart.map(item => ({ ...item, is_new: true }));
 
-    if (pushSubscription) {
-        order.push_subscription = pushSubscription;
-    }
+    // Căutăm dacă există deja o comandă activă pentru această masă
+    const { data: existingOrders, error: searchError } = await supabase
+        .from('comenzi')
+        .select('*')
+        .eq('numar_masa', String(masa))
+        .neq('status', 'finalizata')
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    // Salvăm coordonatele clientului pentru audit de securitate
-    if (clientCoords) {
-        order.client_lat = clientCoords.lat;
-        order.client_lng = clientCoords.lng;
-    }
-
-    const { data, error } = await supabase.from('comenzi').insert([order]).select();
-    if (error) {
-        console.error("Eroare la inserare:", error);
+    if (searchError) {
+        console.error("Eroare la căutarea comenzii active:", searchError);
         return null;
     }
-    return data[0];
+
+    let orderData = {
+        numar_masa: masa,
+        status: 'noua'
+    };
+    
+    if (pushSubscription) {
+        orderData.push_subscription = pushSubscription;
+    }
+
+    if (clientCoords) {
+        orderData.client_lat = clientCoords.lat;
+        orderData.client_lng = clientCoords.lng;
+    }
+
+    if (existingOrders && existingOrders.length > 0) {
+        // Dacă EXISTĂ o comandă activă, o suplimentăm
+        const existingOrder = existingOrders[0];
+        
+        // Menținem detaliile vechi, la care adăugăm noile produse
+        const currentDetails = Array.isArray(existingOrder.detalii_comanda) ? existingOrder.detalii_comanda : [];
+        const newDetails = [...currentDetails, ...cartWithFlags];
+        const newTotal = parseFloat(existingOrder.total || 0) + parseFloat(total || 0);
+
+        orderData.detalii_comanda = newDetails;
+        orderData.total = newTotal;
+
+        const { data, error } = await supabase
+            .from('comenzi')
+            .update(orderData)
+            .eq('id', existingOrder.id)
+            .select();
+            
+        if (error) {
+            console.error("Eroare la suplimentare comandă:", error);
+            return null;
+        }
+        return data[0];
+
+    } else {
+        // Dacă NU există comandă activă, creăm una nouă
+        orderData.detalii_comanda = cartWithFlags;
+        orderData.total = total;
+
+        const { data, error } = await supabase
+            .from('comenzi')
+            .insert([orderData])
+            .select();
+            
+        if (error) {
+            console.error("Eroare la inserare:", error);
+            return null;
+        }
+        return data[0];
+    }
 };
 
 // ==========================================
@@ -240,7 +288,7 @@ window.updateOrderStatus = async function (orderId, newStatus, timestampFinaliza
     try {
         const { data } = await supabase
             .from('comenzi')
-            .select('push_subscription, numar_masa')
+            .select('push_subscription, numar_masa, detalii_comanda')
             .eq('id', orderId)
             .maybeSingle();
         currentOrder = data;
@@ -252,6 +300,18 @@ window.updateOrderStatus = async function (orderId, newStatus, timestampFinaliza
     const updateData = { status: newStatus };
     if (timestampFinalizare !== null) {
         updateData.timp_asteptare = timestampFinalizare;
+    }
+
+    // Dacă trecem în preparare, curățăm flag-ul is_new de pe toate produsele, 
+    // ca să nu le mai printăm a doua oară la o viitoare suplimentare.
+    if (newStatus === 'in_preparare' && currentOrder && currentOrder.detalii_comanda) {
+        const hasNew = currentOrder.detalii_comanda.some(item => item.is_new === true);
+        if (hasNew) {
+            updateData.detalii_comanda = currentOrder.detalii_comanda.map(item => ({
+                ...item,
+                is_new: false
+            }));
+        }
     }
     const { error } = await supabase.from('comenzi').update(updateData).eq('id', orderId);
     if (error) {

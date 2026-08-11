@@ -124,7 +124,16 @@ async function loadOwnerOrders() {
                 printReceiptForOrder(payload.new);
             } else if (payload.eventType === 'UPDATE') {
                 const idx = allOrders.findIndex(o => o.id === payload.new.id);
-                if (idx > -1) allOrders[idx] = payload.new;
+                if (idx > -1) {
+                    const oldOrder = allOrders[idx];
+                    allOrders[idx] = payload.new;
+                    
+                    // Dacă statusul revine la 'noua' înseamnă că e o suplimentare.
+                    // Facem auto-print.
+                    if (oldOrder.status !== 'noua' && payload.new.status === 'noua') {
+                        printReceiptForOrder(payload.new);
+                    }
+                }
             } else if (payload.eventType === 'DELETE') {
                 allOrders = allOrders.filter(o => o.id !== payload.old.id);
             }
@@ -559,9 +568,14 @@ function printReceiptForOrder(order) {
     const dateStr = dateObj.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const timeStr = dateObj.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
 
+    // Verificăm dacă există produse noi (is_new === true) pentru a tipări doar bonul suplimentar
+    const hasNewItems = detalii.some(item => item.is_new === true);
+    const isSupplement = hasNewItems;
+    const itemsToPrint = hasNewItems ? detalii.filter(item => item.is_new === true) : detalii;
+
     // Grupare pe persoane
     const grouped = {};
-    detalii.forEach(item => {
+    itemsToPrint.forEach(item => {
         const person = item.customer_name && item.customer_name.trim() !== '' ? item.customer_name : 'Masa';
         if (!grouped[person]) grouped[person] = [];
         grouped[person].push(item);
@@ -659,6 +673,7 @@ function printReceiptForOrder(order) {
         <div class="header">
             <h1>BELLA ROMA</h1>
             <p>PUB & PIZZERIE</p>
+            ${isSupplement ? '<p style="font-size: 14px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000; padding-top: 4px;">*** BON SUPLIMENTAR ***</p>' : ''}
         </div>
 
         <div class="info">
