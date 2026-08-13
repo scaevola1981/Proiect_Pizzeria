@@ -150,7 +150,13 @@ function renderAdminProducts() {
         return;
     }
 
-    // 2. Grupare pe subcategorii (extrase din descriere "Subcategorie | detalii" sau categorie)
+    // 2. Grupare pe subcategorii (extrase din descriere "Subcategorie | detalii" sau potrivire directă)
+    const knownSubcats = [
+        "Pizza", "Focaccia", "Paste", "Antipasti", "Fel Principal", "Desert", "Înghețată",
+        "Vinuri", "Cocktailuri", "Vodcă", "Whisky", "Gin", "Rom", "Tequila", "Brandy / Cognac",
+        "Bitter / Lichior", "Cafea", "Răcoritoare", "Apă", "Energizant", "Bere Draft", "Bere", "Special"
+    ];
+
     const grouped = {};
     filteredProducts.forEach(p => {
         let subcat = "Altele";
@@ -160,8 +166,12 @@ function renderAdminProducts() {
             const parts = p.descriere.split('|');
             subcat = parts[0].trim();
             displayDesc = escapeHTML(parts.slice(1).join('|').trim());
+        } else if (p.descriere && knownSubcats.some(k => k.toLowerCase() === p.descriere.trim().toLowerCase())) {
+            const match = knownSubcats.find(k => k.toLowerCase() === p.descriere.trim().toLowerCase());
+            subcat = match || p.descriere.trim();
+            displayDesc = '';
         } else if (p.categorie && p.categorie.toLowerCase() !== 'restaurant' && p.categorie.toLowerCase() !== 'bar') {
-            subcat = p.categorie;
+            subcat = p.categorie.trim();
         }
 
         if (!grouped[subcat]) grouped[subcat] = [];
