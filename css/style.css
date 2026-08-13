@@ -67,23 +67,27 @@ h3 {
 /* Noua bara de subcategorii (orizontala) */
 .subcategory-nav-bar {
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
     overflow-x: auto;
     gap: 10px;
-    padding: 15px 0;
-    margin-bottom: 25px;
+    padding: 12px 5px;
+    margin-bottom: 20px;
     white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(15, 23, 42, 0.9);
+    position: relative;
+    z-index: 10;
+    background: rgba(15, 23, 42, 0.4);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
     scrollbar-width: none; /* Firefox */
 }
 .subcategory-nav-bar::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
 }
 .subcategory-btn {
+    flex-shrink: 0;
     padding: 8px 16px;
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.1);
@@ -93,7 +97,9 @@ h3 {
     font-weight: 500;
     transition: all 0.3s ease;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 .subcategory-btn:hover {
     background: rgba(255, 255, 255, 0.2);

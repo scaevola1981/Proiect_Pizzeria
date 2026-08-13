@@ -131,8 +131,16 @@ function renderAdminProducts() {
 
     // 1. Filtrare pe tab curent (Restaurant vs Bar)
     let filteredProducts = allAdminProducts.filter(p => {
-        const catStr = ((p.categorie || '') + ' ' + (p.nume || '')).toLowerCase();
-        const isBautura = p.categorie === 'bar' || catStr.includes('bautur') || catStr.includes('băutur') || catStr.includes('suc') || catStr.includes('apa') || catStr.includes('apă') || catStr.includes('coca') || catStr.includes('cola') || catStr.includes('pepsi') || catStr.includes('fanta') || catStr.includes('sprite') || catStr.includes('cafea') || catStr.includes('bere') || catStr.includes('vin');
+        const pCat = (p.categorie || '').toLowerCase().trim();
+        let isBautura = false;
+        if (pCat === 'bar' || pCat === 'bautura' || pCat === 'bauturi') {
+            isBautura = true;
+        } else if (pCat === 'restaurant' || pCat === 'mancare') {
+            isBautura = false;
+        } else {
+            const catStr = ((p.categorie || '') + ' ' + (p.nume || '') + ' ' + (p.descriere || '')).toLowerCase();
+            isBautura = /\b(bautura|bauturi|băutură|băuturi|suc|apa|apă|coca|cola|fanta|sprite|pepsi|cafea|bere|vin|fresh|limonada|cocktail|shot|energizant|vodca|vodcă|whisky|gin|rom|tequila|cognac|brandy|lichior|bitter|prosecco|spumant)\b/i.test(catStr);
+        }
 
         return adminCurrentTab === 'bar' ? isBautura : !isBautura;
     });
