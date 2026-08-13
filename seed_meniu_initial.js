@@ -220,6 +220,74 @@ const menuItems = [
     { nume: "Cooler F.A. Zmeură și Mure", descriere: "Bere | 330 ml", pret: 10, categorie: "Bar" }
 ];
 
+const imageMap = {
+    "Margherita": "/img/categorii/pizza/pizza-margarita.jpg",
+    "Marinara": "/img/categorii/pizza/pizza-marinara.jpg",
+    "Ortolana": "/img/categorii/pizza/pizza-ortolana.jpg",
+    "Capriciosa": "/img/categorii/pizza/pizza-capriciosa.jpg",
+    "Napoli": "/img/categorii/pizza/pizza-napoli.jpg",
+    "Vegetariană": "/img/categorii/pizza/pizza-vegetariana.jpg",
+    "Wurstel e Patatine": "/img/categorii/pizza/pizza-wurstel-e-patatine.jpg",
+    "Diavola": "/img/categorii/pizza/pizza-diavola.jpg",
+    "Boscaiola": "/img/categorii/pizza/pizza-boscaiola.png",
+    "Tonno e Cipolla": "/img/categorii/pizza/pizza-tonno-e-cipolla.jpg",
+    "Quattro Formaggi": "/img/categorii/pizza/pizza-quattro-formaggi.jpg",
+    "Tradițională": "/img/categorii/pizza/pizza-traditionala.jpg",
+    "Salami": "/img/categorii/pizza/pizza-salami.jpg",
+    "Pepperoni": "/img/categorii/pizza/pizza-pepperoni.jpg",
+    "Margherita e Prosciutto": "/img/categorii/pizza/pizza-margherita-e-prosciutto.jpg",
+    "Estiva": "/img/categorii/pizza/pizza-estiva.jpg",
+    "Calzone": "/img/categorii/pizza/pizza-calzone.jpg",
+    "Funghi e Prosciutto": "/img/categorii/pizza/pizza-funghi-e-prosciutto.jpg",
+    "Bella Roma": "/img/categorii/pizza/pizza-bella-roma.jpg",
+    "Funghi Porcini": "/img/categorii/pizza/pizza-funghi-porvini.jpg",
+    "Pizza Family": "/img/categorii/pizza/pizza-family.jpg",
+
+    "Focaccia": "/img/categorii/focacia/pizza-focaccia-bianca.jpg",
+    "Focaccia Bianca": "/img/categorii/focacia/pizza-focaccia-bianca.jpg",
+    "Focaccia cu Nutella": "/img/categorii/focacia/pizza-focaccia-cu-nutella.jpg",
+    "Focaccia cu Prosciutto": "/img/categorii/focacia/pizza-focaccia-prosciuto.jpg",
+
+    "Burro e Parmigiano": "/img/categorii/paste/paste-buro-e-parmigiano.jpg",
+    "Penne all'Arrabbiata": "/img/categorii/paste/paste-arrabbiata.jpg",
+    "Bolognese / Ragù": "/img/categorii/paste/paste-ragu-bolognese.jpg",
+    "Aglio, Olio e Peperoncino": "/img/categorii/paste/paste-aglio-peperoncino.jpg",
+    "All'Amatriciana": "/img/categorii/paste/paste-all-americana.jpg",
+    "Carbonara": "/img/categorii/paste/paste-carbonara.jpg",
+    "Ai Funghi Porcini": "/img/categorii/paste/paste-funghi-porcini.jpg",
+
+    "Supplì": "/img/categorii/antipasti/suppli.jpg",
+    "Bruschetta Pomodoro": "/img/categorii/antipasti/bruschetta-pomodoro.jpg",
+    "Chipsuri": "/img/categorii/antipasti/chipsuri.jpg",
+    "Legume la grătar": "/img/categorii/fel_principal/legume-la-gratar.jpg",
+    "Scaloppina al Limone": "/img/categorii/fel_principal/scalopina-al-limoni.jpg",
+    "Platou aperitiv (2 pers.)": "/img/categorii/antipasti/platou-aperitiv.jpg",
+    "Ceafă de porc la grătar": "/img/categorii/fel_principal/ceafa-de-porc-la-gratar.jpg",
+    "Ceafă de porc cu legume la grătar": "/img/categorii/fel_principal/ceafa-de-porc-la-gratar-cu-legume-la-gratar.jpg",
+
+    "Clătite cu Finetti": "/img/categorii/desert/clatite-cu-finetti.jpg",
+    "Cheesecake": "/img/categorii/desert/cheesecake.jpg",
+    "Tiramisu": "/img/categorii/desert/tiramisu.jpg",
+    "Gumă de mestecat Mentos": "/img/categorii/desert/gumm-mestecat-mentos.jpg",
+
+    "Betty Blue Vanilie": "/img/categorii/inghetata/inghetata-betty-blue-vanilie.jpg",
+    "Betty Blue Tiramisu": "/img/categorii/inghetata/inghetata-betty-blue-tiramisu.jpg",
+    "Betty Blue Triple Chocolate": "/img/categorii/inghetata/inghetata-betty-blue-chocolate.jpg",
+    "Betty Blue Chocolate": "/img/categorii/inghetata/inghetata-betty-blue-chocolate.jpg",
+    "Betty Blue Fistic": "/img/categorii/inghetata/inghetata-betty-blue-vanilie.jpg",
+    "Betty Blue Bubble Gum": "/img/categorii/inghetata/inghetata-bubble-gum.jpg",
+    "Cornet Scufița Roșie": "/img/categorii/inghetata/cornet-scufita-rosie.jpg",
+    "Napoca Cornet Cacao": "/img/categorii/inghetata/napoca-cornet-cacao.jpg",
+    "Napoca Pahar Cacao": "/img/categorii/inghetata/napoca-pahar-cacao.jpg",
+    "Napoca Pahar Vanilie": "/img/categorii/inghetata/napoca-pahar-vanilie.jpg",
+    "Twister Green": "/img/categorii/inghetata/twister-green.jpg",
+    "Calippo Căpșuni": "/img/categorii/inghetata/calipi-capsuni.jpg",
+    "Cornetto King Cone Vanilie": "/img/categorii/inghetata/napoca-cornet-cacao.jpg",
+    "Cornetto King Cone Ciocolată": "/img/categorii/inghetata/napoca-cornet-cacao.jpg",
+    "Magnum Migdale": "/img/categorii/inghetata/magnum-migdale.jpg",
+    "Magnum Piersică": "/img/categorii/inghetata/magnum-piersica.jpg"
+};
+
 async function seedMenu() {
     console.log("Ștergere produse existente...");
     const { error: deleteError } = await supabase
@@ -234,10 +302,10 @@ async function seedMenu() {
     
     console.log("Inserare meniu nou...");
     
-    // Add default image to all items
+    // Add image url to items if mapped
     const itemsToInsert = menuItems.map(item => ({
         ...item,
-        imagine_url: null
+        imagine_url: imageMap[item.nume] || null
     }));
 
     const { error: insertError } = await supabase

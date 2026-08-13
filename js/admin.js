@@ -146,7 +146,10 @@ function renderAdminProducts() {
             <h3 style="color: #fff;">${escapeHTML(p.nume)}</h3>
             <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px; font-size: 0.9rem;">${escapeHTML(p.descriere || '-')}</p>
             ${priceHTML}
-            <button onclick="window.deleteProduct(${parseInt(p.id)})" style="margin-top:auto; background:#e74c3c; color:white;"><i class="fas fa-trash"></i> Șterge Produs</button>
+            <div style="display: flex; gap: 10px; margin-top: auto;">
+                <button onclick="window.openEditModal(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #f39c12 0%, #d35400 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-edit"></i> Editează</button>
+                <button onclick="window.deleteProduct(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-trash"></i> Șterge</button>
+            </div>
         `;
         container.appendChild(div);
         count++;
@@ -340,6 +343,159 @@ window.confirmDeleteProduct = async () => {
         loadAdminProducts();
     }
 };
+
+// ==========================================
+// EDITARE PRODUS — Modal & Logica de Salvare
+// ==========================================
+
+let editingProduct = null;
+
+window.openEditModal = (id) => {
+    editingProduct = allAdminProducts.find(p => parseInt(p.id) === parseInt(id));
+    if (!editingProduct) return;
+
+    document.getElementById('edit-product-id').value = editingProduct.id;
+    document.getElementById('edit-nume').value = editingProduct.nume || '';
+    document.getElementById('edit-categorie').value = editingProduct.categorie || '';
+    document.getElementById('edit-pret').value = editingProduct.pret || '';
+    document.getElementById('edit-descriere').value = editingProduct.descriere || '';
+
+    const preview = document.getElementById('edit-image-preview');
+    if (preview) {
+        preview.src = editingProduct.imagine_url || getDefaultProductImage();
+    }
+
+    const fileInput = document.getElementById('edit-imagine_upload');
+    if (fileInput) fileInput.value = '';
+
+    const fileNameLabel = document.getElementById('edit-file-name');
+    if (fileNameLabel) fileNameLabel.innerText = 'Se păstrează imaginea curentă dacă nu alegeți alta.';
+
+    const modal = document.getElementById('edit-product-modal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.closeEditModal = () => {
+    editingProduct = null;
+    const modal = document.getElementById('edit-product-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+// Listener preview imagine noua la editare
+const editImageInput = document.getElementById('edit-imagine_upload');
+if (editImageInput) {
+    editImageInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const validation = window.validateFileUpload(file);
+            if (!validation.valid) {
+                alert(validation.error);
+                editImageInput.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                const preview = document.getElementById('edit-image-preview');
+                if (preview) preview.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            const fileNameLabel = document.getElementById('edit-file-name');
+            if (fileNameLabel) fileNameLabel.innerText = `Imagine nouă: ${file.name}`;
+        }
+    });
+}
+
+// Handler salvare editare produs
+const editForm = document.getElementById('edit-product-form');
+if (editForm) {
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const { authenticated } = await window.getAuthSession();
+        if (!authenticated) {
+            alert('Sesiunea a expirat. Te rugăm să te autentifici din nou.');
+            window.location.reload();
+            return;
+        }
+
+        const id = document.getElementById('edit-product-id').value;
+        const nume = document.getElementById('edit-nume').value.trim();
+        const descriere = document.getElementById('edit-descriere').value.trim();
+        const categorie = document.getElementById('edit-categorie').value.trim();
+        const pret = parseFloat(document.getElementById('edit-pret').value);
+
+        if (!pret || pret <= 0 || pret > 9999) {
+            alert("Prețul trebuie să fie între 1 și 9999 Lei.");
+            return;
+        }
+        if (!nume) {
+            alert("Completați numele!");
+            return;
+        }
+        if (nume.length > 100) {
+            alert("Numele produsului nu poate depăși 100 de caractere.");
+            return;
+        }
+        if (descriere.length > 500) {
+            alert("Descrierea nu poate depăși 500 de caractere.");
+            return;
+        }
+
+        const btn = editForm.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Se salvează...';
+
+        let imagine_url = editingProduct ? editingProduct.imagine_url : null;
+        const fileInput = document.getElementById('edit-imagine_upload');
+
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const validation = window.validateFileUpload(file);
+            if (!validation.valid) {
+                alert(validation.error);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Salvează Modificările';
+                return;
+            }
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+            const { data: uploadData, error: uploadError } = await window.supabaseClient.storage
+                .from('imagini_produse')
+                .upload(fileName, file);
+
+            if (uploadError) {
+                console.error("Eroare la upload poză:", uploadError);
+                alert("Nu s-a putut încărca noua poză. Se păstrează poza curentă.");
+            } else {
+                const { data: publicUrlData } = window.supabaseClient.storage
+                    .from('imagini_produse')
+                    .getPublicUrl(fileName);
+
+                imagine_url = publicUrlData.publicUrl;
+            }
+        }
+
+        const { error } = await window.supabaseClient
+            .from('meniu')
+            .update({ nume, descriere, pret, categorie, imagine_url })
+            .eq('id', id);
+
+        if (error) {
+            console.error("Eroare la actualizare:", error);
+            alert("Eroare la salvarea modificărilor: " + error.message);
+        } else {
+            window.closeEditModal();
+            loadAdminProducts();
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Salvează Modificările';
+    });
+}
 
 // ==========================================
 // PROGRAM DE FUNCȚIONARE (STORE SCHEDULE)
