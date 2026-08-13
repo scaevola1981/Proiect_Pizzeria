@@ -234,7 +234,7 @@ function renderAdminProducts() {
                 <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px; font-size: 0.9rem;">${p.displayDesc || '-'}</p>
                 ${priceHTML}
                 <div style="display: flex; gap: 10px; margin-top: auto;">
-                    <button onclick="window.openEditModal(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #f39c12 0%, #d35400 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-edit"></i> Editează</button>
+                    <button onclick="window.openEditModal('${p.id}')" style="flex: 1; background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);"><i class="fas fa-edit"></i> Editează</button>
                     <button onclick="window.deleteProduct(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-trash"></i> Șterge</button>
                 </div>
             `;
