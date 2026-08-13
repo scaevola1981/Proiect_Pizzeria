@@ -115,48 +115,116 @@ function getDefaultProductImage() {
 
 function renderAdminProducts() {
     const container = document.getElementById('admin-products-container');
+    const navBar = document.getElementById('admin-subcategory-nav');
     if (!container) return;
+
     container.innerHTML = '';
+    if (navBar) {
+        navBar.innerHTML = '';
+        navBar.classList.add('hidden');
+    }
 
     if (allAdminProducts.length === 0) {
         container.innerHTML = '<p style="text-align:center; width:100%;">Meniul este momentan gol.</p>';
         return;
     }
 
-    let count = 0;
-
-    allAdminProducts.forEach(p => {
+    // 1. Filtrare pe tab curent (Restaurant vs Bar)
+    let filteredProducts = allAdminProducts.filter(p => {
         const catStr = ((p.categorie || '') + ' ' + (p.nume || '')).toLowerCase();
         const isBautura = p.categorie === 'bar' || catStr.includes('bautur') || catStr.includes('băutur') || catStr.includes('suc') || catStr.includes('apa') || catStr.includes('apă') || catStr.includes('coca') || catStr.includes('cola') || catStr.includes('pepsi') || catStr.includes('fanta') || catStr.includes('sprite') || catStr.includes('cafea') || catStr.includes('bere') || catStr.includes('vin');
 
-        if (adminCurrentTab === 'bar' && !isBautura) return;
-        if (adminCurrentTab === 'restaurant' && isBautura) return;
-
-        const imageUrl = p.imagine_url || getDefaultProductImage();
-        const div = document.createElement('div');
-        div.className = 'product-card';
-        div.style.background = 'rgba(255, 255, 255, 0.1)';
-        div.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-
-        let priceHTML = `<h4 style="color: #f5b041; margin-bottom: 15px;">${escapeHTML(String(p.pret))} Lei <small style="font-size:0.8rem; opacity:0.7;">(${isBautura ? 'Bar' : 'Restaurant'})</small></h4>`;
-
-        // XSS Protection — escapăm toate datele din DB
-        div.innerHTML = `
-            <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(p.nume)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
-            <h3 style="color: #fff;">${escapeHTML(p.nume)}</h3>
-            <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px; font-size: 0.9rem;">${escapeHTML(p.descriere || '-')}</p>
-            ${priceHTML}
-            <div style="display: flex; gap: 10px; margin-top: auto;">
-                <button onclick="window.openEditModal(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #f39c12 0%, #d35400 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-edit"></i> Editează</button>
-                <button onclick="window.deleteProduct(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-trash"></i> Șterge</button>
-            </div>
-        `;
-        container.appendChild(div);
-        count++;
+        return adminCurrentTab === 'bar' ? isBautura : !isBautura;
     });
 
-    if (count === 0) {
-        container.innerHTML = '<p style="text-align:center; width:100%; margin-top: 20px;">Niciun produs în această categorie.</p>';
+    if (filteredProducts.length === 0) {
+        container.innerHTML = `<p style="text-align:center; width:100%; margin-top: 20px;">Niciun produs în secțiunea <strong>${adminCurrentTab === 'bar' ? 'Bar' : 'Restaurant'}</strong>.</p>`;
+        return;
+    }
+
+    // 2. Grupare pe subcategorii (extrase din descriere "Subcategorie | detalii" sau categorie)
+    const grouped = {};
+    filteredProducts.forEach(p => {
+        let subcat = "Altele";
+        let displayDesc = escapeHTML(p.descriere || '');
+
+        if (p.descriere && p.descriere.includes('|')) {
+            const parts = p.descriere.split('|');
+            subcat = parts[0].trim();
+            displayDesc = escapeHTML(parts.slice(1).join('|').trim());
+        } else if (p.categorie && p.categorie.toLowerCase() !== 'restaurant' && p.categorie.toLowerCase() !== 'bar') {
+            subcat = p.categorie;
+        }
+
+        if (!grouped[subcat]) grouped[subcat] = [];
+        grouped[subcat].push({ ...p, displayDesc });
+    });
+
+    // 3. Generare Navigație Orizontală Subcategorii
+    if (navBar && Object.keys(grouped).length > 1) {
+        navBar.classList.remove('hidden');
+
+        Object.keys(grouped).forEach(cat => {
+            const btn = document.createElement('a');
+            btn.href = `#admin-cat-${escapeHTML(cat.replace(/\s+/g, '-'))}`;
+            btn.className = 'subcategory-btn';
+            btn.innerText = cat;
+
+            btn.addEventListener('click', (e) => {
+                navBar.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+
+            navBar.appendChild(btn);
+        });
+
+        if (navBar.firstChild) navBar.firstChild.classList.add('active');
+    }
+
+    // 4. Randare grupuri de produse (pe categorii cu titluri clare)
+    for (const [catName, prods] of Object.entries(grouped)) {
+        const sectionId = `admin-cat-${escapeHTML(catName.replace(/\s+/g, '-'))}`;
+
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.id = sectionId;
+
+        const sectionTitle = document.createElement('h2');
+        sectionTitle.style.color = '#f5b041';
+        sectionTitle.style.borderBottom = '1px solid rgba(245,176,65,0.3)';
+        sectionTitle.style.paddingBottom = '5px';
+        sectionTitle.style.marginBottom = '15px';
+        sectionTitle.innerHTML = `<i class="fas fa-layer-group"></i> ${escapeHTML(catName)}`;
+        section.appendChild(sectionTitle);
+
+        const grid = document.createElement('div');
+        grid.className = 'products-grid';
+
+        prods.forEach(p => {
+            const imageUrl = p.imagine_url || getDefaultProductImage();
+            const isBautura = adminCurrentTab === 'bar';
+            const priceHTML = `<h4 style="color: #f5b041; margin-bottom: 15px;">${escapeHTML(String(p.pret))} Lei <small style="font-size:0.8rem; opacity:0.7;">(${isBautura ? 'Bar' : 'Restaurant'})</small></h4>`;
+
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.style.background = 'rgba(255, 255, 255, 0.1)';
+            card.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+
+            card.innerHTML = `
+                <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(p.nume)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
+                <h3 style="color: #fff;">${escapeHTML(p.nume)}</h3>
+                <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px; font-size: 0.9rem;">${p.displayDesc || '-'}</p>
+                ${priceHTML}
+                <div style="display: flex; gap: 10px; margin-top: auto;">
+                    <button onclick="window.openEditModal(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #f39c12 0%, #d35400 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-edit"></i> Editează</button>
+                    <button onclick="window.deleteProduct(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-trash"></i> Șterge</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        container.appendChild(section);
     }
 }
 

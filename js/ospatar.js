@@ -331,18 +331,22 @@ async function loadMenuProducts() {
 
 function renderProducts() {
     const container = document.getElementById('produse-container');
+    const navBar = document.getElementById('subcategory-nav');
     if (!container) return;
 
     container.innerHTML = '';
+    if (navBar) {
+        navBar.innerHTML = '';
+        navBar.classList.add('hidden');
+    }
 
     if (produse.length === 0) {
         container.innerHTML = '<p style="text-align:center; width:100%; color: #fff;">Meniul se încarcă sau este gol.</p>';
         return;
     }
 
-    let count = 0;
-
-    produse.forEach(p => {
+    // 1. Filtrare produse
+    let filteredProducts = produse.filter(p => {
         const pCat = (p.categorie || '').toLowerCase().trim();
         let isBautura = false;
         if (pCat === 'bar' || pCat === 'bautura' || pCat === 'bauturi') {
@@ -355,41 +359,102 @@ function renderProducts() {
         }
 
         if (searchQuery) {
-            const matchesSearch = p.nume.toLowerCase().includes(searchQuery) ||
+            return p.nume.toLowerCase().includes(searchQuery) ||
                 (p.descriere && p.descriere.toLowerCase().includes(searchQuery));
-            if (!matchesSearch) return;
         } else {
-            if (currentTab === 'bar' && !isBautura) return;
-            if (currentTab === 'restaurant' && isBautura) return;
+            return currentTab === 'bar' ? isBautura : !isBautura;
         }
-
-        const safeName = escapeHTML(p.nume);
-        const safeDesc = escapeHTML(p.descriere || '');
-        const safePrice = escapeHTML(String(p.pret));
-        const safeImage = escapeHTML(p.imagine_url || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60');
-
-        const div = document.createElement('div');
-        div.className = 'product-card glass-panel';
-        div.style.padding = '15px';
-        div.style.display = 'flex';
-        div.style.flexDirection = 'column';
-
-        div.innerHTML = `
-            <img src="${safeImage}" alt="${safeName}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 12px;">
-            <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 5px;">${safeName}</h3>
-            <p style="color: #cbd5e1; font-size: 0.85rem; flex: 1; margin-bottom: 10px;">${safeDesc}</p>
-            <h4 style="color: #f5b041; font-size: 1.15rem; margin-bottom: 12px;">${safePrice} Lei</h4>
-            <button onclick="window.addToCartOspatar(${parseInt(p.id)})"
-                style="width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.2s;">
-                <i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})
-            </button>
-        `;
-        container.appendChild(div);
-        count++;
     });
 
-    if (count === 0) {
+    if (filteredProducts.length === 0) {
         container.innerHTML = `<p style="text-align:center; width:100%; margin-top: 30px; color: #fff;">Niciun produs găsit în secțiunea <strong>${currentTab === 'bar' ? 'Bar' : 'Restaurant'}</strong>.</p>`;
+        return;
+    }
+
+    // 2. Grupare pe subcategorii
+    const grouped = {};
+    filteredProducts.forEach(p => {
+        let subcat = "Altele";
+        let displayDesc = escapeHTML(p.descriere || '');
+
+        if (p.descriere && p.descriere.includes('|')) {
+            const parts = p.descriere.split('|');
+            subcat = parts[0].trim();
+            displayDesc = escapeHTML(parts.slice(1).join('|').trim());
+        } else if (p.categorie && p.categorie.toLowerCase() !== 'restaurant' && p.categorie.toLowerCase() !== 'bar') {
+            subcat = p.categorie;
+        }
+
+        if (!grouped[subcat]) grouped[subcat] = [];
+        grouped[subcat].push({ ...p, displayDesc });
+    });
+
+    // 3. Generare Navigatie Orizontală Subcategorii (doar dacă nu este căutare activă)
+    if (navBar && !searchQuery && Object.keys(grouped).length > 1) {
+        navBar.classList.remove('hidden');
+
+        Object.keys(grouped).forEach(cat => {
+            const btn = document.createElement('a');
+            btn.href = `#ospatar-cat-${escapeHTML(cat.replace(/\s+/g, '-'))}`;
+            btn.className = 'subcategory-btn';
+            btn.innerText = cat;
+
+            btn.addEventListener('click', (e) => {
+                navBar.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+
+            navBar.appendChild(btn);
+        });
+
+        if (navBar.firstChild) navBar.firstChild.classList.add('active');
+    }
+
+    // 4. Randare pe sectiuni de categorii
+    for (const [catName, prods] of Object.entries(grouped)) {
+        const sectionId = `ospatar-cat-${escapeHTML(catName.replace(/\s+/g, '-'))}`;
+
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.id = sectionId;
+
+        const sectionTitle = document.createElement('h2');
+        sectionTitle.style.color = '#f5b041';
+        sectionTitle.style.borderBottom = '1px solid rgba(245,176,65,0.3)';
+        sectionTitle.style.paddingBottom = '5px';
+        sectionTitle.style.marginBottom = '15px';
+        sectionTitle.innerText = catName;
+        section.appendChild(sectionTitle);
+
+        const grid = document.createElement('div');
+        grid.className = 'products-grid';
+
+        prods.forEach(p => {
+            const safeName = escapeHTML(p.nume);
+            const safePrice = escapeHTML(String(p.pret));
+            const safeImage = escapeHTML(p.imagine_url || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60');
+
+            const div = document.createElement('div');
+            div.className = 'product-card glass-panel';
+            div.style.padding = '15px';
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+
+            div.innerHTML = `
+                <img src="${safeImage}" alt="${safeName}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 12px;">
+                <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 5px;">${safeName}</h3>
+                <p style="color: #cbd5e1; font-size: 0.85rem; flex: 1; margin-bottom: 10px;">${p.displayDesc || '-'}</p>
+                <h4 style="color: #f5b041; font-size: 1.15rem; margin-bottom: 12px;">${safePrice} Lei</h4>
+                <button onclick="window.addToCartOspatar(${parseInt(p.id)})"
+                    style="width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.2s;">
+                    <i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})
+                </button>
+            `;
+            grid.appendChild(div);
+        });
+
+        section.appendChild(grid);
+        container.appendChild(section);
     }
 }
 
