@@ -427,7 +427,7 @@ window.confirmDeleteProduct = async () => {
 let editingProduct = null;
 
 window.openEditModal = (id) => {
-    editingProduct = allAdminProducts.find(p => parseInt(p.id) === parseInt(id));
+    editingProduct = allAdminProducts.find(p => String(p.id) === String(id));
     if (!editingProduct) return;
 
     document.getElementById('edit-product-id').value = editingProduct.id;
