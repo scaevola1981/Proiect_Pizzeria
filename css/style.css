@@ -64,6 +64,25 @@ h3 {
     width: 100%;
 }
 
+/* Containerul de Navigare Sticky (Main Tabs + Subcategorii) */
+.menu-controls {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 14px 14px 10px 14px;
+    margin-top: -20px;
+    margin-left: -20px;
+    margin-right: -20px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
 /* Noua bara de subcategorii (orizontala) */
 .subcategory-nav-bar {
     display: flex;
@@ -72,15 +91,12 @@ h3 {
     width: 100%;
     overflow-x: auto;
     gap: 10px;
-    padding: 12px 5px;
-    margin-bottom: 20px;
+    padding: 10px 2px 4px 2px;
+    margin-top: 10px;
+    margin-bottom: 0;
     white-space: nowrap;
     position: relative;
     z-index: 10;
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
     scrollbar-width: none; /* Firefox */
 }
 .subcategory-nav-bar::-webkit-scrollbar {
@@ -111,7 +127,7 @@ h3 {
     font-weight: bold;
 }
 .category-section {
-    scroll-margin-top: 80px; /* Offset for sticky header */
+    scroll-margin-top: 150px; /* Offset for sticky header */
     margin-bottom: 40px;
 }
 .category-section h2 {
