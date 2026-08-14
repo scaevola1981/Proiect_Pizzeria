@@ -220,8 +220,12 @@ function renderAdminProducts() {
 
         prods.forEach(p => {
             const imageUrl = p.imagine_url || getDefaultProductImage();
-            const isBautura = adminCurrentTab === 'bar';
+            const isBautura = adminCurrentTab === 'bar' || (p.categorie && p.categorie.toLowerCase() === 'bar');
             const priceHTML = `<h4 style="color: #f5b041; margin-bottom: 15px;">${escapeHTML(String(p.pret))} Lei <small style="font-size:0.8rem; opacity:0.7;">(${isBautura ? 'Bar' : 'Restaurant'})</small></h4>`;
+
+            const imgStyle = isBautura ?
+                'width: 100%; height: 180px; object-fit: contain; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 15px; box-sizing: border-box;' :
+                'width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;';
 
             const card = document.createElement('div');
             card.className = 'product-card';
@@ -229,7 +233,7 @@ function renderAdminProducts() {
             card.style.border = '1px solid rgba(255, 255, 255, 0.2)';
 
             card.innerHTML = `
-                <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(p.nume)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
+                <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(p.nume)}" style="${imgStyle}">
                 <h3 style="color: #fff;">${escapeHTML(p.nume)}</h3>
                 <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px; font-size: 0.9rem;">${p.displayDesc || '-'}</p>
                 ${priceHTML}

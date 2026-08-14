@@ -444,6 +444,11 @@ function renderProducts() {
             const safePrice = escapeHTML(String(p.pret));
             const safeImage = escapeHTML(p.imagine_url || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60');
 
+            const isDrink = currentTab === 'bar' || (p.categorie && p.categorie.toLowerCase() === 'bar');
+            const imgStyle = isDrink ?
+                'width: 100%; height: 160px; object-fit: contain; background: #ffffff; border-radius: 10px; padding: 6px; margin-bottom: 12px; box-sizing: border-box;' :
+                'width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 12px;';
+
             const div = document.createElement('div');
             div.className = 'product-card glass-panel';
             div.style.padding = '15px';
@@ -451,7 +456,7 @@ function renderProducts() {
             div.style.flexDirection = 'column';
 
             div.innerHTML = `
-                <img src="${safeImage}" alt="${safeName}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 12px;">
+                <img src="${safeImage}" alt="${safeName}" style="${imgStyle}">
                 <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 5px;">${safeName}</h3>
                 <p style="color: #cbd5e1; font-size: 0.85rem; flex: 1; margin-bottom: 10px;">${p.displayDesc || '-'}</p>
                 <h4 style="color: #f5b041; font-size: 1.15rem; margin-bottom: 12px;">${safePrice} Lei</h4>

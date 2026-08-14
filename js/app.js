@@ -207,8 +207,13 @@ function renderProducts() {
             const card = document.createElement('div');
             card.className = 'product-card';
 
+            const isDrink = currentTab === 'bar' || (p.categorie && p.categorie.toLowerCase() === 'bar');
+            const imgStyle = isDrink ?
+                'width: 100%; height: 180px; object-fit: contain; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 15px; box-sizing: border-box;' :
+                'width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;';
+
             card.innerHTML = `
-                <img src="${escapeHTML(imageUrl)}" alt="${safeName}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;">
+                <img src="${escapeHTML(imageUrl)}" alt="${safeName}" style="${imgStyle}">
                 <h3>${safeName}</h3>
                 <p>${p.displayDesc}</p>
                 <h4 style="margin-top: auto; padding-top: 15px; font-size: 1.1rem; color: #f5b041;">${priceDisplay}</h4>
