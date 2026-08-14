@@ -163,11 +163,26 @@ function renderProducts() {
         grouped[subcat].push({ ...p, displayDesc });
     });
 
+    // Ordonare logică a subcategoriilor
+    const preferredOrder = [
+        "Pizza", "Focaccia", "Paste", "Antipasti", "Fel Principal", "Desert", "Înghețată",
+        "Vinuri", "Vin Alb", "Vin Rosé", "Vin Roșu", "Spumante", "Cocktailuri", "Vodcă", "Whisky", "Gin", "Rom", "Tequila", "Brandy / Cognac",
+        "Bitter / Lichior", "Cafea", "Răcoritoare", "Apă", "Energizant", "Bere Draft", "Bere", "Special", "Altele"
+    ];
+
+    const sortedSubcats = Object.keys(grouped).sort((a, b) => {
+        const indexA = preferredOrder.findIndex(k => k.toLowerCase() === a.toLowerCase());
+        const indexB = preferredOrder.findIndex(k => k.toLowerCase() === b.toLowerCase());
+        const posA = indexA !== -1 ? indexA : 999;
+        const posB = indexB !== -1 ? indexB : 999;
+        return posA - posB;
+    });
+
     // Generăm butoanele orizontale doar dacă nu e search
-    if (!searchQuery && Object.keys(grouped).length > 1) {
+    if (!searchQuery && sortedSubcats.length > 1) {
         navBar.classList.remove('hidden');
         
-        Object.keys(grouped).forEach(cat => {
+        sortedSubcats.forEach(cat => {
             const btn = document.createElement('a');
             btn.href = `#cat-${escapeHTML(cat.replace(/\s+/g, '-'))}`;
             btn.className = 'subcategory-btn';
@@ -185,7 +200,8 @@ function renderProducts() {
     }
 
     // Randare grupuri de produse
-    for (const [catName, prods] of Object.entries(grouped)) {
+    for (const catName of sortedSubcats) {
+        const prods = grouped[catName];
         const sectionId = `cat-${escapeHTML(catName.replace(/\s+/g, '-'))}`;
         
         const section = document.createElement('div');
