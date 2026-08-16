@@ -611,13 +611,19 @@ function updateAllProductButtons() {
     });
 }
 
-async function sendWaiterOrder() {
+window.sendWaiterOrder = async function () {
     if (cart.length === 0) return;
 
     const btnSubmit = document.getElementById('btn-trimite-comanda-ospatar');
+    const quickBtnSubmit = document.getElementById('quick-btn-trimite');
+
     if (btnSubmit) {
         btnSubmit.disabled = true;
-        btnSubmit.innerText = "Se trimite comanda...";
+        btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Se trimite comanda...';
+    }
+    if (quickBtnSubmit) {
+        quickBtnSubmit.disabled = true;
+        quickBtnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Se trimite...';
     }
 
     const total = cart.reduce((sum, item) => sum + (item.product.pret * item.quantity), 0);
@@ -643,10 +649,14 @@ async function sendWaiterOrder() {
     }
 
     if (btnSubmit) {
-        btnSubmit.disabled = false;
+        btnSubmit.disabled = cart.length === 0;
         btnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> Trimite Comanda la Recepție';
     }
-}
+    if (quickBtnSubmit) {
+        quickBtnSubmit.disabled = cart.length === 0;
+        quickBtnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> Trimite la Recepție';
+    }
+};
 
 function showNotification(msg, icon, color) {
     const container = document.getElementById('notification-container');
