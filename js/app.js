@@ -288,6 +288,7 @@ function updateCartUI() {
     if (clientCart.length === 0) {
         modalContainer.innerHTML = `<p style="text-align: center; color: #cbd5e1; padding: 20px 0;">Coșul tău este gol. Alege preparate delicioase din meniu!</p>`;
         if (btnSubmit) btnSubmit.disabled = true;
+        updateAllClientProductButtons();
         return;
     }
 
@@ -311,6 +312,8 @@ function updateCartUI() {
         `;
         modalContainer.appendChild(div);
     });
+
+    updateAllClientProductButtons();
 }
 
 window.sendClientOrder = async function () {
@@ -401,14 +404,26 @@ function showNotification(msg, icon = 'fas fa-info-circle', bg = '#3498db') {
                 'width: 100%; height: 180px; object-fit: contain; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 15px; box-sizing: border-box;' :
                 'width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;';
 
+            const qtyInCart = clientCart
+                .filter(item => String(item.product.id) === String(p.id))
+                .reduce((sum, item) => sum + item.quantity, 0);
+
+            let btnBg = 'background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);';
+            let btnContent = `<i class="fas fa-plus"></i> Adaugă în Coș`;
+
+            if (qtyInCart > 0) {
+                btnBg = 'background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.45); transform: scale(1.02);';
+                btnContent = `<i class="fas fa-check-circle"></i> În coș (${qtyInCart})`;
+            }
+
             card.innerHTML = `
                 <img src="${escapeHTML(imageUrl)}" alt="${safeName}" style="${imgStyle}">
                 <h3>${safeName}</h3>
                 <p>${p.displayDesc}</p>
                 <h4 style="margin-top: auto; padding-top: 15px; font-size: 1.1rem; color: #f5b041;">${priceDisplay}</h4>
-                <button onclick="window.addToCartClient(${parseInt(p.id)})"
-                    style="width: 100%; padding: 10px; background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);">
-                    <i class="fas fa-plus"></i> Adaugă în Coș
+                <button id="client-add-btn-${p.id}" onclick="window.addToCartClient(${parseInt(p.id)})"
+                    style="width: 100%; padding: 11px; ${btnBg} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                    ${btnContent}
                 </button>
             `;
 
@@ -420,4 +435,25 @@ function showNotification(msg, icon = 'fas fa-info-circle', bg = '#3498db') {
     }
 
     updateCartUI();
+}
+
+function updateAllClientProductButtons() {
+    produse.forEach(p => {
+        const btn = document.getElementById(`client-add-btn-${p.id}`);
+        if (!btn) return;
+
+        const qtyInCart = clientCart
+            .filter(item => String(item.product.id) === String(p.id))
+            .reduce((sum, item) => sum + item.quantity, 0);
+
+        if (qtyInCart > 0) {
+            btn.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+            btn.style.boxShadow = '0 4px 15px rgba(46, 204, 113, 0.45)';
+            btn.innerHTML = `<i class="fas fa-check-circle"></i> În coș (${qtyInCart})`;
+        } else {
+            btn.style.background = 'linear-gradient(to right, #29EAC4, #4284DB)';
+            btn.style.boxShadow = '0 4px 12px rgba(41, 234, 196, 0.35)';
+            btn.innerHTML = `<i class="fas fa-plus"></i> Adaugă în Coș`;
+        }
+    });
 }

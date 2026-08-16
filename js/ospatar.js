@@ -464,14 +464,26 @@ function renderProducts() {
             div.style.display = 'flex';
             div.style.flexDirection = 'column';
 
+            const qtyInCart = cart
+                .filter(item => String(item.product.id) === String(p.id))
+                .reduce((sum, item) => sum + item.quantity, 0);
+
+            let btnBg = 'background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);';
+            let btnContent = `<i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})`;
+
+            if (qtyInCart > 0) {
+                btnBg = 'background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.45); transform: scale(1.02);';
+                btnContent = `<i class="fas fa-check-circle"></i> Adăugat (${qtyInCart}) — ${escapeHTML(currentPerson)}`;
+            }
+
             div.innerHTML = `
                 <img src="${safeImage}" alt="${safeName}" style="${imgStyle}">
                 <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 5px;">${safeName}</h3>
                 <p style="color: #cbd5e1; font-size: 0.85rem; flex: 1; margin-bottom: 10px;">${p.displayDesc || '-'}</p>
                 <h4 style="color: #f5b041; font-size: 1.15rem; margin-bottom: 12px;">${safePrice} Lei</h4>
-                <button onclick="window.addToCartOspatar(${parseInt(p.id)})"
-                    style="width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.2s;">
-                    <i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})
+                <button id="add-btn-${p.id}" onclick="window.addToCartOspatar(${parseInt(p.id)})"
+                    style="width: 100%; padding: 12px; ${btnBg} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: all 0.2s;">
+                    ${btnContent}
                 </button>
             `;
             grid.appendChild(div);
@@ -493,6 +505,7 @@ window.addToCartOspatar = function (productId) {
         cart.push({ product, quantity: 1, notes: '', customer_name: currentPerson });
     }
 
+    showNotification(`🛒 ${escapeHTML(product.nume)} adăugat pentru ${escapeHTML(currentPerson)}!`, "fas fa-check-circle", "#2ecc71");
     updateCartUI();
 };
 
@@ -501,59 +514,101 @@ window.removeFromCartOspatar = function (index) {
     updateCartUI();
 };
 
+window.scrollToCart = function () {
+    const cartEl = document.querySelector('.cart-area');
+    if (cartEl) {
+        cartEl.scrollIntoView({ behavior: 'smooth' });
+    }
+};
+
 function updateCartUI() {
     const container = document.getElementById('cart-items');
     const totalEl = document.getElementById('cart-total');
     const btnSubmit = document.getElementById('btn-trimite-comanda-ospatar');
 
-    if (!container) return;
+    // Elemente Quick Floating Bar
+    const quickMasa = document.getElementById('quick-bar-masa');
+    const quickCount = document.getElementById('quick-bar-count');
+    const quickTotal = document.getElementById('quick-bar-total');
+    const quickBtnSubmit = document.getElementById('quick-btn-trimite');
 
-    container.innerHTML = '';
-    let total = 0;
+    const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const total = cart.reduce((sum, item) => sum + (item.product.pret * item.quantity), 0);
+
+    if (quickMasa) quickMasa.innerText = selectedMasa;
+    if (quickCount) quickCount.innerText = String(totalCount);
+    if (quickTotal) quickTotal.innerText = total.toFixed(2);
 
     if (cart.length === 0) {
-        container.innerHTML = `<p class="empty-cart">Comanda pentru <strong>Masa ${escapeHTML(selectedMasa)}</strong> este goală.</p>`;
+        if (container) container.innerHTML = `<p class="empty-cart">Comanda pentru <strong>Masa ${escapeHTML(selectedMasa)}</strong> este goală.</p>`;
         if (btnSubmit) btnSubmit.disabled = true;
+        if (quickBtnSubmit) quickBtnSubmit.disabled = true;
         if (totalEl) totalEl.innerText = "0.00";
+        updateAllProductButtons();
         return;
     }
 
     if (btnSubmit) btnSubmit.disabled = false;
+    if (quickBtnSubmit) quickBtnSubmit.disabled = false;
 
-    // Grupare pe persoane
-    const grouped = {};
-    cart.forEach((item, index) => {
-        const cName = item.customer_name || "Masa";
-        if (!grouped[cName]) grouped[cName] = [];
-        grouped[cName].push({ ...item, originalIndex: index });
-    });
-
-    for (const [cName, items] of Object.entries(grouped)) {
-        const header = document.createElement('div');
-        header.style = "color: #f5b041; font-weight: bold; font-size: 0.95rem; margin: 12px 0 6px 0; border-bottom: 1px solid rgba(245, 176, 65, 0.3); padding-bottom: 4px; text-align: left;";
-        header.innerHTML = `<i class="fas fa-user"></i> ${escapeHTML(cName === "Masa" ? "👥 Comandă Împreună" : cName)}`;
-        container.appendChild(header);
-
-        items.forEach((item) => {
-            total += item.product.pret * item.quantity;
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            div.style = "display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.08); padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;";
-            div.innerHTML = `
-                <div style="flex: 1; text-align: left;">
-                    <strong style="color: #fff; font-size: 0.95rem;">${item.quantity}x ${escapeHTML(item.product.nume)}</strong>
-                    <div style="color: #f5b041; font-size: 0.85rem; font-weight: bold;">${(item.product.pret * item.quantity).toFixed(2)} Lei</div>
-                </div>
-                <button onclick="window.removeFromCartOspatar(${item.originalIndex})"
-                    style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(div);
+    if (container) {
+        container.innerHTML = '';
+        // Grupare pe persoane
+        const grouped = {};
+        cart.forEach((item, index) => {
+            const cName = item.customer_name || "Masa";
+            if (!grouped[cName]) grouped[cName] = [];
+            grouped[cName].push({ ...item, originalIndex: index });
         });
+
+        for (const [cName, items] of Object.entries(grouped)) {
+            const header = document.createElement('div');
+            header.style = "color: #f5b041; font-weight: bold; font-size: 0.95rem; margin: 12px 0 6px 0; border-bottom: 1px solid rgba(245, 176, 65, 0.3); padding-bottom: 4px; text-align: left;";
+            header.innerHTML = `<i class="fas fa-user"></i> ${escapeHTML(cName === "Masa" ? "👥 Comandă Împreună" : cName)}`;
+            container.appendChild(header);
+
+            items.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.style = "display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.08); padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;";
+                div.innerHTML = `
+                    <div style="flex: 1; text-align: left;">
+                        <strong style="color: #fff; font-size: 0.95rem;">${item.quantity}x ${escapeHTML(item.product.nume)}</strong>
+                        <div style="color: #f5b041; font-size: 0.85rem; font-weight: bold;">${(item.product.pret * item.quantity).toFixed(2)} Lei</div>
+                    </div>
+                    <button onclick="window.removeFromCartOspatar(${item.originalIndex})"
+                        style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
     }
 
     if (totalEl) totalEl.innerText = total.toFixed(2);
+    updateAllProductButtons();
+}
+
+function updateAllProductButtons() {
+    produse.forEach(p => {
+        const btn = document.getElementById(`add-btn-${p.id}`);
+        if (!btn) return;
+
+        const qtyInCart = cart
+            .filter(item => String(item.product.id) === String(p.id))
+            .reduce((sum, item) => sum + item.quantity, 0);
+
+        if (qtyInCart > 0) {
+            btn.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+            btn.style.boxShadow = '0 4px 15px rgba(46, 204, 113, 0.45)';
+            btn.innerHTML = `<i class="fas fa-check-circle"></i> Adăugat (${qtyInCart}) — ${escapeHTML(currentPerson)}`;
+        } else {
+            btn.style.background = 'linear-gradient(to right, #29EAC4, #4284DB)';
+            btn.style.boxShadow = '0 4px 12px rgba(41, 234, 196, 0.35)';
+            btn.innerHTML = `<i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})`;
+        }
+    });
 }
 
 async function sendWaiterOrder() {
