@@ -62,6 +62,43 @@
         </main>
     </div>
 
+    <!-- Buton Plutitor Coș Cumpărături (Client) -->
+    <button id="floating-cart-btn" onclick="window.toggleCartModal()"
+        style="position: fixed; bottom: 25px; right: 25px; z-index: 9999; background: linear-gradient(135deg, #f5b041 0%, #e67e22 100%); color: #1e293b; border: none; padding: 14px 22px; border-radius: 30px; font-weight: bold; font-size: 1.05rem; cursor: pointer; box-shadow: 0 8px 25px rgba(245, 176, 65, 0.5); display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+        <i class="fas fa-shopping-cart" style="font-size: 1.2rem;"></i>
+        <span>Coșul Tău</span>
+        <span id="cart-count-badge" style="background: #1e293b; color: #fff; border-radius: 50%; padding: 2px 8px; font-size: 0.85rem;">0</span>
+        <span id="cart-total-badge" style="font-weight: 800; color: #1e293b;">0.00 Lei</span>
+    </button>
+
+    <!-- Modal Sertar Coș Cumpărături -->
+    <div id="cart-modal"
+        style="position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10000; display: none; align-items: flex-end; justify-content: center;">
+        <div style="background: #1e293b; border-top-left-radius: 24px; border-top-right-radius: 24px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: 550px; max-height: 85vh; display: flex; flex-direction: column; padding: 20px; box-shadow: 0 -10px 35px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 12px;">
+                <h3 style="color: #f5b041; margin: 0; font-size: 1.2rem;"><i class="fas fa-shopping-cart"></i> Coșul Tău de Cumpărături</h3>
+                <button onclick="window.toggleCartModal()" style="background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer; padding: 0 5px;">&times;</button>
+            </div>
+            <div style="margin-bottom: 15px; background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);">
+                <span style="color: #cbd5e1; font-weight: 600;">📍 Masa ta: <strong id="cart-modal-masa-text" style="color: #2ecc71; font-size: 1.05rem;">Masa 1</strong></span>
+                <button onclick="window.changeMasaPrompt()" style="background: rgba(245, 176, 65, 0.2); color: #f5b041; border: 1px solid #f5b041; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; font-weight: bold;">Schimbă Masa</button>
+            </div>
+            <div id="client-cart-items" style="flex: 1; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; max-height: 50vh;">
+                <!-- Produse adăugate -->
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px; margin-top: auto;">
+                <div style="display: flex; justify-content: space-between; color: #fff; font-size: 1.25rem; font-weight: bold; margin-bottom: 15px;">
+                    <span>Total de plată:</span>
+                    <span id="client-cart-total" style="color: #f5b041;">0.00 Lei</span>
+                </div>
+                <button id="btn-trimite-comanda-client" onclick="window.sendClientOrder()"
+                    style="width: 100%; padding: 16px; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white; border: none; border-radius: 14px; font-size: 1.15rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
+                    <i class="fas fa-paper-plane"></i> Trimite Comanda la Recepție
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- App Loading Screen to prevent FOUC -->
     <div id="app-loading"
         style="position: fixed; inset: 0; background: #0f172a; z-index: 9999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease; pointer-events: none;">
@@ -79,10 +116,9 @@
 
     <!-- Notificări Custom -->
     <div id="notification-container"
-        style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+        style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px;">
     </div>
 
-    <!-- Am eliminat html5-qrcode și security.js, deoarece e doar vizualizare meniu -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/supabase.js"></script>
     <script type="module" src="js/app.js"></script>

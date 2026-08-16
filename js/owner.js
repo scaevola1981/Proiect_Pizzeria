@@ -116,29 +116,52 @@ async function loadOwnerOrders() {
     allOrders = data || [];
     renderOwnerOrders();
 
-    window.supabaseClient.channel('owner_channel')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'comenzi' }, (payload) => {
-            if (payload.eventType === 'INSERT') {
-                allOrders.unshift(payload.new);
-                // Printare automată bon termic la comandă nouă
-                printReceiptForOrder(payload.new);
-            } else if (payload.eventType === 'UPDATE') {
-                const idx = allOrders.findIndex(o => o.id === payload.new.id);
-                if (idx > -1) {
-                    const oldOrder = allOrders[idx];
-                    allOrders[idx] = payload.new;
-                    
-                    // Dacă statusul revine la 'noua' înseamnă că e o suplimentare.
-                    // Facem auto-print.
-                    if (oldOrder.status !== 'noua' && payload.new.status === 'noua') {
+    if (!window.ownerChannelSubscribed) {
+        window.ownerChannelSubscribed = true;
+        window.supabaseClient.channel('owner_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'comenzi' }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    const idx = allOrders.findIndex(o => o.id === payload.new.id);
+                    if (idx === -1) {
+                        allOrders.unshift(payload.new);
                         printReceiptForOrder(payload.new);
                     }
+                } else if (payload.eventType === 'UPDATE') {
+                    const idx = allOrders.findIndex(o => o.id === payload.new.id);
+                    if (idx > -1) {
+                        const oldOrder = allOrders[idx];
+                        allOrders[idx] = payload.new;
+                        if (oldOrder.status !== 'noua' && payload.new.status === 'noua') {
+                            printReceiptForOrder(payload.new);
+                        }
+                    } else {
+                        allOrders.unshift(payload.new);
+                        if (payload.new.status === 'noua') {
+                            printReceiptForOrder(payload.new);
+                        }
+                    }
+                } else if (payload.eventType === 'DELETE') {
+                    allOrders = allOrders.filter(o => o.id !== payload.old.id);
                 }
-            } else if (payload.eventType === 'DELETE') {
-                allOrders = allOrders.filter(o => o.id !== payload.old.id);
+                renderOwnerOrders();
+            }).subscribe();
+    }
+
+    // Polling fallback la 5 secunde pentru recepție
+    if (!window.ownerPollInterval) {
+        window.ownerPollInterval = setInterval(async () => {
+            if (window.supabaseClient) {
+                const { data: latestData } = await window.supabaseClient
+                    .from('comenzi')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (latestData) {
+                    allOrders = latestData;
+                    renderOwnerOrders();
+                }
             }
-            renderOwnerOrders();
-        }).subscribe();
+        }, 5000);
+    }
 }
 
 // ==========================================
