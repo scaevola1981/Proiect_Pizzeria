@@ -162,7 +162,7 @@ async function loadOwnerOrders() {
 
 const printedOrderSignatures = new Set();
 
-function autoPrintIfNew(order) {
+async function autoPrintIfNew(order) {
     if (!order || order.status !== 'noua') return;
 
     const detailsCount = Array.isArray(order.detalii_comanda) ? order.detalii_comanda.length : 0;
@@ -171,7 +171,7 @@ function autoPrintIfNew(order) {
     if (!printedOrderSignatures.has(signature)) {
         printedOrderSignatures.add(signature);
         console.log("🖨️ Auto-print declanșat automat pentru comanda #", order.id, "Masa:", order.numar_masa);
-        printReceiptForOrder(order);
+        await printReceiptForOrder(order);
     }
 }
 
@@ -790,62 +790,97 @@ function fallbackBrowserPrint(receiptHtml) {
 }
 
 // ==========================================
-// QZ TRAY — SUPORT IMPRIMANTĂ SILENȚIOASĂ (SAMSUNG / POS)
+// QZ TRAY — IMPRIMARE SILENȚIOASĂ 100% AUTOMATĂ
 // ==========================================
 
 let qzTargetPrinter = null;
-let isQzConnecting = false;
+let qzSecurityConfigured = false;
+let qzConnecting = false;
+
+function configureQZSecurity() {
+    if (qzSecurityConfigured || typeof qz === 'undefined') return;
+    qzSecurityConfigured = true;
+
+    // Formatul corect pentru QZ Tray v2.2 — se setează O SINGURĂ DATĂ
+    qz.security.setCertificatePromise(function(resolve, reject) {
+        // Acceptăm toate certificatele (mod demo/unsigned)
+        resolve();
+    });
+
+    qz.security.setSignaturePromise(function(toSign) {
+        return function(resolve, reject) {
+            // Sărind peste verificarea semnăturii (mod demo/unsigned)
+            resolve();
+        };
+    });
+
+    // Auto-reconectare când conexiunea se pierde
+    qz.websocket.setClosedCallbacks(function(evt) {
+        console.warn("⚠️ QZ Tray: Conexiune pierdută. Se reconectează în 3 secunde...", evt);
+        updateQZBadge('Reconectare...', '#f5b041');
+        setTimeout(connectToQZ, 3000);
+    });
+
+    console.log("✅ QZ Tray: Securitate configurată (mod demo/unsigned)");
+}
+
+async function connectToQZ() {
+    if (typeof qz === 'undefined') return false;
+    if (qz.websocket.isActive()) {
+        await detectPrinter();
+        updateQZBadge(`Conectat (${qzTargetPrinter || 'Implicită'})`, '#2ecc71');
+        return true;
+    }
+    if (qzConnecting) return false;
+    qzConnecting = true;
+
+    try {
+        configureQZSecurity();
+        await qz.websocket.connect({ retries: 3, delay: 1 });
+        console.log("✅ QZ Tray: WebSocket conectat cu succes!");
+        await detectPrinter();
+        updateQZBadge(`Conectat (${qzTargetPrinter || 'Implicită'})`, '#2ecc71');
+        qzConnecting = false;
+        return true;
+    } catch (err) {
+        console.warn("❌ QZ Tray: Nu s-a putut conecta (aplicația QZ Tray pornită pe laptop?):", err.message || err);
+        updateQZBadge('Deconectat', '#f5b041');
+        qzConnecting = false;
+        return false;
+    }
+}
+
+async function detectPrinter() {
+    if (!qz.websocket.isActive()) return;
+    try {
+        const printers = await qz.printers.find();
+        console.log("🖨️ QZ Tray: Imprimante detectate:", printers);
+        const samsung = printers.find(p => p && (
+            p.toLowerCase().includes('samsung') ||
+            p.toLowerCase().includes('m2020') ||
+            p.toLowerCase().includes('m2026')
+        ));
+        qzTargetPrinter = samsung || (await qz.printers.getDefault());
+        console.log("🖨️ QZ Tray: Imprimantă selectată:", qzTargetPrinter);
+    } catch (e) {
+        console.warn("QZ Tray: Nu s-au putut detecta imprimantele:", e);
+    }
+}
 
 async function initQZTrayConnection() {
     if (typeof qz === 'undefined') {
         updateQZBadge('Lipsă SDK QZ', '#e74c3c');
         return false;
     }
-
-    if (qz.websocket.isActive()) {
-        updateQZBadge(`Conectat (${qzTargetPrinter || 'Implicită'})`, '#2ecc71');
-        return true;
-    }
-
-    if (isQzConnecting) return false;
-    isQzConnecting = true;
-
-    try {
-        qz.security.setCertificatePromise((resolve) => resolve());
-        qz.security.setSignaturePromise(() => (resolve) => resolve());
-
-        if (!qz.websocket.isActive()) {
-            await qz.websocket.connect({ retries: 5, delay: 1 });
-        }
-
-        try {
-            const printers = await qz.printers.find();
-            console.log("🖨️ Imprimante detectate de QZ Tray:", printers);
-            const samsung = printers.find(p => p && (p.toLowerCase().includes('samsung') || p.toLowerCase().includes('m2020') || p.toLowerCase().includes('m2026')));
-            if (samsung) {
-                qzTargetPrinter = samsung;
-            } else {
-                qzTargetPrinter = await qz.printers.getDefault();
-            }
-            updateQZBadge(`Conectat (${qzTargetPrinter || 'Implicită'})`, '#2ecc71');
-        } catch {
-            updateQZBadge('Conectat QZ', '#2ecc71');
-        }
-
-        isQzConnecting = false;
-        return true;
-    } catch (err) {
-        console.warn("QZ Tray nu este pornit pe laptop:", err);
-        updateQZBadge('Deconectat (Offline)', '#f5b041');
-        isQzConnecting = false;
-        return false;
-    }
+    return await connectToQZ();
 }
 
 function updateQZBadge(text, color) {
     const badge = document.getElementById('qz-status-badge');
     if (badge) {
-        badge.style.background = `rgba(${color === '#2ecc71' ? '46, 204, 113' : '245, 176, 65'}, 0.2)`;
+        const rgb = color === '#2ecc71' ? '46, 204, 113' :
+                    color === '#e74c3c' ? '231, 76, 60' : '245, 176, 65';
+        badge.style.background = `rgba(${rgb}, 0.2)`;
         badge.style.color = color;
         badge.style.borderColor = color;
         badge.innerHTML = `<i class="fas fa-print"></i> QZ Tray: ${text}`;
@@ -854,7 +889,7 @@ function updateQZBadge(text, color) {
 
 window.testQZPrint = async function () {
     const isConnected = await initQZTrayConnection();
-    if (isConnected && typeof qz !== 'undefined' && qz.websocket.isActive()) {
+    if (isConnected && qz.websocket.isActive()) {
         try {
             const printerName = qzTargetPrinter || await qz.printers.getDefault();
             const config = qz.print.createConfig(printerName);
@@ -874,12 +909,12 @@ window.testQZPrint = async function () {
                 data: sampleHTML
             }];
             await qz.print(config, data);
-            alert(`✅ Test trimis cu succes pe imprimanta: ${printerName}!`);
+            alert(`✅ Test trimis cu succes pe imprimanta: ${printerName}!\nBonul a fost printat SILENȚIOS fără fereastră de dialog!`);
         } catch (e) {
-            alert('Eroare la printare prin QZ Tray: ' + e.message);
+            alert('❌ Eroare la printare prin QZ Tray: ' + (e.message || e));
         }
     } else {
-        alert('QZ Tray nu este pornit pe laptop. Deschide aplicația QZ Tray pe Windows!');
+        alert('❌ QZ Tray nu este pornit pe laptop.\n\n1. Deschide aplicația QZ Tray pe Windows\n2. Verifică iconița verde lângă ceas\n3. Apasă din nou Test');
     }
 };
 
@@ -901,5 +936,14 @@ window.printOrderReceipt = function(orderId) {
 // ==========================================
 
 initOwnerAuth();
-setTimeout(initQZTrayConnection, 500);
-setInterval(initQZTrayConnection, 8000);
+
+// Conectare inițială la QZ Tray după 1 secundă (după ce SDK-ul s-a încărcat)
+setTimeout(initQZTrayConnection, 1000);
+
+// Keep-alive: verifică conexiunea la fiecare 10 secunde și reconectează dacă s-a pierdut
+setInterval(async () => {
+    if (typeof qz !== 'undefined' && !qz.websocket.isActive() && !qzConnecting) {
+        console.log("🔄 QZ Tray: Keep-alive reconectare...");
+        await connectToQZ();
+    }
+}, 10000);
