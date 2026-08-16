@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest-owner.json">
-  <script type="module" crossorigin src="/assets/receptie-CAA6VGGB.js"></script>
+  <script type="module" crossorigin src="/assets/receptie-B2DdvKhF.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/supabase-Cnp1ATid.js">
   <link rel="modulepreload" crossorigin href="/assets/security-Bv09CpAF.js">
   <link rel="modulepreload" crossorigin href="/assets/app-wBbXJArf.js">
@@ -63,6 +63,12 @@
                     ROMA - PUB &amp; PIZZERIE</span>
             </div>
             <div class="owner-header-btns" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <div id="qz-status-badge" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; background: rgba(245, 176, 65, 0.2); color: #f5b041; border: 1px solid #f5b041;">
+                    <i class="fas fa-print"></i> QZ Tray: Se verifică...
+                </div>
+                <button onclick="window.testQZPrint()" style="background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-paper-plane"></i> Test Imprimantă Samsung
+                </button>
                 <button onclick="window.open('ospatar.html', '_blank')"
                     style="background: #27ae60; color: white; width: auto; padding: 10px 20px; border-radius: 8px; font-size: 1rem; border: none; cursor: pointer; font-weight: bold;"><i
                         class="fas fa-user-tie"></i> Pagină Ospătar</button>
@@ -138,6 +144,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2/qz-tray.min.js"></script>
 </body>
 
 </html>

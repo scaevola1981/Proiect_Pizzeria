@@ -578,7 +578,7 @@ function renderOrderItemsGroupedByPerson(detaliiComanda) {
 // PRINTARE BON TERMIC — OCPP-80K (80mm)
 // ==========================================
 
-function printReceiptForOrder(order) {
+async function printReceiptForOrder(order) {
     if (!order) return;
 
     const detalii = order.detalii_comanda || [];
@@ -720,7 +720,34 @@ function printReceiptForOrder(order) {
     </body>
     </html>`;
 
-    // Folosim un iframe ascuns pentru printare silențioasă (fără popup blocker)
+    // 1. Încercăm mai întâi printare silențioasă 100% automată prin QZ Tray pe Imprimanta Samsung
+    if (typeof qz !== 'undefined' && qz.websocket.isActive()) {
+        try {
+            const printerName = qzTargetPrinter || await qz.printers.getDefault();
+            const config = qz.print.createConfig(printerName);
+            const data = [{
+                type: 'pixel',
+                format: 'html',
+                flavor: 'plain',
+                data: receiptHtml
+            }];
+            qz.print(config, data).then(() => {
+                console.log("✅ Bon printat silențios via QZ Tray pe:", printerName);
+            }).catch(err => {
+                console.warn("Eroare printare QZ Tray, fallback la browser:", err);
+                fallbackBrowserPrint(receiptHtml);
+            });
+            return;
+        } catch (qzErr) {
+            console.warn("Excepție QZ Tray, fallback la browser:", qzErr);
+        }
+    }
+
+    // 2. Fallback la printare standard prin browser iframe
+    fallbackBrowserPrint(receiptHtml);
+}
+
+function fallbackBrowserPrint(receiptHtml) {
     let printFrame = document.getElementById('receipt-print-frame');
     if (!printFrame) {
         printFrame = document.createElement('iframe');
@@ -734,14 +761,12 @@ function printReceiptForOrder(order) {
     frameDoc.write(receiptHtml);
     frameDoc.close();
 
-    // Așteptăm încărcarea completă, apoi printăm
     printFrame.onload = () => {
         try {
             printFrame.contentWindow.focus();
             printFrame.contentWindow.print();
         } catch (e) {
             console.warn('Printare automată blocată, se deschide fereastra manuală:', e);
-            // Fallback: deschidem fereastră separată dacă iframe-ul nu merge
             const printWindow = window.open('', '_blank', 'width=320,height=600');
             if (printWindow) {
                 printWindow.document.write(receiptHtml);
@@ -754,6 +779,92 @@ function printReceiptForOrder(order) {
         }
     };
 }
+
+// ==========================================
+// QZ TRAY — SUPORT IMPRIMANTĂ SILENȚIOASĂ (SAMSUNG / POS)
+// ==========================================
+
+let qzTargetPrinter = null;
+
+async function initQZTrayConnection() {
+    if (typeof qz === 'undefined') {
+        updateQZBadge('Lipsă SDK QZ', '#e74c3c');
+        return false;
+    }
+
+    if (qz.websocket.isActive()) {
+        updateQZBadge(`Conectat (${qzTargetPrinter || 'Implicită'})`, '#2ecc71');
+        return true;
+    }
+
+    try {
+        qz.security.setCertificatePromise((resolve) => resolve());
+        qz.security.setSignaturePromise(() => (resolve) => resolve());
+
+        await qz.websocket.connect({ retries: 3, delay: 1 });
+
+        try {
+            const printers = await qz.printers.find();
+            console.log("🖨️ Imprimante detectate de QZ Tray:", printers);
+            const samsung = printers.find(p => p.toLowerCase().includes('samsung') || p.toLowerCase().includes('m2020') || p.toLowerCase().includes('m2026'));
+            if (samsung) {
+                qzTargetPrinter = samsung;
+            } else {
+                qzTargetPrinter = await qz.printers.getDefault();
+            }
+            updateQZBadge(`Conectat: ${qzTargetPrinter || 'Implicită'}`, '#2ecc71');
+        } catch {
+            updateQZBadge('Conectat QZ', '#2ecc71');
+        }
+
+        return true;
+    } catch (err) {
+        console.warn("QZ Tray nu este pornit pe laptop:", err);
+        updateQZBadge('Deconectat (Offline)', '#f5b041');
+        return false;
+    }
+}
+
+function updateQZBadge(text, color) {
+    const badge = document.getElementById('qz-status-badge');
+    if (badge) {
+        badge.style.background = `rgba(${color === '#2ecc71' ? '46, 204, 113' : '245, 176, 65'}, 0.2)`;
+        badge.style.color = color;
+        badge.style.borderColor = color;
+        badge.innerHTML = `<i class="fas fa-print"></i> QZ Tray: ${text}`;
+    }
+}
+
+window.testQZPrint = async function () {
+    const isConnected = await initQZTrayConnection();
+    if (isConnected && typeof qz !== 'undefined' && qz.websocket.isActive()) {
+        try {
+            const printerName = qzTargetPrinter || await qz.printers.getDefault();
+            const config = qz.print.createConfig(printerName);
+            const sampleHTML = `
+                <div style="font-family: sans-serif; text-align: center; padding: 20px; border: 2px dashed #000;">
+                    <h2 style="margin: 0; font-size: 20px;">BELLA ROMA - PUB & PIZZERIE</h2>
+                    <p style="margin: 5px 0;">Test Imprimare Silențioasă QZ Tray</p>
+                    <hr style="border: 1px dashed #000; margin: 10px 0;">
+                    <p style="font-weight: bold; font-size: 16px;">Imprimantă: ${printerName}</p>
+                    <p style="font-size: 14px; color: green; font-weight: bold;">TEST REUȘIT 🚀</p>
+                </div>
+            `;
+            const data = [{
+                type: 'pixel',
+                format: 'html',
+                flavor: 'plain',
+                data: sampleHTML
+            }];
+            await qz.print(config, data);
+            alert(`✅ Test trimis cu succes pe imprimanta: ${printerName}!`);
+        } catch (e) {
+            alert('Eroare la printare prin QZ Tray: ' + e.message);
+        }
+    } else {
+        alert('QZ Tray nu este pornit pe laptop. Deschide aplicația QZ Tray pe Windows!');
+    }
+};
 
 // Funcție globală pentru print manual de pe card
 window.printOrderReceipt = function(orderId) {
@@ -773,3 +884,4 @@ window.printOrderReceipt = function(orderId) {
 // ==========================================
 
 initOwnerAuth();
+setTimeout(initQZTrayConnection, 1000);
