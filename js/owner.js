@@ -184,14 +184,11 @@ window.renderOwnerOrders = function () {
     }
 
     allOrders.forEach(order => {
-        const orderDate = new Date(order.created_at);
-        const isToday = orderDate >= today;
-
-        if (isToday && order.status !== 'finalizata') {
+        if (order.status !== 'finalizata') {
             totalRevenue += parseFloat(order.total) || 0;
         }
 
-        if (order.status === 'finalizata' || !isToday) {
+        if (order.status === 'finalizata') {
             return;
         }
 

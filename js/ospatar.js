@@ -90,17 +90,10 @@ async function loadActiveTableStatus() {
             return;
         }
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
         activeTableOrdersMap = {};
 
         (data || []).forEach(order => {
-            // Filtram doar comenzile din ziua curentă (sau nefinalizate recent)
-            const orderDate = new Date(order.created_at);
-            if (isNaN(orderDate.getTime()) || orderDate < today) {
-                return; // Ignorăm testele vechi din zile anterioare
-            }
+            if (order.status === 'finalizata') return;
 
             const rawMasa = String(order.numar_masa || '').trim();
             if (!rawMasa) return;
