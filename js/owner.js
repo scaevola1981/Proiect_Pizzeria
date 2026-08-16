@@ -114,6 +114,7 @@ async function loadOwnerOrders() {
     }
 
     allOrders = data || [];
+    allOrders.forEach(o => autoPrintIfNew(o));
     renderOwnerOrders();
 
     if (!window.ownerChannelSubscribed) {
@@ -124,22 +125,16 @@ async function loadOwnerOrders() {
                     const idx = allOrders.findIndex(o => o.id === payload.new.id);
                     if (idx === -1) {
                         allOrders.unshift(payload.new);
-                        printReceiptForOrder(payload.new);
                     }
+                    autoPrintIfNew(payload.new);
                 } else if (payload.eventType === 'UPDATE') {
                     const idx = allOrders.findIndex(o => o.id === payload.new.id);
                     if (idx > -1) {
-                        const oldOrder = allOrders[idx];
                         allOrders[idx] = payload.new;
-                        if (oldOrder.status !== 'noua' && payload.new.status === 'noua') {
-                            printReceiptForOrder(payload.new);
-                        }
                     } else {
                         allOrders.unshift(payload.new);
-                        if (payload.new.status === 'noua') {
-                            printReceiptForOrder(payload.new);
-                        }
                     }
+                    autoPrintIfNew(payload.new);
                 } else if (payload.eventType === 'DELETE') {
                     allOrders = allOrders.filter(o => o.id !== payload.old.id);
                 }
@@ -157,10 +152,26 @@ async function loadOwnerOrders() {
                     .order('created_at', { ascending: false });
                 if (latestData) {
                     allOrders = latestData;
+                    allOrders.forEach(o => autoPrintIfNew(o));
                     renderOwnerOrders();
                 }
             }
         }, 5000);
+    }
+}
+
+const printedOrderSignatures = new Set();
+
+function autoPrintIfNew(order) {
+    if (!order || order.status !== 'noua') return;
+
+    const detailsCount = Array.isArray(order.detalii_comanda) ? order.detalii_comanda.length : 0;
+    const signature = `${order.id}_${order.total}_${detailsCount}`;
+
+    if (!printedOrderSignatures.has(signature)) {
+        printedOrderSignatures.add(signature);
+        console.log("🖨️ Auto-print declanșat automat pentru comanda #", order.id, "Masa:", order.numar_masa);
+        printReceiptForOrder(order);
     }
 }
 
