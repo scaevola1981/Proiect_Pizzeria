@@ -731,8 +731,10 @@ async function printReceiptForOrder(order) {
     </body>
     </html>`;
 
-    // 1. Încercăm mai întâi printare silențioasă 100% automată prin QZ Tray pe Imprimanta Samsung
-    if (typeof qz !== 'undefined' && qz.websocket.isActive()) {
+    // Încercăm conexiunea / reconectarea la QZ Tray înainte de printare
+    const isQzActive = await initQZTrayConnection();
+
+    if (isQzActive && typeof qz !== 'undefined' && qz.websocket.isActive()) {
         try {
             const printerName = qzTargetPrinter || await qz.printers.getDefault();
             const config = qz.print.createConfig(printerName);
@@ -742,19 +744,15 @@ async function printReceiptForOrder(order) {
                 flavor: 'plain',
                 data: receiptHtml
             }];
-            qz.print(config, data).then(() => {
-                console.log("✅ Bon printat silențios via QZ Tray pe:", printerName);
-            }).catch(err => {
-                console.warn("Eroare printare QZ Tray, fallback la browser:", err);
-                fallbackBrowserPrint(receiptHtml);
-            });
-            return;
+            await qz.print(config, data);
+            console.log("✅ Bon printat 100% silențios via QZ Tray pe:", printerName);
+            return; // S-A PRINTAT SILENȚIOS VIA QZ TRAY — NU MAI DESCHIDEM NICIO FEREASTRĂ BROWSER!
         } catch (qzErr) {
-            console.warn("Excepție QZ Tray, fallback la browser:", qzErr);
+            console.warn("Eroare trimitere job QZ Tray, fallback la browser:", qzErr);
         }
     }
 
-    // 2. Fallback la printare standard prin browser iframe
+    // Doar dacă QZ Tray este oprit pe laptop, deschidem fereastră de backup
     fallbackBrowserPrint(receiptHtml);
 }
 
@@ -796,6 +794,7 @@ function fallbackBrowserPrint(receiptHtml) {
 // ==========================================
 
 let qzTargetPrinter = null;
+let isQzConnecting = false;
 
 async function initQZTrayConnection() {
     if (typeof qz === 'undefined') {
@@ -808,30 +807,37 @@ async function initQZTrayConnection() {
         return true;
     }
 
+    if (isQzConnecting) return false;
+    isQzConnecting = true;
+
     try {
         qz.security.setCertificatePromise((resolve) => resolve());
         qz.security.setSignaturePromise(() => (resolve) => resolve());
 
-        await qz.websocket.connect({ retries: 3, delay: 1 });
+        if (!qz.websocket.isActive()) {
+            await qz.websocket.connect({ retries: 5, delay: 1 });
+        }
 
         try {
             const printers = await qz.printers.find();
             console.log("🖨️ Imprimante detectate de QZ Tray:", printers);
-            const samsung = printers.find(p => p.toLowerCase().includes('samsung') || p.toLowerCase().includes('m2020') || p.toLowerCase().includes('m2026'));
+            const samsung = printers.find(p => p && (p.toLowerCase().includes('samsung') || p.toLowerCase().includes('m2020') || p.toLowerCase().includes('m2026')));
             if (samsung) {
                 qzTargetPrinter = samsung;
             } else {
                 qzTargetPrinter = await qz.printers.getDefault();
             }
-            updateQZBadge(`Conectat: ${qzTargetPrinter || 'Implicită'}`, '#2ecc71');
+            updateQZBadge(`Conectat (${qzTargetPrinter || 'Implicită'})`, '#2ecc71');
         } catch {
             updateQZBadge('Conectat QZ', '#2ecc71');
         }
 
+        isQzConnecting = false;
         return true;
     } catch (err) {
         console.warn("QZ Tray nu este pornit pe laptop:", err);
         updateQZBadge('Deconectat (Offline)', '#f5b041');
+        isQzConnecting = false;
         return false;
     }
 }
@@ -891,8 +897,9 @@ window.printOrderReceipt = function(orderId) {
 };
 
 // ==========================================
-// INIȚIALIZARE
+// INIȚIALIZARE & KEEP-ALIVE QZ TRAY
 // ==========================================
 
 initOwnerAuth();
-setTimeout(initQZTrayConnection, 1000);
+setTimeout(initQZTrayConnection, 500);
+setInterval(initQZTrayConnection, 8000);
