@@ -737,7 +737,7 @@ async function printReceiptForOrder(order) {
     if (isQzActive && typeof qz !== 'undefined' && qz.websocket.isActive()) {
         try {
             const printerName = qzTargetPrinter || await qz.printers.getDefault();
-            const config = qz.print.createConfig(printerName);
+            const config = qz.configs.create(printerName);
             const data = [{
                 type: 'pixel',
                 format: 'html',
@@ -892,7 +892,7 @@ window.testQZPrint = async function () {
     if (isConnected && qz.websocket.isActive()) {
         try {
             const printerName = qzTargetPrinter || await qz.printers.getDefault();
-            const config = qz.print.createConfig(printerName);
+            const config = qz.configs.create(printerName);
             const sampleHTML = `
                 <div style="font-family: sans-serif; text-align: center; padding: 20px; border: 2px dashed #000;">
                     <h2 style="margin: 0; font-size: 20px;">BELLA ROMA - PUB & PIZZERIE</h2>
