@@ -514,12 +514,28 @@ window.removeFromCartOspatar = function (index) {
     updateCartUI();
 };
 
-window.scrollToCart = function () {
-    const cartEl = document.querySelector('.cart-area');
-    if (cartEl) {
-        cartEl.scrollIntoView({ behavior: 'smooth' });
+window.openCartModal = function () {
+    const modal = document.getElementById('cart-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        updateCartUI();
     }
 };
+
+window.closeCartModal = function () {
+    const modal = document.getElementById('cart-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
+
+// Închidere modal la click pe fundal
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('cart-modal');
+    if (modal && e.target === modal) {
+        window.closeCartModal();
+    }
+});
 
 function updateCartUI() {
     const container = document.getElementById('cart-items');
@@ -634,6 +650,7 @@ window.sendWaiterOrder = async function () {
             if (placedOrder) {
                 showNotification(`Comandă trimisă cu succes pentru Masa ${selectedMasa}!`, "fas fa-check-circle", "#2ecc71");
                 cart = [];
+                window.closeCartModal();
                 updateCartUI();
                 await loadActiveTableStatus();
             } else {
