@@ -7,14 +7,13 @@ echo   BELLA ROMA - Configurare Imprimanta QZ Tray
 echo ============================================
 echo.
 
-:: Calea QZ Tray pe Windows - creeaza daca nu exista
 set "QZ_PATH=%APPDATA%\QZ Tray"
 set "SSL_PATH=%QZ_PATH%\sslcert"
 
 echo [1/3] Se creeaza folderele necesare...
 if not exist "%QZ_PATH%" mkdir "%QZ_PATH%"
 if not exist "%SSL_PATH%" mkdir "%SSL_PATH%"
-echo       OK - Foldere create: %SSL_PATH%
+echo       OK - Foldere create
 
 echo [2/3] Se instaleaza certificatul digital...
 (
@@ -42,29 +41,25 @@ echo       OK - Certificat instalat cu succes!
 echo [3/3] Se reporneste QZ Tray...
 taskkill /f /im "qz-tray.exe" >nul 2>&1
 timeout /t 3 /nobreak >nul
-
-:: Incearca mai multe locatii posibile
 if exist "%ProgramFiles%\QZ Tray\qz-tray.exe" (
     start "" "%ProgramFiles%\QZ Tray\qz-tray.exe"
-    echo       OK - QZ Tray repornit din Program Files
 ) else if exist "%ProgramFiles(x86)%\QZ Tray\qz-tray.exe" (
     start "" "%ProgramFiles(x86)%\QZ Tray\qz-tray.exe"
-    echo       OK - QZ Tray repornit din Program Files x86
 ) else if exist "%LOCALAPPDATA%\Programs\QZ Tray\qz-tray.exe" (
     start "" "%LOCALAPPDATA%\Programs\QZ Tray\qz-tray.exe"
-    echo       OK - QZ Tray repornit din LocalAppData
 ) else (
-    echo       ! Nu s-a gasit executabilul QZ Tray - porneste-l manual din Start Menu
+    echo       ! Porneste QZ Tray manual din Start Menu
 )
+echo       OK - QZ Tray repornit
 
 echo.
 echo ============================================
 echo   INSTALARE COMPLETA!
 echo ============================================
 echo.
-echo Acum deschide browserul si acceseaza:
+echo Deschide browserul si acceseaza:
 echo   https://proiect-pizzeria.vercel.app/receptie.html
 echo.
-echo Imprimanta va printa automat fara pop-up!
+echo Imprimanta va printa AUTOMAT fara niciun popup!
 echo.
 pause

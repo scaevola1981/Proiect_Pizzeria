@@ -800,15 +800,74 @@ function configureQZSecurity() {
     if (qzSecurityConfigured || typeof qz === 'undefined') return;
     qzSecurityConfigured = true;
 
-    // Mod unsigned — va apărea popup "Allow" O SINGURĂ DATĂ per sesiune QZ Tray
-    // După ce apeși Allow, TOATE printările din acea sesiune sunt 100% silențioase
+    // Certificatul digital CORECT (self-signed, 10 ani validitate)
+    var CERTIFICATE = "-----BEGIN CERTIFICATE-----\n" +
+        "MIIC/DCCAeQCCQCa8tjrVFTdTzANBgkqhkiG9w0BAQsFADBAMRwwGgYDVQQDDBNC\n" +
+        "ZWxsYSBSb21hIFBpenplcmllMRMwEQYDVQQKDApCZWxsYSBSb21hMQswCQYDVQQG\n" +
+        "EwJSTzAeFw0yNjA4MTcwODE5NTNaFw0zNjA4MTQwODE5NTNaMEAxHDAaBgNVBAMM\n" +
+        "E0JlbGxhIFJvbWEgUGl6emVyaWUxEzARBgNVBAoMCkJlbGxhIFJvbWExCzAJBgNV\n" +
+        "BAYTAlJPMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyIlOlsiH0rt8\n" +
+        "+x5TodLsyrlhKhDKVKqtRIbxKgr+U2AdNaT7fRAzDCaYvLYNgNxyjoBMBRt97UTI\n" +
+        "IUY35oHBVMq4AwVwJQEe81MxoLJpV8PerYsSUuoaV0hfnGQjTjHgSfLpZvABZ6XF\n" +
+        "D6VwCvg2u9JRsBDptdNaR1hIBmIwM7qNRill2LnAbqdVqOFIzd/sky1qywD+2/bi\n" +
+        "54rBf0ml8SNgw/9V0hvSXeGGYgV/u2KN+HAWNt2/sKdwdurdchak7O5YqgNvqPx0\n" +
+        "1JvkO/NhIGLd11LrbPbineNiXQuHwKQ1QVWQNcNHgIQ5JIFQuXNUMH8LZFs4KGZL\n" +
+        "nRL/7FpLOwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQC7P039OQg3Zi/aZD8XHBkv\n" +
+        "1SfuDeG3EgW5lqGdLib6cX1Ft/0XSIXYPIm/uMZrhn6owtEu9XP1nZGlt9u5ByMD\n" +
+        "GlsVdZX2EqBAhic4jQZa3N3rivpIHWTJfqMOE4eYYPrEXz3a4nmW5ZfW9Sp480qd\n" +
+        "gzPZLzVVwF7TtbmTyQ9gRE0c5mN/hHPvNTrCeGdqt2OjHfSVEVpvgwzvYI6yUftc\n" +
+        "V0+zyU4bzK51xmlBsofb1NfAjkLFj3oMNjCdMYTe36TC1sT0wbOYC262artO7dbj\n" +
+        "jA7Y2ztoFknFP/eGkUeXClaqcDqp1NHX3WWvZ5Eee3/qMGmmdiaqrQYwu6h2m7EF\n" +
+        "-----END CERTIFICATE-----";
+
+    // Cheia privată pentru semnare digitală
+    var PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----\n" +
+        "MIIEpAIBAAKCAQEAyIlOlsiH0rt8+x5TodLsyrlhKhDKVKqtRIbxKgr+U2AdNaT7\n" +
+        "fRAzDCaYvLYNgNxyjoBMBRt97UTIIUY35oHBVMq4AwVwJQEe81MxoLJpV8PerYsS\n" +
+        "UuoaV0hfnGQjTjHgSfLpZvABZ6XFD6VwCvg2u9JRsBDptdNaR1hIBmIwM7qNRill\n" +
+        "2LnAbqdVqOFIzd/sky1qywD+2/bi54rBf0ml8SNgw/9V0hvSXeGGYgV/u2KN+HAW\n" +
+        "Nt2/sKdwdurdchak7O5YqgNvqPx01JvkO/NhIGLd11LrbPbineNiXQuHwKQ1QVWQ\n" +
+        "NcNHgIQ5JIFQuXNUMH8LZFs4KGZLnRL/7FpLOwIDAQABAoIBAQCkxOzlx26SH6rZ\n" +
+        "Slm9JOmayCalwZX9ax9ipt2Qhefh6Z8WbLCWWbEX0r68j3kY4AjgPVo4+BXH1jP5\n" +
+        "4xAbPZH0cXwwP0+dmAYuN7UXLICRtEZKoXI03lU2Uij8/upjXWfEWuqbwafl2bbI\n" +
+        "3E3rNXcDbBPiboMY+se6xzamyBaC6NdQRUB3/w6Pd90VCIQOVhfIfLXxArPhDYGF\n" +
+        "d/pTRk/B4v/VlbIaZSXE0cqtPydUXSMMZnV8xsa9kHkBJ91vvErcVJpGlsDVbVnJ\n" +
+        "u+5EhicPh0pNthq0hgdvtE83PcOP70LUYQNxjurq2AOplnJ5btouUW/cqotE6QPS\n" +
+        "P1UWk6LBAoGBAPeFQA3ywSWl9IEUnVN2krtEL+fJaLHO4fM4aNdIfxBentI7zkui\n" +
+        "7fhMM7gt+xJIYOcWamKS4zfwgCCWq0xX+M9ZplrG/aof99M9r0H4lgH2q7YLdr6b\n" +
+        "88Yf/RNWr9I8+LaHM/zivdSxa3lxFF3+nyoRhJjRIv3XBF+kM54QcQ6HAoGBAM9o\n" +
+        "AbgPDIpv0q4uPAEZQnAvDyqg373gieAdTpEMnBfyzeBM1XU1a4phb6l3zoq3yXEi\n" +
+        "jpyKBRYzlmAIQT84Ck+exQ0CPiOloKVvaz7hfB+VNFnwJD7en91KsH9FlVqM5gO/\n" +
+        "x6DaEK9ZXuOFNJodD8h3PFRPUb+MzsTIXZQvxTatAoGBALVDlgcg8aWahRZKfHR0\n" +
+        "7zvI0bRS4SLluL6fXtfZtYPNZ03aklb9uHwPggitU6Kt8pkI51vM6i07KPm0nTnJ\n" +
+        "auKeap8r/vQpeRnvoHsVivVhKZqlho5MMxeysWkKILQ8Bn/VP5NAkXhDfctvrlSv\n" +
+        "dOwf7BTlg1SVtBQ+cbadn83dAoGADmvv+qlpONMPtjbWy0jDWuOazV8ET8KmM6Q2\n" +
+        "C1XyIKQsdpVBHnZJdQTTa9g9z116L1i0y+O4+NM7eI/6YXf3F5Q1pXLreTUSF47I\n" +
+        "yUWKiPOqATr2ejympw+DeEYRXYuAjvAt5FxlXpv7QhzIDJNKvqiz1DTzvTsAQaSh\n" +
+        "BSXRM70CgYBWWaBpuCCxsuPZVrcV6BT5HjRuXPQ/VUPa7m7MJfljpmiZKn85wAR2\n" +
+        "e102YBQ+sbWSIXaRcbVgQlUTarpeBepCZ8CemuwU6v52qFR1vFqzrT8Us9j5il9u\n" +
+        "cmislyBkYbexYBYwSSgtxKvsqYU0WbuHsvfrcCDvi/itEXvytisfWA==\n" +
+        "-----END RSA PRIVATE KEY-----";
+
+    // Trimite certificatul către QZ Tray — QZ Tray va verifica dacă îl are în trusted
     qz.security.setCertificatePromise(function(resolve, reject) {
-        resolve();
+        resolve(CERTIFICATE);
     });
 
+    // Semnează digital fiecare cerere cu cheia privată
     qz.security.setSignaturePromise(function(toSign) {
         return function(resolve, reject) {
-            resolve();
+            try {
+                var pk = KEYUTIL.getKey(PRIVATE_KEY);
+                var sig = new KJUR.crypto.Signature({alg: "SHA512withRSA"});
+                sig.init(pk);
+                sig.updateString(toSign);
+                var hex = sig.sign();
+                resolve(stob64(hextorstr(hex)));
+            } catch (err) {
+                console.error("QZ Tray semnare eșuată:", err);
+                resolve();
+            }
         };
     });
 
@@ -819,7 +878,7 @@ function configureQZSecurity() {
         setTimeout(connectToQZ, 3000);
     });
 
-    console.log("✅ QZ Tray: Securitate configurată (mod unsigned)");
+    console.log("✅ QZ Tray: Securitate configurată cu certificat digital");
 }
 
 async function connectToQZ() {
