@@ -172,6 +172,11 @@ async function autoPrintIfNew(order) {
         printedOrderSignatures.add(signature);
         console.log("🖨️ Auto-print declanșat automat pentru comanda #", order.id, "Masa:", order.numar_masa);
         await printReceiptForOrder(order);
+        
+        // Trecem automat statusul în 'in_preparare' (Comandă Printată)
+        if (window.updateOrderStatus) {
+            await window.updateOrderStatus(order.id, 'in_preparare');
+        }
     }
 }
 
@@ -223,22 +228,23 @@ window.renderOwnerOrders = function () {
             statusLabel = 'NOUĂ';
             statusColor = '#f39c12';
         } else if (order.status === 'in_preparare') {
-            statusLabel = 'ÎN PREPARARE';
+            statusLabel = 'PRINTATĂ / ÎN PREPARARE';
             statusColor = '#2ecc71';
         } else if (order.status === 'servita') {
             statusLabel = 'SERVITĂ';
-            statusColor = '#95a5a6';
+            statusColor = '#3498db';
         }
 
         let buttonHtml = '';
         if (order.status === 'noua') {
-            buttonHtml = `<button class="modern-card-btn" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'in_preparare')"><i class="fas fa-check"></i> Acceptă Comanda</button>`;
+            buttonHtml = `<button class="modern-card-btn" style="background: #e67e22;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'in_preparare')"><i class="fas fa-check"></i> Acceptă Comanda</button>`;
         } else if (order.status === 'in_preparare') {
-            buttonHtml = `<button class="modern-card-btn success" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'servita')"><i class="fas fa-flag-checkered"></i> Marchează ca Servită</button>`;
+            buttonHtml = `<button class="modern-card-btn success" style="background: #27ae60;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'servita')"><i class="fas fa-check-circle"></i> Comandă Printată (Marchează Servită)</button>`;
         } else if (order.status === 'servita') {
             buttonHtml = `<button class="modern-card-btn success" style="background: #e74c3c;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'finalizata')"><i class="fas fa-broom"></i> Eliberează Masa ${escapeHTML(String(order.numar_masa))}</button>`;
         }
 
+        const printBtnText = order.status === 'noua' ? 'Printează Bon' : 'Retipărește Bon';
 
         div.innerHTML = `
             <div class="modern-card-header" style="background: url('/img/bella-roma.png') center/cover; position: relative;">
@@ -259,7 +265,7 @@ window.renderOwnerOrders = function () {
                 </div>
             </div>
             ${buttonHtml}
-            <button class="modern-card-btn" style="background: #2c3e50; margin-top: 0;" onclick="window.printOrderReceipt(${parseInt(order.id)})"><i class="fas fa-print"></i> Printează Bon</button>
+            <button class="modern-card-btn" style="background: #2c3e50; margin-top: 0;" onclick="window.printOrderReceipt(${parseInt(order.id)})"><i class="fas fa-print"></i> ${printBtnText}</button>
         `;
         container.appendChild(div);
     });
