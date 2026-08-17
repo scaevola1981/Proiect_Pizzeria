@@ -918,12 +918,23 @@ async function detectPrinter() {
     try {
         const printers = await qz.printers.find();
         console.log("🖨️ QZ Tray: Imprimante detectate:", printers);
-        const samsung = printers.find(p => p && (
+        
+        // Căutare inteligentă: OCPP-80K (Thermal POS), POS-80, Samsung M2020, etc.
+        const matched = printers.find(p => p && (
+            p.toLowerCase().includes('ocpp') ||
+            p.toLowerCase().includes('pos-80') ||
+            p.toLowerCase().includes('pos 80') ||
+            p.toLowerCase().includes('pos80') ||
+            p.toLowerCase().includes('thermal') ||
+            p.toLowerCase().includes('receipt') ||
             p.toLowerCase().includes('samsung') ||
             p.toLowerCase().includes('m2020') ||
-            p.toLowerCase().includes('m2026')
+            p.toLowerCase().includes('m2026') ||
+            p.toLowerCase().includes('xprinter') ||
+            p.toLowerCase().includes('epson')
         ));
-        qzTargetPrinter = samsung || (await qz.printers.getDefault());
+        
+        qzTargetPrinter = matched || (await qz.printers.getDefault());
         console.log("🖨️ QZ Tray: Imprimantă selectată:", qzTargetPrinter);
     } catch (e) {
         console.warn("QZ Tray: Nu s-au putut detecta imprimantele:", e);
