@@ -632,10 +632,11 @@ async function printReceiptForOrder(order) {
             const price = parseFloat(item.product?.pret || 0);
             const lineTotal = qty * price;
             personTotal += lineTotal;
-            const notes = item.notes ? `<br><small><i>* ${item.notes}</i></small>` : '';
-            itemsHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; padding: 1px 0;">
-                <span>${qty}x ${item.product?.nume || 'Produs'}</span>
-                <span>${lineTotal.toFixed(2)}</span>
+            const productName = item.product?.nume || 'Produs';
+            const notes = item.notes ? `<div style="font-size: 11px; font-style: italic; padding-left: 8px;">* ${item.notes}</div>` : '';
+            itemsHtml += `<div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; padding: 2px 0; line-height: 1.3;">
+                <span style="font-weight: bold;"><b>${qty}x ${productName}</b></span>
+                <span style="font-weight: bold;">${lineTotal.toFixed(2)}</span>
             </div>${notes}`;
         });
 

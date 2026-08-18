@@ -1,19 +1,27 @@
-# Business Logic: Gestiunea Meselor (proiect-pizzeria-MVP)
+# Task: Îngroșarea (Bold) produselor pe bonul de printare
 
-**Scenariu:** Menținerea comenzii deschise și cumularea produselor pentru o masă ocupată.
+## Obiectiv
+Modificarea stilului vizual al bonului generat prin QZ Tray pentru ca denumirea produselor și cantitatea să apară cu text îngroșat (bold), pentru o mai bună lizibilitate la imprimanta termică POS-80.
 
-Acest document descrie logica pe care agentul trebuie să o implementeze pentru a gestiona adăugarea de produse noi la o masă care are deja o comandă activă.
+## Detalii Tehnice
+Trebuie să intervii în fișierul care generează `template`-ul HTML al bonului (cel care este trimis către QZ Tray).
 
-## 1. Masă Ocupată (Comanda Inițială)
-* La preluarea primei comenzi de către ospătar, sistemul alocă un **ID unic de comandă** asociat mesei respective.
-* Statusul mesei se schimbă în `Ocupată`.
-* Bonul inițial este trimis automat către secțiile de preparare (ex: bucătărie).
+### Acțiuni necesare:
+1. **Localizare:** Identifică secțiunea din codul sursă unde se face maparea produselor (bucla care iterează prin `produseComanda` sau similar).
+2. **Modificare CSS/HTML:** 
+   - Înconjoară elementele care afișează produsul și cantitatea cu un tag `<b>` sau un `span` cu stilul `font-weight: bold`.
+   - **Exemplu de modificare:**
+     ```html
+     <!-- În loc de -->
+     <div>${produs.nume}</div>
+     
+     <!-- Folosește -->
+     <div style="font-weight: bold;">${produs.cantitate}x ${produs.nume}</div>
+     ```
 
-## 2. Actualizare Comandă (Suplimentare)
-* Cât timp masa este marcată ca `Ocupată`, orice produs nou adăugat de ospătar trebuie atașat **la aceeași comandă principală** (același ID unic).
-* La momentul trimiterii suplimentării, sistemul trebuie să emită către bucătărie **doar produsele noi**, pentru a evita prepararea dublă.
-* În baza de date (sau în state-ul aplicației), nota de plată finală va cumula toate produsele adăugate succesiv pe parcursul șederii clienților.
+## Cerințe Suplimentare
+* Verifică dacă în același șablon este prezentă declarația `<meta charset="UTF-8">` în secțiunea `<head>`, pentru a preveni erorile de afișare a diacriticelor (cum a fost cazul cu „Împreună”).
+* Asigură-te că stilul `font-weight: bold` nu este suprascris de alte clase CSS globale.
 
-## 3. Eliberare Masă (Finalizare)
-* Comanda principală rămâne deschisă și poate primi completări până când ospătarul apasă explicit un buton de finalizare (ex: `Masă Liberă`, `Închide Comanda` sau `Achitat`).
-* Doar în acel moment, ciclul comenzii curente se închide definitiv, iar masa redevine disponibilă pentru a primi un nou ID de comandă.
+## Testare
+* După aplicarea modificării și push pe Vercel, efectuează o printare de test din aplicație pentru a verifica dacă textul apare îngroșat pe bonul tipărit.
