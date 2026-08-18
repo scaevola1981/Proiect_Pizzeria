@@ -621,13 +621,24 @@ if (editForm) {
 
 window.loadStoreSchedule = async function() {
     try {
+        let retries = 0;
+        while (!window.supabaseClient && retries < 10) {
+            await new Promise(r => setTimeout(r, 200));
+            retries++;
+        }
+        if (!window.supabaseClient) return;
+
         const { data: openData } = await window.supabaseClient.from('setari').select('value').eq('key', 'store_open_time').maybeSingle();
         const { data: closeData } = await window.supabaseClient.from('setari').select('value').eq('key', 'store_close_time').maybeSingle();
         const { data: forceData } = await window.supabaseClient.from('setari').select('value').eq('key', 'store_force_close').maybeSingle();
 
-        if (openData && openData.value) document.getElementById('store-open-time').value = openData.value;
-        if (closeData && closeData.value) document.getElementById('store-close-time').value = closeData.value;
-        if (forceData && forceData.value === 'true') document.getElementById('store-force-close').checked = true;
+        const openEl = document.getElementById('store-open-time');
+        const closeEl = document.getElementById('store-close-time');
+        const forceEl = document.getElementById('store-force-close');
+
+        if (openEl && openData?.value) openEl.value = openData.value;
+        if (closeEl && closeData?.value) closeEl.value = closeData.value;
+        if (forceEl) forceEl.checked = (forceData?.value === 'true');
     } catch (e) {
         console.error("Eroare la încărcarea programului", e);
     }
@@ -677,6 +688,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authenticated && pinVerified) {
         document.getElementById('login-overlay').style.display = 'none';
         loadAdminProducts();
+        window.loadStoreSchedule();
     } else if (authenticated && !pinVerified) {
         // Are sesiune Supabase (logat la recepție) -> cere DOAR PIN-ul
         document.getElementById('login-overlay').style.display = 'flex';

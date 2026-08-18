@@ -620,11 +620,11 @@ async function printReceiptForOrder(order) {
 
     let itemsHtml = '';
     for (const [person, items] of Object.entries(grouped)) {
-        const displayLabel = person === 'Masa' ? '👥 Împreună' : `👤 ${person}`;
+        const displayLabel = person === 'Masa' ? '--- [ IMPREUNA ] ---' : `--- [ ${person.toUpperCase()} ] ---`;
         let personTotal = 0;
 
-        itemsHtml += `<div style="border-top: 1px dashed #000; padding: 4px 0 2px; margin-top: 4px;">
-            <b>${displayLabel}</b>
+        itemsHtml += `<div style="border-top: 1px dashed #000; padding: 4px 0 2px; margin-top: 4px; text-align: center;">
+            <b style="font-size: 12px; letter-spacing: 1px;">${displayLabel}</b>
         </div>`;
 
         items.forEach(item => {
@@ -636,11 +636,11 @@ async function printReceiptForOrder(order) {
             const notes = item.notes ? `<div style="font-size: 11px; font-style: italic; padding-left: 8px;">* ${item.notes}</div>` : '';
             itemsHtml += `<div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; padding: 2px 0; line-height: 1.3;">
                 <span style="font-weight: bold;"><b>${qty}x ${productName}</b></span>
-                <span style="font-weight: bold;">${lineTotal.toFixed(2)}</span>
+                <span style="font-weight: bold; padding-right: 2px;">${lineTotal.toFixed(2)}</span>
             </div>${notes}`;
         });
 
-        itemsHtml += `<div style="text-align: right; font-size: 11px; font-weight: bold; padding-top: 2px;">Subtotal: ${personTotal.toFixed(2)} Lei</div>`;
+        itemsHtml += `<div style="text-align: right; font-size: 11px; font-weight: bold; padding-top: 2px; padding-right: 2px;">Subtotal: ${personTotal.toFixed(2)} Lei</div>`;
     }
 
     const receiptHtml = `
@@ -661,8 +661,9 @@ async function printReceiptForOrder(order) {
             }
             body {
                 font-family: 'Courier New', monospace;
-                width: 80mm;
-                padding: 5mm;
+                width: 72mm;
+                max-width: 72mm;
+                padding: 2mm 3mm 4mm 3mm;
                 font-size: 12px;
                 color: #000;
             }
