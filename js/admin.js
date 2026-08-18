@@ -88,12 +88,20 @@ window.handleAdminLogin = async function () {
 let allAdminProducts = [];
 let adminCurrentTab = 'restaurant';
 
-async function loadAdminProducts() {
+window.loadAdminProducts = async function loadAdminProducts() {
     const container = document.getElementById('admin-products-container');
-    container.innerHTML = '<p style="text-align:center; width:100%;">Se încarcă meniul...</p>';
+    if (!container) return;
+    container.innerHTML = '<p style="text-align:center; width:100%;"><i class="fas fa-spinner fa-spin"></i> Se încarcă meniul...</p>';
+
+    // Așteptăm inițializarea clientului Supabase dacă e necesar
+    let retries = 0;
+    while (!window.supabaseClient && retries < 15) {
+        await new Promise(r => setTimeout(r, 200));
+        retries++;
+    }
 
     if (!window.supabaseClient) {
-        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare: Clientul bazei de date nu este inițializat.</p>';
+        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare: Conexiunea la baza de date nu a putut fi inițializată. Reîncărcați pagina.</p>';
         return;
     }
 
@@ -101,12 +109,16 @@ async function loadAdminProducts() {
 
     if (error) {
         console.error("Eroare la preluarea meniului din Supabase:", error);
-        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la încărcarea meniului.</p>';
+        container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la încărcarea meniului: ' + escapeHTML(error.message || '') + '</p>';
         return;
     }
 
     allAdminProducts = data || [];
     renderAdminProducts();
+};
+
+async function loadAdminProducts() {
+    return window.loadAdminProducts();
 }
 
 function getDefaultProductImage() {
