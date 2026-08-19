@@ -260,6 +260,11 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
 // GESTIUNE & AUTENTIFICARE OSPĂTARI
 // ==========================================
 
+const DEFAULT_WAITERS = [
+    { id: 1, nume: 'Ospătar 1', pin: '1111', activ: true },
+    { id: 2, nume: 'Ospătar 2', pin: '2222', activ: true }
+];
+
 /**
  * Returnează lista ospătarilor activi pentru ecranul de login
  */
@@ -272,28 +277,32 @@ window.getOspatariList = async function () {
             .order('nume', { ascending: true });
 
         if (error) {
-            console.error("Eroare la preluarea ospătarilor:", error);
-            return [];
+            console.warn("Avertizare preluare ospatari din Supabase (posibil RLS activ):", error.message);
+            return DEFAULT_WAITERS;
         }
 
-        // Dacă tabela e proaspăt creată și goală, o populăm cu 2 ospătari impliciți
+        // Dacă tabela e proaspăt creată și goală, încercăm să adăugăm ospătari impliciți
         if (!data || data.length === 0) {
-            console.log("Tabela ospatari este goala. Se adauga ospătari inițiali...");
-            await supabase.from('ospatari').insert([
-                { nume: 'Ospătar 1', pin: '1111', activ: true },
-                { nume: 'Ospătar 2', pin: '2222', activ: true }
-            ]);
-            const { data: seeded } = await supabase
-                .from('ospatari')
-                .select('id, nume, activ')
-                .eq('activ', true);
-            return seeded || [];
+            try {
+                await supabase.from('ospatari').insert([
+                    { nume: 'Ospătar 1', pin: '1111', activ: true },
+                    { nume: 'Ospătar 2', pin: '2222', activ: true }
+                ]);
+                const { data: seeded } = await supabase
+                    .from('ospatari')
+                    .select('id, nume, activ')
+                    .eq('activ', true);
+                if (seeded && seeded.length > 0) return seeded;
+            } catch (seedErr) {
+                console.warn("Auto-seed ospatari avertizare:", seedErr);
+            }
+            return DEFAULT_WAITERS;
         }
 
         return data;
     } catch (e) {
         console.error("Eroare getOspatariList:", e);
-        return [];
+        return DEFAULT_WAITERS;
     }
 };
 
@@ -302,15 +311,22 @@ window.getOspatariList = async function () {
  */
 window.verifyOspatarPin = async function (ospatarId, pin) {
     try {
+        // Fallback rapid pentru ospătarii impliciți
+        const defaultMatch = DEFAULT_WAITERS.find(w => w.id === ospatarId || String(w.id) === String(ospatarId));
+        
         const { data, error } = await supabase
             .from('ospatari')
             .select('id, nume, pin, activ')
             .eq('id', ospatarId)
-            .eq('activ', true)
             .maybeSingle();
 
         if (error || !data) {
-            return { valid: false, message: 'Ospătarul nu a fost găsit.' };
+            if (defaultMatch) {
+                if (String(defaultMatch.pin) === String(pin).trim()) {
+                    return { valid: true, waiter: { id: defaultMatch.id, nume: defaultMatch.nume } };
+                }
+            }
+            return { valid: false, message: 'PIN incorect.' };
         }
 
         if (String(data.pin).trim() === String(pin).trim()) {
