@@ -168,12 +168,16 @@ window.updateAdminPin = async function (newPin) {
 // ==========================================
 
 /**
- * Trimitere comandă nouă (pentru clienți anonimi)
- * Acum include și coordonatele GPS ale clientului
+ * Trimitere comandă nouă (pentru clienți anonimi sau ospătari)
+ * Suportă salvarea coordonatelor GPS și a numelui ospătarului
  */
-window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription = null, clientCoords = null) {
-    // Adăugăm flag-ul is_new pe produsele din coșul curent (suplimentarea)
-    const cartWithFlags = cart.map(item => ({ ...item, is_new: true }));
+window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription = null, clientCoords = null, waiterName = null) {
+    // Adăugăm flag-ul is_new și numele ospătarului pe produsele din coșul curent
+    const cartWithFlags = cart.map(item => ({ 
+        ...item, 
+        is_new: true,
+        ospatar_nume: waiterName || item.ospatar_nume || null
+    }));
 
     // Căutăm dacă există deja o comandă activă pentru această masă
     const { data: existingOrders, error: searchError } = await supabase
@@ -190,9 +194,13 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
     }
 
     let orderData = {
-        numar_masa: masa,
+        numar_masa: String(masa),
         status: 'noua'
     };
+
+    if (waiterName) {
+        orderData.ospatar_nume = waiterName;
+    }
     
     if (pushSubscription) {
         orderData.push_subscription = pushSubscription;
@@ -214,6 +222,9 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
 
         orderData.detalii_comanda = newDetails;
         orderData.total = newTotal;
+        if (!orderData.ospatar_nume && existingOrder.ospatar_nume) {
+            orderData.ospatar_nume = existingOrder.ospatar_nume;
+        }
 
         const { data, error } = await supabase
             .from('comenzi')
@@ -242,6 +253,142 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
             return null;
         }
         return data[0];
+    }
+};
+
+// ==========================================
+// GESTIUNE & AUTENTIFICARE OSPĂTARI
+// ==========================================
+
+/**
+ * Returnează lista ospătarilor activi pentru ecranul de login
+ */
+window.getOspatariList = async function () {
+    try {
+        const { data, error } = await supabase
+            .from('ospatari')
+            .select('id, nume, activ')
+            .eq('activ', true)
+            .order('nume', { ascending: true });
+
+        if (error) {
+            console.error("Eroare la preluarea ospătarilor:", error);
+            return [];
+        }
+
+        // Dacă tabela e proaspăt creată și goală, o populăm cu 2 ospătari impliciți
+        if (!data || data.length === 0) {
+            console.log("Tabela ospatari este goala. Se adauga ospătari inițiali...");
+            await supabase.from('ospatari').insert([
+                { nume: 'Ospătar 1', pin: '1111', activ: true },
+                { nume: 'Ospătar 2', pin: '2222', activ: true }
+            ]);
+            const { data: seeded } = await supabase
+                .from('ospatari')
+                .select('id, nume, activ')
+                .eq('activ', true);
+            return seeded || [];
+        }
+
+        return data;
+    } catch (e) {
+        console.error("Eroare getOspatariList:", e);
+        return [];
+    }
+};
+
+/**
+ * Verifică PIN-ul unui ospătar
+ */
+window.verifyOspatarPin = async function (ospatarId, pin) {
+    try {
+        const { data, error } = await supabase
+            .from('ospatari')
+            .select('id, nume, pin, activ')
+            .eq('id', ospatarId)
+            .eq('activ', true)
+            .maybeSingle();
+
+        if (error || !data) {
+            return { valid: false, message: 'Ospătarul nu a fost găsit.' };
+        }
+
+        if (String(data.pin).trim() === String(pin).trim()) {
+            return { valid: true, waiter: { id: data.id, nume: data.nume } };
+        } else {
+            return { valid: false, message: 'PIN incorect.' };
+        }
+    } catch (e) {
+        console.error("Eroare verifyOspatarPin:", e);
+        return { valid: false, message: 'Eroare de conexiune la verificarea PIN-ului.' };
+    }
+};
+
+/**
+ * Returnează toți ospătarii (pentru panoul Admin)
+ */
+window.getAllOspatariAdmin = async function () {
+    try {
+        const { data, error } = await supabase
+            .from('ospatari')
+            .select('*')
+            .order('id', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    } catch (e) {
+        console.error("Eroare getAllOspatariAdmin:", e);
+        return [];
+    }
+};
+
+/**
+ * Adaugă un ospătar nou
+ */
+window.addOspatar = async function (nume, pin) {
+    try {
+        const { data, error } = await supabase
+            .from('ospatari')
+            .insert([{ nume: nume.trim(), pin: String(pin).trim(), activ: true }])
+            .select();
+        if (error) throw error;
+        return { success: true, waiter: data[0] };
+    } catch (e) {
+        console.error("Eroare addOspatar:", e);
+        return { success: false, error: e.message };
+    }
+};
+
+/**
+ * Șterge un ospătar
+ */
+window.deleteOspatar = async function (id) {
+    try {
+        const { error } = await supabase
+            .from('ospatari')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+        return { success: true };
+    } catch (e) {
+        console.error("Eroare deleteOspatar:", e);
+        return { success: false, error: e.message };
+    }
+};
+
+/**
+ * Actualizează PIN-ul unui ospătar
+ */
+window.updateOspatarPin = async function (id, newPin) {
+    try {
+        const { error } = await supabase
+            .from('ospatari')
+            .update({ pin: String(newPin).trim() })
+            .eq('id', id);
+        if (error) throw error;
+        return { success: true };
+    } catch (e) {
+        console.error("Eroare updateOspatarPin:", e);
+        return { success: false, error: e.message };
     }
 };
 

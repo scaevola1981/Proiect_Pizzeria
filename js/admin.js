@@ -67,6 +67,7 @@ window.handleAdminLogin = async function () {
             document.getElementById('login-overlay').style.display = 'none';
             loadAdminProducts();
             window.loadStoreSchedule();
+            window.loadAdminWaiters();
         } else {
             err.style.display = 'block';
             err.innerText = 'PIN Admin incorect. Încercați din nou (sau folosiți parola veche "bella").';
@@ -689,6 +690,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('login-overlay').style.display = 'none';
         loadAdminProducts();
         window.loadStoreSchedule();
+        window.loadAdminWaiters();
     } else if (authenticated && !pinVerified) {
         // Are sesiune Supabase (logat la recepție) -> cere DOAR PIN-ul
         document.getElementById('login-overlay').style.display = 'flex';
@@ -840,4 +842,116 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+
+    // ==========================================
+    // GESTIUNE OSPĂTARI ÎN ADMIN
+    // ==========================================
+    const addWaiterForm = document.getElementById('add-waiter-form');
+    if (addWaiterForm) {
+        addWaiterForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-waiter-name').value.trim();
+            const pin = document.getElementById('new-waiter-pin').value.trim();
+
+            if (!name || !pin || pin.length < 4) {
+                alert("Completați numele și un PIN de minim 4 cifre.");
+                return;
+            }
+
+            const res = await window.addOspatar(name, pin);
+            if (res.success) {
+                addWaiterForm.reset();
+                loadAdminWaiters();
+            } else {
+                alert("Eroare la adăugarea ospătarului: " + (res.error || ''));
+            }
+        });
+    }
 });
+
+window.loadAdminWaiters = async function loadAdminWaiters() {
+    const container = document.getElementById('admin-waiters-table-container');
+    if (!container) return;
+
+    container.innerHTML = '<p style="color: #cbd5e1;"><i class="fas fa-spinner fa-spin"></i> Se încarcă lista ospătarilor...</p>';
+
+    let attempts = 0;
+    while (typeof window.getAllOspatariAdmin !== 'function' && attempts < 20) {
+        await new Promise(r => setTimeout(r, 150));
+        attempts++;
+    }
+
+    const waiters = typeof window.getAllOspatariAdmin === 'function' ? await window.getAllOspatariAdmin() : [];
+
+    if (waiters.length === 0) {
+        container.innerHTML = '<p style="color: #cbd5e1;">Nu există ospătari înregistrați. Adăugați primul ospătar folosind formularul de mai sus.</p>';
+        return;
+    }
+
+    let html = `
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; color: #fff;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2); color: #f5b041; font-size: 0.95rem;">
+                        <th style="padding: 10px;">Nume Ospătar</th>
+                        <th style="padding: 10px;">PIN Acces</th>
+                        <th style="padding: 10px;">Status</th>
+                        <th style="padding: 10px; text-align: right;">Acțiuni</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    waiters.forEach(w => {
+        html += `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <td style="padding: 12px 10px; font-weight: bold;"><i class="fas fa-user-tie" style="color: #f5b041; margin-right: 8px;"></i> ${escapeHTML(w.nume)}</td>
+                <td style="padding: 12px 10px; font-family: monospace; font-size: 1.1rem; color: #2ecc71;">${escapeHTML(String(w.pin))}</td>
+                <td style="padding: 12px 10px;"><span style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">Activ</span></td>
+                <td style="padding: 12px 10px; text-align: right;">
+                    <button onclick="window.editAdminWaiterPin(${w.id}, '${escapeHTML(w.nume)}')" style="background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-right: 6px;">
+                        <i class="fas fa-key"></i> PIN
+                    </button>
+                    <button onclick="window.deleteAdminWaiterPrompt(${w.id}, '${escapeHTML(w.nume)}')" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    container.innerHTML = html;
+};
+
+window.editAdminWaiterPin = async function(id, name) {
+    const newPin = prompt(`Introduceți noul PIN (4 cifre) pentru ${name}:`);
+    if (!newPin) return;
+    if (newPin.length < 4) {
+        alert("PIN-ul trebuie să aibă minim 4 caractere.");
+        return;
+    }
+    const res = await window.updateOspatarPin(id, newPin);
+    if (res.success) {
+        alert(`PIN-ul pentru ${name} a fost actualizat!`);
+        window.loadAdminWaiters();
+    } else {
+        alert("Eroare la actualizarea PIN-ului: " + (res.error || ''));
+    }
+};
+
+window.deleteAdminWaiterPrompt = async function(id, name) {
+    if (confirm(`Sigur doriți să ștergeți ospătarul "${name}"? Nu se va mai putea autentifica pe tabletă.`)) {
+        const res = await window.deleteOspatar(id);
+        if (res.success) {
+            window.loadAdminWaiters();
+        } else {
+            alert("Eroare la ștergere: " + (res.error || ''));
+        }
+    }
+};

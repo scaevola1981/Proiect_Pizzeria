@@ -246,6 +246,11 @@ window.renderOwnerOrders = function () {
 
         const printBtnText = order.status === 'noua' ? 'Printează Bon' : 'Retipărește Bon';
 
+        const waiterName = order.ospatar_nume || (Array.isArray(order.detalii_comanda) ? order.detalii_comanda.find(i => i.ospatar_nume)?.ospatar_nume : null);
+        const waiterTag = waiterName 
+            ? `<span class="modern-tag" style="background: #27ae60; color: white;"><i class="fas fa-user-tie"></i> ${escapeHTML(waiterName)}</span>`
+            : `<span class="modern-tag" style="background: #2980b9; color: white;"><i class="fas fa-qrcode"></i> QR Masă</span>`;
+
         div.innerHTML = `
             <div class="modern-card-header" style="background: url('/img/bella-roma.png') center/cover; position: relative;">
                 <div class="modern-card-tab">Masa ${escapeHTML(String(order.numar_masa))}</div>
@@ -262,6 +267,7 @@ window.renderOwnerOrders = function () {
                     <span class="modern-tag">Ora ${escapeHTML(timeStr)}</span>
                     <span class="modern-tag">${escapeHTML(dateStr)}</span>
                     <span class="modern-tag" style="background: ${statusColor}; color: white;">${escapeHTML(statusLabel)}</span>
+                    ${waiterTag}
                 </div>
             </div>
             ${buttonHtml}
@@ -643,6 +649,8 @@ async function printReceiptForOrder(order) {
         itemsHtml += `<div style="text-align: right; font-size: 11px; font-weight: bold; padding-top: 2px; padding-right: 2px;">Subtotal: ${personTotal.toFixed(2)} Lei</div>`;
     }
 
+    const waiterName = order.ospatar_nume || (Array.isArray(order.detalii_comanda) ? order.detalii_comanda.find(i => i.ospatar_nume)?.ospatar_nume : null);
+
     const receiptHtml = `
     <!DOCTYPE html>
     <html>
@@ -719,10 +727,13 @@ async function printReceiptForOrder(order) {
             <span>Masa: ${masaStr}</span>
             <span>#${parseInt(order.id)}</span>
         </div>
-        <div class="info" style="border-bottom: none; font-weight: normal;">
+        <div class="info" style="${waiterName ? '' : 'border-bottom: none;'} font-weight: normal;">
             <span>${dateStr}</span>
             <span>${timeStr}</span>
         </div>
+        ${waiterName ? `<div class="info" style="border-bottom: none; font-weight: bold;">
+            <span>Ospatar: ${escapeHTML(waiterName)}</span>
+        </div>` : ''}
 
         <div style="margin-top: 4px;">
             ${itemsHtml}

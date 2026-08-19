@@ -16,22 +16,106 @@
     <meta name="apple-mobile-web-app-title" content="Ospătar Bella">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest-ospatar.json">
-  <script type="module" crossorigin src="/assets/ospatar-D4PRV068.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/supabase-esk-4nyX.js">
+  <script type="module" crossorigin src="/assets/ospatar-fsXVyxpw.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/supabase-BWP_rvw7.js">
   <link rel="modulepreload" crossorigin href="/assets/security-Bv09CpAF.js">
   <link rel="stylesheet" crossorigin href="/assets/supabase-DN60NlFN.css">
 </head>
 
 <body>
-    <header class="bella-roma-hero" style="height: 100px; margin-bottom: 15px; position: relative;">
-        <button onclick="window.location.href='receptie.html'"
-            style="position: absolute; top: 12px; left: 12px; z-index: 10; background: rgba(15, 23, 42, 0.85); color: #f5b041; border: 1px solid #f5b041; padding: 7px 14px; border-radius: 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-            <i class="fas fa-arrow-left"></i> Recepție
-        </button>
-        <div class="hero-overlay" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <h1 class="hero-title" style="font-size: 1.8rem; margin: 0;">BELLA ROMA</h1>
-            <p class="hero-subtitle" style="font-size: 0.95rem; margin: 0; color: #2ecc71; font-weight: bold;">
-                <i class="fas fa-user-tie"></i> PANOU OSPĂTAR TABLETĂ
+    <!-- Overlay Autentificare Ospătar (Start Tură) -->
+    <div id="waiter-login-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b1120; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+        
+        <div class="glass-panel" style="max-width: 420px; width: 100%; text-align: center; padding: 25px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid rgba(245, 176, 65, 0.4);">
+            <div style="font-size: 2.2rem; color: #f5b041; margin-bottom: 5px;">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h2 style="color: #fff; margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: 1px;">BELLA ROMA</h2>
+            <p style="color: #f5b041; font-weight: bold; font-size: 0.95rem; margin: 0 0 20px 0;">Autentificare Tură Ospătar</p>
+
+            <!-- Pasul 1: Selectează Numele -->
+            <div id="waiter-step-select" style="display: block;">
+                <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 12px;">Alege numele tău din listă:</p>
+                <div id="waiter-list-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; margin-bottom: 15px;">
+                    <p style="color: #94a3b8;"><i class="fas fa-spinner fa-spin"></i> Se încarcă echipa...</p>
+                </div>
+            </div>
+
+            <!-- Pasul 2: Introducere PIN -->
+            <div id="waiter-step-pin" style="display: none;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <button onclick="window.backToWaiterSelect()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
+                        <i class="fas fa-arrow-left"></i> Înapoi
+                    </button>
+                    <span id="selected-waiter-name-display" style="color: #2ecc71; font-weight: bold; font-size: 1.05rem;"></span>
+                    <div style="width: 50px;"></div>
+                </div>
+
+                <p style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 15px;">Introduceți PIN-ul de 4 cifre:</p>
+
+                <!-- Buline PIN -->
+                <div id="pin-dots-container" style="display: flex; justify-content: center; gap: 14px; margin-bottom: 20px;">
+                    <span class="pin-dot" id="dot-0" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                    <span class="pin-dot" id="dot-1" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                    <span class="pin-dot" id="dot-2" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                    <span class="pin-dot" id="dot-3" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                </div>
+
+                <!-- Tastatură Numerică (PIN Pad) -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto 15px auto;">
+                    <button class="pin-key-btn" onclick="window.pressPinKey('1')">1</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('2')">2</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('3')">3</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('4')">4</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('5')">5</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('6')">6</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('7')">7</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('8')">8</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('9')">9</button>
+                    <button class="pin-key-btn" onclick="window.clearPinKey()" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border-color: #e74c3c;">C</button>
+                    <button class="pin-key-btn" onclick="window.pressPinKey('0')">0</button>
+                    <button class="pin-key-btn" onclick="window.submitWaiterPin()" style="background: rgba(46, 204, 113, 0.3); color: #2ecc71; border-color: #2ecc71;"><i class="fas fa-check"></i></button>
+                </div>
+
+                <style>
+                    .pin-key-btn {
+                        background: rgba(255, 255, 255, 0.08);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        color: #ffffff;
+                        font-size: 1.4rem;
+                        font-weight: bold;
+                        padding: 14px 0;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        transition: all 0.15s;
+                    }
+                    .pin-key-btn:active {
+                        transform: scale(0.92);
+                        background: rgba(245, 176, 65, 0.4);
+                    }
+                </style>
+            </div>
+
+            <p id="waiter-login-error" style="color: #e74c3c; font-size: 0.85rem; font-weight: bold; margin-top: 10px; display: none;"></p>
+        </div>
+    </div>
+
+    <header class="bella-roma-hero" style="height: 90px; margin-bottom: 15px; position: relative;">
+        <div style="position: absolute; top: 10px; left: 12px; z-index: 10; display: flex; align-items: center; gap: 8px;">
+            <div id="waiter-session-badge" style="background: rgba(46, 204, 113, 0.25); color: #2ecc71; border: 1px solid #2ecc71; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-user-tie"></i> <span id="current-waiter-name">Ospătar</span>
+            </div>
+            <button onclick="window.logoutWaiter()" title="Ieșire din tură"
+                style="background: rgba(231, 76, 60, 0.25); color: #e74c3c; border: 1px solid #e74c3c; padding: 6px 10px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <i class="fas fa-sign-out-alt"></i> Ieșire
+            </button>
+        </div>
+
+        <div class="hero-overlay" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding-top: 15px;">
+            <h1 class="hero-title" style="font-size: 1.6rem; margin: 0; letter-spacing: 2px;">BELLA ROMA</h1>
+            <p class="hero-subtitle" style="font-size: 0.85rem; margin: 0; color: #f5b041; font-weight: bold;">
+                COMANDA RAPIDĂ MESE
             </p>
         </div>
     </header>

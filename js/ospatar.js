@@ -10,10 +10,18 @@ let currentPerson = "Masa";
 let currentTab = 'restaurant';
 let searchQuery = '';
 
+// Autentificare Ospătar Curent
+let currentWaiter = null;
+let selectedWaiterForLogin = null;
+let enteredPin = "";
+
 // Hartă pentru stocarea meselor ocupate și totalul lor curent
 let activeTableOrdersMap = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Verificăm autentificarea ospătarului (Start Tură)
+    await initWaiterAuth();
+
     // 1. Încărcăm meniul din Supabase
     await loadMenuProducts();
 
@@ -37,6 +45,163 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnSubmit.addEventListener('click', sendWaiterOrder);
     }
 });
+
+// ==========================================
+// AUTENTIFICARE OSPĂTAR (PIN PAD & TURĂ)
+// ==========================================
+
+async function initWaiterAuth() {
+    const saved = localStorage.getItem('active_waiter');
+    if (saved) {
+        try {
+            currentWaiter = JSON.parse(saved);
+            const overlay = document.getElementById('waiter-login-overlay');
+            if (overlay) overlay.style.display = 'none';
+            const nameEl = document.getElementById('current-waiter-name');
+            if (nameEl && currentWaiter.nume) nameEl.innerText = currentWaiter.nume;
+            return;
+        } catch (e) {
+            localStorage.removeItem('active_waiter');
+        }
+    }
+
+    // Nu e logat -> afișăm overlay-ul de login
+    const overlay = document.getElementById('waiter-login-overlay');
+    if (overlay) overlay.style.display = 'flex';
+    await loadWaitersForLogin();
+}
+
+async function loadWaitersForLogin() {
+    const container = document.getElementById('waiter-list-container');
+    if (!container) return;
+
+    container.innerHTML = '<p style="color: #94a3b8;"><i class="fas fa-spinner fa-spin"></i> Se încarcă echipa...</p>';
+
+    // Așteptăm ca funcțiile Supabase să fie disponibile
+    let attempts = 0;
+    while (typeof window.getOspatariList !== 'function' && attempts < 20) {
+        await new Promise(r => setTimeout(r, 150));
+        attempts++;
+    }
+
+    const list = typeof window.getOspatariList === 'function' ? await window.getOspatariList() : [];
+
+    if (list.length === 0) {
+        container.innerHTML = '<p style="color: #e74c3c;">Niciun ospătar activ găsit. Contactați administratorul.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+    list.forEach(w => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.style = 'background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; padding: 14px 18px; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s;';
+        btn.innerHTML = `<span><i class="fas fa-user-tie" style="color: #f5b041; margin-right: 10px;"></i> ${escapeHTML(w.nume)}</span> <i class="fas fa-chevron-right" style="color: #94a3b8; font-size: 0.9rem;"></i>`;
+        
+        btn.onclick = () => window.selectWaiterForPin(w);
+        container.appendChild(btn);
+    });
+}
+
+window.selectWaiterForPin = function(waiter) {
+    selectedWaiterForLogin = waiter;
+    enteredPin = "";
+    updatePinDots();
+
+    const err = document.getElementById('waiter-login-error');
+    if (err) err.style.display = 'none';
+
+    document.getElementById('waiter-step-select').style.display = 'none';
+    document.getElementById('waiter-step-pin').style.display = 'block';
+    
+    const display = document.getElementById('selected-waiter-name-display');
+    if (display) display.innerText = waiter.nume;
+};
+
+window.backToWaiterSelect = function() {
+    selectedWaiterForLogin = null;
+    enteredPin = "";
+    updatePinDots();
+
+    const err = document.getElementById('waiter-login-error');
+    if (err) err.style.display = 'none';
+
+    document.getElementById('waiter-step-pin').style.display = 'none';
+    document.getElementById('waiter-step-select').style.display = 'block';
+};
+
+window.pressPinKey = function(digit) {
+    if (enteredPin.length >= 4) return;
+    enteredPin += digit;
+    updatePinDots();
+
+    if (enteredPin.length === 4) {
+        setTimeout(() => window.submitWaiterPin(), 100);
+    }
+};
+
+window.clearPinKey = function() {
+    enteredPin = enteredPin.slice(0, -1);
+    updatePinDots();
+};
+
+function updatePinDots() {
+    for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (dot) {
+            if (i < enteredPin.length) {
+                dot.style.background = '#f5b041';
+                dot.style.transform = 'scale(1.25)';
+            } else {
+                dot.style.background = 'transparent';
+                dot.style.transform = 'scale(1)';
+            }
+        }
+    }
+}
+
+window.submitWaiterPin = async function() {
+    if (!selectedWaiterForLogin || enteredPin.length < 4) return;
+
+    const err = document.getElementById('waiter-login-error');
+    if (err) err.style.display = 'none';
+
+    const result = await window.verifyOspatarPin(selectedWaiterForLogin.id, enteredPin);
+
+    if (result.valid) {
+        currentWaiter = result.waiter;
+        localStorage.setItem('active_waiter', JSON.stringify(currentWaiter));
+        
+        const nameEl = document.getElementById('current-waiter-name');
+        if (nameEl) nameEl.innerText = currentWaiter.nume;
+
+        const overlay = document.getElementById('waiter-login-overlay');
+        if (overlay) overlay.style.display = 'none';
+
+        showNotification(`Bun venit, ${currentWaiter.nume}! Tură activă.`, 'fas fa-check-circle', '#2ecc71');
+    } else {
+        if (err) {
+            err.innerText = result.message || 'PIN incorect.';
+            err.style.display = 'block';
+        }
+        enteredPin = "";
+        updatePinDots();
+    }
+};
+
+window.logoutWaiter = function() {
+    if (confirm("Doriți să ieșiți din tura de ospătar?")) {
+        localStorage.removeItem('active_waiter');
+        currentWaiter = null;
+        selectedWaiterForLogin = null;
+        enteredPin = "";
+        
+        window.backToWaiterSelect();
+        const overlay = document.getElementById('waiter-login-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        loadWaitersForLogin();
+    }
+};
 
 window.setTab = function (tab) {
     currentTab = tab;
@@ -646,9 +811,10 @@ window.sendWaiterOrder = async function () {
 
     try {
         if (typeof window.sendOrderToDatabase === 'function') {
-            const placedOrder = await window.sendOrderToDatabase(selectedMasa, cart, total);
+            const waiterName = currentWaiter ? currentWaiter.nume : null;
+            const placedOrder = await window.sendOrderToDatabase(selectedMasa, cart, total, null, null, waiterName);
             if (placedOrder) {
-                showNotification(`Comandă trimisă cu succes pentru Masa ${selectedMasa}!`, "fas fa-check-circle", "#2ecc71");
+                showNotification(`Comandă trimisă de ${waiterName || 'Ospătar'} pentru Masa ${selectedMasa}!`, "fas fa-check-circle", "#2ecc71");
                 cart = [];
                 window.closeCartModal();
                 updateCartUI();
