@@ -45,6 +45,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnSubmit.addEventListener('click', sendWaiterOrder);
     }
 
+    const tableInput = document.getElementById('input-numar-masa');
+    if (tableInput) {
+        tableInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                window.confirmTableInput();
+            }
+        });
+    }
+
     // 5. Suport Tastatură Fizică (0-9, Numpad, Backspace, Enter, Esc) pentru PIN
     document.addEventListener('keydown', (e) => {
         const overlay = document.getElementById('waiter-login-overlay');
@@ -326,7 +336,8 @@ async function loadActiveTableStatus() {
             });
         });
 
-        renderTableChips();
+        renderProducts();
+        window.updateTableAndPersonUI();
     } catch (e) {
         console.error("Excepție verificare mese ocupate:", e);
     }
@@ -347,75 +358,80 @@ function subscribeToRealtimeTableStatus() {
     }
 }
 
-function renderTableChips() {
-    const container = document.getElementById('table-chips-grid');
-    if (!container) return;
+// ==========================================
+// GESTIUNE MASĂ & PERSOANE ACTIVE
+// ==========================================
 
-    let html = '';
-    // Mesele 1-12 în grid cu 3 coloane pe width
-    for (let i = 1; i <= 12; i++) {
-        const masaStr = String(i);
-        const isActive = (selectedMasa === masaStr);
-        const occupiedInfo = activeTableOrdersMap[masaStr];
-        const isOccupied = !!occupiedInfo;
-
-        let bg, color, border, shadow, statusText;
-
-        if (isOccupied) {
-            // Masă Ocupată
-            bg = isActive ? '#e67e22' : 'rgba(230, 126, 34, 0.25)';
-            color = isActive ? '#ffffff' : '#f39c12';
-            border = isActive ? '2px solid #e67e22' : '1px solid #e67e22';
-            shadow = isActive ? 'box-shadow: 0 0 15px rgba(230, 126, 34, 0.6);' : '';
-            statusText = `<br><small style="font-weight: 800; font-size: 0.8rem; color: ${isActive ? '#fff' : '#f5b041'};">🔴 Ocupată (${occupiedInfo.total.toFixed(0)} L)</small>`;
-        } else {
-            // Masă Liberă
-            bg = isActive ? '#2ecc71' : 'rgba(46, 204, 113, 0.15)';
-            color = isActive ? '#1e293b' : '#2ecc71';
-            border = isActive ? '2px solid #2ecc71' : '1px solid rgba(46, 204, 113, 0.4)';
-            shadow = isActive ? 'box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);' : '';
-            statusText = `<br><small style="font-size: 0.78rem; opacity: 0.9;">🟢 Liberă</small>`;
+window.toggleTableInputSection = function () {
+    const section = document.getElementById('table-input-section');
+    if (!section) return;
+    if (section.style.display === 'none' || section.style.display === '') {
+        section.style.display = 'block';
+        const input = document.getElementById('input-numar-masa');
+        if (input) {
+            input.value = selectedMasa;
+            setTimeout(() => input.focus(), 50);
         }
-
-        html += `
-            <button type="button" onclick="window.selectMasa('${masaStr}')"
-                style="padding: 12px 6px; border-radius: 12px; border: ${border}; background: ${bg}; color: ${color}; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; ${shadow} text-align: center;">
-                <i class="fas fa-utensils"></i> Masa ${i}${statusText}
-            </button>
-        `;
+    } else {
+        section.style.display = 'none';
     }
+};
 
-    // Buton masă personalizată
-    const isCustomActive = isNaN(selectedMasa) || parseInt(selectedMasa) > 12;
-    const customOccupied = activeTableOrdersMap[selectedMasa];
-    const customBg = isCustomActive ? '#f5b041' : 'rgba(245, 176, 65, 0.15)';
-    const customColor = isCustomActive ? '#1e293b' : '#f5b041';
+window.confirmTableInput = function () {
+    const input = document.getElementById('input-numar-masa');
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) {
+        showNotification("Introduceți un număr de masă.", "fas fa-exclamation-circle", "#f39c12");
+        return;
+    }
+    selectedMasa = val;
+    const section = document.getElementById('table-input-section');
+    if (section) section.style.display = 'none';
+    
+    window.updateTableAndPersonUI();
+    renderProducts();
+    showNotification(`Masa activă setată: Masa ${selectedMasa}`, "fas fa-utensils", "#2ecc71");
+};
 
-    html += `
-        <button type="button" onclick="window.customMasaPrompt()"
-            style="grid-column: span 3; padding: 14px; border-radius: 12px; border: 1px solid #f5b041; background: ${customBg}; color: ${customColor}; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-align: center;">
-            <i class="fas fa-edit"></i> ${isCustomActive ? 'Masa Selectată: ' + selectedMasa + (customOccupied ? ` (🔴 Ocupată ${customOccupied.total.toFixed(0)} Lei)` : ' (🟢 Liberă)') : '+ Altă Masă (Scrie Numărul)'}
-        </button>
-    `;
+window.setTableQuick = function (nr) {
+    selectedMasa = String(nr);
+    const section = document.getElementById('table-input-section');
+    if (section) section.style.display = 'none';
+    
+    window.updateTableAndPersonUI();
+    renderProducts();
+    showNotification(`Masa activă setată: Masa ${selectedMasa}`, "fas fa-utensils", "#2ecc71");
+};
 
-    container.innerHTML = html;
+window.selectMasa = function (masaStr) {
+    selectedMasa = String(masaStr);
+    window.updateTableAndPersonUI();
+    renderProducts();
+};
 
-    // Actualizăm etichetele și butonul de eliberare a mesei
-    const currentOccupied = activeTableOrdersMap[selectedMasa];
-    const badge = document.getElementById('ospatar-active-table-badge');
+window.updateTableAndPersonUI = function () {
+    // 1. Titlu Masă
+    const titleEl = document.getElementById('active-table-title');
+    if (titleEl) titleEl.innerText = `Masa ${selectedMasa}`;
+
+    // 2. Status Masă (Liberă vs Ocupată)
+    const cleanNr = String(selectedMasa).replace(/^masa\s*/i, '').trim();
+    const currentOccupied = activeTableOrdersMap[selectedMasa] || activeTableOrdersMap[cleanNr];
+    const statusBadge = document.getElementById('active-table-status-badge');
     const freeBtnContainer = document.getElementById('ospatar-free-table-btn-container');
 
-    if (badge) {
+    if (statusBadge) {
         if (currentOccupied) {
-            badge.style.background = '#e67e22';
-            badge.style.color = '#fff';
-            badge.style.boxShadow = '0 0 15px rgba(230, 126, 34, 0.5)';
-            badge.innerHTML = `🔴 Masa ${escapeHTML(selectedMasa)} (Ocupată - ${currentOccupied.total.toFixed(2)} Lei)`;
+            statusBadge.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+            statusBadge.style.color = '#fff';
+            statusBadge.style.boxShadow = '0 0 15px rgba(230, 126, 34, 0.6)';
+            statusBadge.innerHTML = `🔴 Ocupată (${currentOccupied.total.toFixed(2)} Lei)`;
         } else {
-            badge.style.background = '#2ecc71';
-            badge.style.color = '#1e293b';
-            badge.style.boxShadow = '0 0 15px rgba(46, 204, 113, 0.4)';
-            badge.innerHTML = `🟢 Masa ${escapeHTML(selectedMasa)} (Liberă)`;
+            statusBadge.style.background = '#2ecc71';
+            statusBadge.style.color = '#1e293b';
+            statusBadge.style.boxShadow = '0 0 12px rgba(46, 204, 113, 0.4)';
+            statusBadge.innerHTML = `🟢 Liberă`;
         }
     }
 
@@ -423,8 +439,8 @@ function renderTableChips() {
         if (currentOccupied) {
             freeBtnContainer.innerHTML = `
                 <button type="button" onclick="window.freeActiveTable('${escapeHTML(selectedMasa)}')"
-                    style="background: #e74c3c; color: white; border: none; padding: 7px 16px; border-radius: 14px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);">
-                    <i class="fas fa-broom"></i> Eliberează Masa ${escapeHTML(selectedMasa)}
+                    style="background: #e74c3c; color: white; border: none; padding: 7px 14px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);">
+                    <i class="fas fa-broom"></i> Eliberează Masa
                 </button>
             `;
         } else {
@@ -432,21 +448,73 @@ function renderTableChips() {
         }
     }
 
+    // 3. Calcul Număr Persoane Active la Masă
+    // Aflăm toate persoanele distincte care au comenzi în coșul curent
+    const cartPersons = [...new Set(cart.map(i => i.customer_name).filter(p => p && p !== 'Masa'))];
+    const hasMasaGeneral = cart.some(i => i.customer_name === 'Masa');
+
+    const personCountText = document.getElementById('table-person-count-text');
+    if (personCountText) {
+        if (cartPersons.length > 0) {
+            const count = cartPersons.length;
+            const label = count === 1 ? '1 Persoană la masă' : `${count} Persoane la masă`;
+            personCountText.innerHTML = `<b>${label}</b> (${cartPersons.join(', ')})${hasMasaGeneral ? ' + Împreună' : ''}`;
+        } else if (hasMasaGeneral) {
+            personCountText.innerHTML = `<b>Comandă Împreună (Masa)</b>`;
+        } else {
+            personCountText.innerHTML = `0 Persoane comandat`;
+        }
+    }
+
+    // 4. Actualizare Butoane Persoane (pastile)
+    const personLabel = document.getElementById('current-person-active-label');
+    if (personLabel) {
+        personLabel.innerText = `Selectat: ${currentPerson === 'Masa' ? 'Masa (Împreună)' : currentPerson}`;
+    }
+
+    document.querySelectorAll('.person-chip').forEach(btn => {
+        const pName = btn.dataset.person;
+        if (!pName) return;
+
+        // Numărăm preparatele adăugate pentru această persoană
+        const pQty = cart
+            .filter(item => item.customer_name === pName)
+            .reduce((sum, item) => sum + item.quantity, 0);
+
+        const isCurrent = (pName === currentPerson);
+
+        let icon = pName === 'Masa' ? '👥' : '👤';
+        let title = pName === 'Masa' ? 'Comandă Împreună (Masa)' : pName;
+        let badgeHtml = pQty > 0 ? ` <span style="background: rgba(0,0,0,0.4); color: #fff; padding: 2px 7px; border-radius: 10px; font-size: 0.78rem; margin-left: 4px;">${pQty}</span>` : '';
+
+        btn.innerHTML = `${icon} ${title}${badgeHtml}`;
+
+        if (isCurrent) {
+            btn.style.background = '#f5b041';
+            btn.style.color = '#1e293b';
+            btn.style.border = '1px solid #f5b041';
+            btn.style.fontWeight = 'bold';
+        } else if (pQty > 0) {
+            btn.style.background = 'rgba(46, 204, 113, 0.22)';
+            btn.style.color = '#2ecc71';
+            btn.style.border = '1px solid #2ecc71';
+            btn.style.fontWeight = 'bold';
+        } else {
+            btn.style.background = 'rgba(0,0,0,0.3)';
+            btn.style.color = 'white';
+            btn.style.border = '1px solid rgba(255,255,255,0.2)';
+            btn.style.fontWeight = '500';
+        }
+    });
+
     const tableDisplay = document.getElementById('cart-table-display');
     if (tableDisplay) tableDisplay.innerText = `Masa ${selectedMasa}`;
-}
-
-window.selectMasa = function (masaStr) {
-    selectedMasa = masaStr;
-    renderTableChips();
 };
 
-window.customMasaPrompt = function () {
-    const val = prompt("Introduceți numărul sau numele mesei (ex: 15, Terasa 2):", selectedMasa);
-    if (val && val.trim() !== '') {
-        selectedMasa = val.trim();
-        renderTableChips();
-    }
+window.selectPersonChip = function (btnElement, personValue) {
+    currentPerson = personValue;
+    window.updateTableAndPersonUI();
+    renderProducts();
 };
 
 window.freeActiveTable = async function (masaStr) {
@@ -494,24 +562,6 @@ window.freeActiveTable = async function (masaStr) {
     } catch (e) {
         console.error("Excepție eliberare masă:", e);
         showNotification("Eroare de rețea.", "fas fa-exclamation-triangle", "#e74c3c");
-    }
-};
-
-window.selectPersonChip = function (btnElement, personValue) {
-    currentPerson = personValue;
-
-    document.querySelectorAll('.person-chip').forEach(btn => {
-        btn.style.background = 'rgba(0,0,0,0.3)';
-        btn.style.color = 'white';
-        btn.style.border = '1px solid rgba(255,255,255,0.2)';
-        btn.style.fontWeight = '500';
-    });
-
-    if (btnElement) {
-        btnElement.style.background = '#f5b041';
-        btnElement.style.color = '#1e293b';
-        btnElement.style.border = '1px solid #f5b041';
-        btnElement.style.fontWeight = 'bold';
     }
 };
 
@@ -818,6 +868,9 @@ function updateCartUI() {
 
     if (totalEl) totalEl.innerText = total.toFixed(2);
     updateAllProductButtons();
+    if (typeof window.updateTableAndPersonUI === 'function') {
+        window.updateTableAndPersonUI();
+    }
 }
 
 function updateAllProductButtons() {
