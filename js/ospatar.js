@@ -160,6 +160,7 @@ async function initWaiterAuth() {
 
 window.switchWaiterAccount = function() {
     localStorage.removeItem('saved_waiter_name');
+    localStorage.removeItem('saved_waiter_pin');
     localStorage.removeItem('active_waiter');
     currentWaiter = null;
     enteredPin = "";
@@ -174,7 +175,10 @@ window.switchWaiterAccount = function() {
 
     const nameInput = document.getElementById('waiter-name-input');
     const pinInput = document.getElementById('waiter-pin-input');
-    if (nameInput) nameInput.value = '';
+    if (nameInput) {
+        nameInput.value = '';
+        setTimeout(() => nameInput.focus(), 50);
+    }
     if (pinInput) pinInput.value = '';
 };
 

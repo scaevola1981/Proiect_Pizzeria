@@ -318,12 +318,14 @@ window.loginOrCreateWaiterByName = async function (name, pin) {
     }
 
     try {
-        // 1. Căutăm ospătarul după nume
-        const { data, error } = await supabase
+        // 1. Căutăm ospătarul după nume (limit 1 pentru a evita eroarea PGRST116 la duplicate)
+        const { data: rows, error } = await supabase
             .from('ospatari')
             .select('*')
             .ilike('nume', cleanName)
-            .maybeSingle();
+            .limit(1);
+
+        const data = rows && rows.length > 0 ? rows[0] : null;
 
         if (data) {
             if (String(data.pin).trim() === cleanPin) {
@@ -331,7 +333,7 @@ window.loginOrCreateWaiterByName = async function (name, pin) {
                 localStorage.setItem('saved_waiter_pin', cleanPin);
                 return { success: true, waiter: { id: data.id, nume: data.nume } };
             } else {
-                return { success: false, message: 'PIN incorect pentru acest nume.' };
+                return { success: false, message: `PIN incorect pentru ${data.nume}. (Verificați în Admin sau introduceți PIN-ul corect).` };
             }
         } else {
             // 2. Nu există -> îl înregistrăm automat
@@ -356,6 +358,8 @@ window.loginOrCreateWaiterByName = async function (name, pin) {
         }
     } catch (e) {
         console.warn("Eroare verificare ospatar:", e);
+        localStorage.setItem('saved_waiter_name', cleanName);
+        localStorage.setItem('saved_waiter_pin', cleanPin);
         return { success: true, waiter: { id: Date.now(), nume: cleanName } };
     }
 };
@@ -367,15 +371,6 @@ window.verifyOspatarPin = async function (ospatarIdOrName, pin) {
     const cleanPin = String(pin).trim();
     const cleanName = String(ospatarIdOrName || '').trim();
 
-    // 1. Verificare rapidă în cache local (zero lag, funcționează și offline)
-    const localSavedName = localStorage.getItem('saved_waiter_name');
-    const localSavedPin = localStorage.getItem('saved_waiter_pin');
-    if (localSavedName && cleanName && localSavedName.toLowerCase() === cleanName.toLowerCase()) {
-        if (localSavedPin && localSavedPin === cleanPin) {
-            return { valid: true, waiter: { id: Date.now(), nume: localSavedName } };
-        }
-    }
-
     try {
         let query = supabase.from('ospatari').select('id, nume, pin, activ');
         
@@ -385,16 +380,24 @@ window.verifyOspatarPin = async function (ospatarIdOrName, pin) {
             query = query.ilike('nume', cleanName);
         }
 
-        const { data, error } = await query.maybeSingle();
+        const { data: rows, error } = await query.limit(1);
+        const data = rows && rows.length > 0 ? rows[0] : null;
 
         if (data) {
             if (String(data.pin).trim() === cleanPin) {
-                // Actualizăm cache-ul local cu noul PIN confirmat din DB
+                localStorage.setItem('saved_waiter_name', data.nume);
                 localStorage.setItem('saved_waiter_pin', cleanPin);
                 return { valid: true, waiter: { id: data.id, nume: data.nume } };
             } else {
                 return { valid: false, message: 'PIN incorect.' };
             }
+        }
+
+        // Verificare rapidă în cache local
+        const localSavedName = localStorage.getItem('saved_waiter_name');
+        const localSavedPin = localStorage.getItem('saved_waiter_pin');
+        if (localSavedName && cleanName && localSavedName.toLowerCase() === cleanName.toLowerCase() && localSavedPin === cleanPin) {
+            return { valid: true, waiter: { id: Date.now(), nume: localSavedName } };
         }
 
         // Verificare în lista implicită
@@ -404,6 +407,7 @@ window.verifyOspatarPin = async function (ospatarIdOrName, pin) {
         );
 
         if (defaultMatch && String(defaultMatch.pin) === cleanPin) {
+            localStorage.setItem('saved_waiter_name', defaultMatch.nume);
             localStorage.setItem('saved_waiter_pin', cleanPin);
             return { valid: true, waiter: { id: defaultMatch.id, nume: defaultMatch.nume } };
         }
@@ -411,7 +415,7 @@ window.verifyOspatarPin = async function (ospatarIdOrName, pin) {
         return { valid: false, message: 'PIN incorect.' };
     } catch (e) {
         console.error("Eroare verifyOspatarPin:", e);
-        // Dacă a picat rețeaua dar PIN-ul e validat local
+        const localSavedPin = localStorage.getItem('saved_waiter_pin');
         if (localSavedPin && localSavedPin === cleanPin) {
             return { valid: true, waiter: { id: Date.now(), nume: cleanName } };
         }
