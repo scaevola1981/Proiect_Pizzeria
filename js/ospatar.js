@@ -44,6 +44,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnSubmit) {
         btnSubmit.addEventListener('click', sendWaiterOrder);
     }
+
+    // 5. Suport Tastatură Fizică (0-9, Numpad, Backspace, Enter, Esc) pentru PIN
+    document.addEventListener('keydown', (e) => {
+        const overlay = document.getElementById('waiter-login-overlay');
+        const pinScreen = document.getElementById('waiter-remembered-pin-screen');
+        if (!overlay || overlay.style.display === 'none') return;
+        if (!pinScreen || pinScreen.style.display === 'none') return;
+
+        if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+            window.pressPinKey(e.key);
+        } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            window.clearPinKey();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            window.submitRememberedPin();
+        } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
+            e.preventDefault();
+            enteredPin = "";
+            updatePinDots();
+        }
+    });
 });
 
 // ==========================================

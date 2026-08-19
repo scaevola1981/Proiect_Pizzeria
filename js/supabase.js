@@ -327,6 +327,8 @@ window.loginOrCreateWaiterByName = async function (name, pin) {
 
         if (data) {
             if (String(data.pin).trim() === cleanPin) {
+                localStorage.setItem('saved_waiter_name', data.nume);
+                localStorage.setItem('saved_waiter_pin', cleanPin);
                 return { success: true, waiter: { id: data.id, nume: data.nume } };
             } else {
                 return { success: false, message: 'PIN incorect pentru acest nume.' };
@@ -340,12 +342,16 @@ window.loginOrCreateWaiterByName = async function (name, pin) {
                     .select();
 
                 if (newWaiter && newWaiter.length > 0) {
+                    localStorage.setItem('saved_waiter_name', newWaiter[0].nume);
+                    localStorage.setItem('saved_waiter_pin', cleanPin);
                     return { success: true, waiter: { id: newWaiter[0].id, nume: newWaiter[0].nume } };
                 }
             } catch (insErr) {
                 console.warn("Auto-creare ospatar avertizare:", insErr);
             }
 
+            localStorage.setItem('saved_waiter_name', cleanName);
+            localStorage.setItem('saved_waiter_pin', cleanPin);
             return { success: true, waiter: { id: Date.now(), nume: cleanName } };
         }
     } catch (e) {
@@ -359,19 +365,32 @@ window.loginOrCreateWaiterByName = async function (name, pin) {
  */
 window.verifyOspatarPin = async function (ospatarIdOrName, pin) {
     const cleanPin = String(pin).trim();
+    const cleanName = String(ospatarIdOrName || '').trim();
+
+    // 1. Verificare rapidă în cache local (zero lag, funcționează și offline)
+    const localSavedName = localStorage.getItem('saved_waiter_name');
+    const localSavedPin = localStorage.getItem('saved_waiter_pin');
+    if (localSavedName && cleanName && localSavedName.toLowerCase() === cleanName.toLowerCase()) {
+        if (localSavedPin && localSavedPin === cleanPin) {
+            return { valid: true, waiter: { id: Date.now(), nume: localSavedName } };
+        }
+    }
+
     try {
         let query = supabase.from('ospatari').select('id, nume, pin, activ');
         
-        if (typeof ospatarIdOrName === 'number' || !isNaN(Number(ospatarIdOrName))) {
+        if (typeof ospatarIdOrName === 'number' || (!isNaN(Number(ospatarIdOrName)) && String(ospatarIdOrName).length < 4)) {
             query = query.eq('id', Number(ospatarIdOrName));
         } else {
-            query = query.ilike('nume', String(ospatarIdOrName).trim());
+            query = query.ilike('nume', cleanName);
         }
 
         const { data, error } = await query.maybeSingle();
 
         if (data) {
             if (String(data.pin).trim() === cleanPin) {
+                // Actualizăm cache-ul local cu noul PIN confirmat din DB
+                localStorage.setItem('saved_waiter_pin', cleanPin);
                 return { valid: true, waiter: { id: data.id, nume: data.nume } };
             } else {
                 return { valid: false, message: 'PIN incorect.' };
@@ -381,16 +400,21 @@ window.verifyOspatarPin = async function (ospatarIdOrName, pin) {
         // Verificare în lista implicită
         const defaultMatch = DEFAULT_WAITERS.find(w => 
             String(w.id) === String(ospatarIdOrName) || 
-            w.nume.toLowerCase() === String(ospatarIdOrName).toLowerCase()
+            w.nume.toLowerCase() === cleanName.toLowerCase()
         );
 
         if (defaultMatch && String(defaultMatch.pin) === cleanPin) {
+            localStorage.setItem('saved_waiter_pin', cleanPin);
             return { valid: true, waiter: { id: defaultMatch.id, nume: defaultMatch.nume } };
         }
 
         return { valid: false, message: 'PIN incorect.' };
     } catch (e) {
         console.error("Eroare verifyOspatarPin:", e);
+        // Dacă a picat rețeaua dar PIN-ul e validat local
+        if (localSavedPin && localSavedPin === cleanPin) {
+            return { valid: true, waiter: { id: Date.now(), nume: cleanName } };
+        }
         return { valid: false, message: 'Eroare la verificare PIN.' };
     }
 };
