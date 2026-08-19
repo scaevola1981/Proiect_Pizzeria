@@ -237,11 +237,17 @@ window.renderOwnerOrders = function () {
 
         let buttonHtml = '';
         if (order.status === 'noua') {
-            buttonHtml = `<button class="modern-card-btn" style="background: #e67e22;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'in_preparare')"><i class="fas fa-check"></i> Acceptă Comanda</button>`;
+            buttonHtml = `
+                <button class="modern-card-btn" style="background: #e67e22;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'in_preparare')"><i class="fas fa-check"></i> Acceptă Comanda</button>
+                <button class="modern-card-btn" style="background: #c0392b; margin-top: 4px;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'finalizata')"><i class="fas fa-broom"></i> Închide & Eliberează Masa ${escapeHTML(String(order.numar_masa))}</button>
+            `;
         } else if (order.status === 'in_preparare') {
-            buttonHtml = `<button class="modern-card-btn success" style="background: #27ae60;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'servita')"><i class="fas fa-check-circle"></i> Comandă Printată (Marchează Servită)</button>`;
+            buttonHtml = `
+                <button class="modern-card-btn success" style="background: #27ae60;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'servita')"><i class="fas fa-check-circle"></i> Comandă Printată (Marchează Servită)</button>
+                <button class="modern-card-btn" style="background: #c0392b; margin-top: 4px;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'finalizata')"><i class="fas fa-broom"></i> Închide & Eliberează Masa ${escapeHTML(String(order.numar_masa))}</button>
+            `;
         } else if (order.status === 'servita') {
-            buttonHtml = `<button class="modern-card-btn success" style="background: #e74c3c;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'finalizata')"><i class="fas fa-broom"></i> Eliberează Masa ${escapeHTML(String(order.numar_masa))}</button>`;
+            buttonHtml = `<button class="modern-card-btn success" style="background: #e74c3c;" onclick="window.updateOrderStatus(${parseInt(order.id)}, 'finalizata')"><i class="fas fa-broom"></i> Închide & Eliberează Masa ${escapeHTML(String(order.numar_masa))}</button>`;
         }
 
         const printBtnText = order.status === 'noua' ? 'Printează Bon' : 'Retipărește Bon';

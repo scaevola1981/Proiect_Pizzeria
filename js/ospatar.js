@@ -411,21 +411,7 @@ window.updateTableAndPersonUI = function () {
         } else {
             statusEl.style.background = '#2ecc71';
             statusEl.style.color = '#1e293b';
-            statusEl.style.boxShadow = '0 2px 10px rgba(46, 204, 113, 0.35)';
-            statusEl.innerHTML = `🟢 Liberă`;
-        }
-    }
-
-    if (freeBtnContainer) {
-        if (currentOccupied) {
-            freeBtnContainer.innerHTML = `
-                <button type="button" onclick="window.freeActiveTable('${escapeHTML(selectedMasa)}')"
-                    style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.35);">
-                    <i class="fas fa-broom"></i> Eliberează Masa ${escapeHTML(selectedMasa)}
-                </button>
-            `;
-        } else {
-            freeBtnContainer.innerHTML = '';
+                statusEl.innerHTML = `🟢 Liberă`;
         }
     }
 
@@ -506,54 +492,6 @@ window.selectPersonChip = function (btnElement, personValue) {
     currentPerson = personValue;
     window.updateTableAndPersonUI();
     renderProducts();
-};
-
-window.freeActiveTable = async function (masaStr) {
-    if (!confirm(`Sunteți sigur că Masa ${masaStr} a fost eliberată și clienții au plecat?\nMasa va deveni LIBERĂ.`)) {
-        return;
-    }
-
-    if (!window.supabaseClient) return;
-
-    try {
-        const targetClean = String(masaStr).replace(/[^0-9a-zA-Z]/g, '').replace(/^masa/i, '').trim();
-
-        // Găsim toate comenzile nefinalizate pentru această masă
-        const { data: activeOrders } = await window.supabaseClient
-            .from('comenzi')
-            .select('id, numar_masa')
-            .neq('status', 'finalizata');
-
-        if (activeOrders && activeOrders.length > 0) {
-            const idsToFree = activeOrders.filter(o => {
-                const oMasaClean = String(o.numar_masa || '').replace(/[^0-9a-zA-Z]/g, '').replace(/^masa/i, '').trim();
-                return oMasaClean === targetClean || String(o.numar_masa) === String(masaStr);
-            }).map(o => o.id);
-
-            if (idsToFree.length > 0) {
-                const { error } = await window.supabaseClient
-                    .from('comenzi')
-                    .update({ status: 'finalizata' })
-                    .in('id', idsToFree);
-
-                if (error) {
-                    console.error("Eroare la eliberarea mesei:", error);
-                    showNotification("Eroare la eliberarea mesei: " + error.message, "fas fa-exclamation-triangle", "#e74c3c");
-                    return;
-                }
-            }
-        }
-
-        // Ștergem din harta locală imediat
-        delete activeTableOrdersMap[masaStr];
-        delete activeTableOrdersMap[targetClean];
-
-        showNotification(`🧹 Masa ${masaStr} a fost eliberată cu succes!`, "fas fa-check-circle", "#2ecc71");
-        await loadActiveTableStatus();
-    } catch (e) {
-        console.error("Excepție eliberare masă:", e);
-        showNotification("Eroare de rețea.", "fas fa-exclamation-triangle", "#e74c3c");
-    }
 };
 
 async function loadMenuProducts() {
