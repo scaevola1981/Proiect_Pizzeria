@@ -127,31 +127,31 @@
         </div>
     </header>
 
-    <!-- Panou Compact Masă & Persoane (Ultra-subțire, economisește spațiu) -->
+    <!-- Panou Compact Masă & Persoane -->
     <div class="glass-panel" style="margin-bottom: 15px; padding: 12px 16px; border-radius: 16px;">
         
-        <!-- Rândul 1: Masă + Status + Persoane Comandate (Toate aliniate pe o singură linie compactă!) -->
+        <!-- Rândul 1: Masă Input + Pilule Mese Active + Contor Persoane -->
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
             
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1;">
                 <!-- Căsuță Masă -->
                 <div style="display: flex; align-items: center; background: rgba(0,0,0,0.5); border: 1.5px solid #f5b041; border-radius: 10px; padding: 4px 10px;">
                     <label for="input-numar-masa" style="color: #f5b041; font-weight: bold; font-size: 0.95rem; margin-right: 6px; display: flex; align-items: center; gap: 5px; white-space: nowrap;">
                         <i class="fas fa-utensils"></i> Masă:
                     </label>
                     <input type="text" id="input-numar-masa" class="modern-input" value="1" placeholder="Nr"
-                        style="width: 70px; font-size: 1.2rem; font-weight: 900; text-align: center; padding: 2px 4px; border: none; background: transparent; color: #fff;"
+                        style="width: 60px; font-size: 1.2rem; font-weight: 900; text-align: center; padding: 2px 4px; border: none; background: transparent; color: #fff;"
                         maxlength="15" oninput="window.onTableInputChanged(this.value)">
                 </div>
 
-                <!-- Badge Status Masă (Compact) -->
-                <div id="table-visual-status" style="background: #2ecc71; color: #1e293b; padding: 6px 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(46, 204, 113, 0.35); transition: all 0.3s;">
-                    🟢 Liberă
+                <!-- Pilule Dinamice pentru Mesele Active / Selectate (Stil Foto 2) -->
+                <div id="active-tables-pills-container" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <!-- Generat dinamic: [🍽️ Masa 1] [🍽️ Masa 3] [🍽️ Masa 7] -->
                 </div>
 
-                <!-- Badge Persoane care au comandat (Compact) -->
-                <div id="table-visual-persons" style="background: rgba(245, 176, 65, 0.15); color: #f5b041; border: 1px solid rgba(245, 176, 65, 0.35); padding: 6px 14px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
-                    <i class="fas fa-users"></i> <span id="table-person-count-text">0 Persoane au comandat</span>
+                <!-- Badge Persoane care au comandat (pentru masa curentă) -->
+                <div id="table-visual-persons" style="background: rgba(245, 176, 65, 0.15); color: #f5b041; border: 1px solid rgba(245, 176, 65, 0.35); padding: 6px 14px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; margin-left: auto;">
+                    <i class="fas fa-users"></i> <span id="table-person-count-text">0 Pers. au comandat</span>
                 </div>
             </div>
         </div>

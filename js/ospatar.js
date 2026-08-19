@@ -396,23 +396,69 @@ window.updateTableAndPersonUI = function () {
         inp.value = selectedMasa;
     }
 
-    // 2. Status Masă (Liberă vs Ocupată)
-    const cleanNr = String(selectedMasa).replace(/^masa\s*/i, '').trim();
-    const currentOccupied = activeTableOrdersMap[selectedMasa] || activeTableOrdersMap[cleanNr];
-    const statusEl = document.getElementById('table-visual-status');
-    const freeBtnContainer = document.getElementById('ospatar-free-table-btn-container');
+    const currentClean = String(selectedMasa).replace(/^masa\s*/i, '').trim() || "1";
+    const currentOccupied = activeTableOrdersMap[selectedMasa] || activeTableOrdersMap[currentClean];
 
-    if (statusEl) {
-        if (currentOccupied) {
-            statusEl.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
-            statusEl.style.color = '#ffffff';
-            statusEl.style.boxShadow = '0 2px 10px rgba(230, 126, 34, 0.45)';
-            statusEl.innerHTML = `🔴 Ocupată (${currentOccupied.total.toFixed(2)} Lei)`;
-        } else {
-            statusEl.style.background = '#2ecc71';
-            statusEl.style.color = '#1e293b';
-                statusEl.innerHTML = `🟢 Liberă`;
-        }
+    // 2. Generăm Pilulele pentru Mese Active / Selectate (Stil Foto 2: Fără cuvântul "OCUPATĂ", fără preț)
+    const pillsContainer = document.getElementById('active-tables-pills-container');
+    if (pillsContainer) {
+        // Obținem toate mesele care au comenzi active în sistem
+        const activeTableKeys = Object.keys(activeTableOrdersMap)
+            .map(k => String(k).replace(/^masa\s*/i, '').trim())
+            .filter(k => k !== '');
+
+        const allVisibleTables = Array.from(new Set([currentClean, ...activeTableKeys]))
+            .filter(Boolean)
+            .sort((a, b) => {
+                const na = parseInt(a), nb = parseInt(b);
+                if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                return a.localeCompare(b);
+            });
+
+        let pillsHtml = '';
+        allVisibleTables.forEach(t => {
+            const isSelected = (String(t) === currentClean);
+            const isOccupied = !!(activeTableOrdersMap[t] || activeTableOrdersMap[`Masa ${t}`]);
+
+            let bg, color, border, shadow;
+
+            if (isOccupied) {
+                // Masă cu comenzi active (Portocaliu)
+                if (isSelected) {
+                    bg = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+                    color = '#ffffff';
+                    border = '2px solid #f39c12';
+                    shadow = 'box-shadow: 0 0 12px rgba(230, 126, 34, 0.6);';
+                } else {
+                    bg = 'rgba(230, 126, 34, 0.25)';
+                    color = '#f39c12';
+                    border = '1px solid #e67e22';
+                    shadow = '';
+                }
+            } else {
+                // Masă Liberă (Verde)
+                if (isSelected) {
+                    bg = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+                    color = '#1e293b';
+                    border = '2px solid #27ae60';
+                    shadow = 'box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);';
+                } else {
+                    bg = 'rgba(46, 204, 113, 0.15)';
+                    color = '#2ecc71';
+                    border = '1px solid rgba(46, 204, 113, 0.4)';
+                    shadow = '';
+                }
+            }
+
+            pillsHtml += `
+                <button type="button" class="table-pill-chip" onclick="window.selectMasa('${escapeHTML(t)}')"
+                    style="background: ${bg}; color: ${color}; border: ${border}; ${shadow}">
+                    <i class="fas fa-utensils"></i> Masa ${escapeHTML(t)}
+                </button>
+            `;
+        });
+
+        pillsContainer.innerHTML = pillsHtml;
     }
 
     // 3. Calcul Număr Persoane care au comandat la această masă (din DB + Coș curent)
