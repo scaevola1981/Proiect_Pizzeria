@@ -226,15 +226,31 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
             orderData.ospatar_nume = existingOrder.ospatar_nume;
         }
 
-        const { data, error } = await supabase
+        let { data, error } = await supabase
             .from('comenzi')
             .update(orderData)
             .eq('id', existingOrder.id)
             .select();
             
         if (error) {
-            console.error("Eroare la suplimentare comandă:", error);
-            return null;
+            console.warn("Avertizare update comanda cu coloane opționale:", error.message || error);
+            // Încercăm fallback curat doar cu coloanele de bază garantate
+            const fallbackData = {
+                numar_masa: String(masa),
+                status: 'noua',
+                detalii_comanda: newDetails,
+                total: newTotal
+            };
+            const retry = await supabase
+                .from('comenzi')
+                .update(fallbackData)
+                .eq('id', existingOrder.id)
+                .select();
+            if (retry.error) {
+                console.error("Eroare la suplimentare comandă (fallback):", retry.error);
+                return null;
+            }
+            return retry.data[0];
         }
         return data[0];
 
@@ -243,14 +259,29 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
         orderData.detalii_comanda = cartWithFlags;
         orderData.total = total;
 
-        const { data, error } = await supabase
+        let { data, error } = await supabase
             .from('comenzi')
             .insert([orderData])
             .select();
             
         if (error) {
-            console.error("Eroare la inserare:", error);
-            return null;
+            console.warn("Avertizare inserare comanda cu coloane opționale:", error.message || error);
+            // Încercăm fallback curat doar cu coloanele de bază garantate
+            const fallbackData = {
+                numar_masa: String(masa),
+                status: 'noua',
+                detalii_comanda: cartWithFlags,
+                total: total
+            };
+            const retry = await supabase
+                .from('comenzi')
+                .insert([fallbackData])
+                .select();
+            if (retry.error) {
+                console.error("Eroare la inserare (fallback):", retry.error);
+                return null;
+            }
+            return retry.data[0];
         }
         return data[0];
     }

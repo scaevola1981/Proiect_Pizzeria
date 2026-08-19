@@ -159,9 +159,9 @@
             <div id="ospatar-free-table-btn-container"></div>
         </div>
 
-        <!-- Rândul 2: Selector Rapid Persoane (Flex-wrap complet vizibil) -->
-        <div id="person-chips-container" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%;">
-            <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')">
+        <!-- Rândul 2: Selector Rapid Persoane (Grid modern, compact) -->
+        <div id="person-chips-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px; width: 100%;">
+            <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')" style="grid-column: 1 / -1; padding: 9px 14px;">
                 👥 Împreună (Masa)
             </button>
             <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')">
@@ -192,21 +192,20 @@
 
         <style>
             .person-chip {
-                padding: 8px 14px !important;
-                border-radius: 10px !important;
-                border: 1px solid rgba(255,255,255,0.25);
-                background: rgba(0,0,0,0.4);
+                padding: 8px 10px;
+                border-radius: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                background: rgba(0, 0, 0, 0.4);
                 color: white;
                 font-weight: 700;
-                font-size: 0.9rem;
+                font-size: 0.88rem;
                 cursor: pointer;
                 transition: all 0.2s;
-                display: inline-flex !important;
+                display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 6px;
-                white-space: nowrap;
-                flex: 0 0 auto !important;
+                gap: 5px;
+                text-align: center;
             }
             .person-chip:hover {
                 background: rgba(245, 176, 65, 0.25);
