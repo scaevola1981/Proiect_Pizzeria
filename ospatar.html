@@ -127,88 +127,86 @@
         </div>
     </header>
 
-    <!-- Selector Modern Masă + Card Automat (Foto Stil 2) -->
-    <div class="glass-panel" style="margin-bottom: 20px; padding: 18px;">
+    <!-- Panou Compact Masă & Persoane (Ultra-subțire, economisește spațiu) -->
+    <div class="glass-panel" style="margin-bottom: 15px; padding: 12px 16px; border-radius: 16px;">
         
-        <!-- Rând Input Număr Masă -->
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
-            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px;">
-                <label for="input-numar-masa" style="color: #f5b041; font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
-                    <i class="fas fa-edit"></i> Număr Masă:
-                </label>
-                <input type="text" id="input-numar-masa" class="modern-input" value="1" placeholder="ex: 1, 2, 5, 14..."
-                    style="max-width: 140px; font-size: 1.25rem; font-weight: 900; text-align: center; padding: 8px 12px; border: 2px solid #f5b041; background: rgba(0,0,0,0.5); color: #fff; border-radius: 10px;"
-                    maxlength="20" oninput="window.onTableInputChanged(this.value)">
-            </div>
+        <!-- Rândul 1: Masă + Status + Persoane Comandate (Toate aliniate pe o singură linie compactă!) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
             
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <!-- Căsuță Masă -->
+                <div style="display: flex; align-items: center; background: rgba(0,0,0,0.5); border: 1.5px solid #f5b041; border-radius: 10px; padding: 4px 10px;">
+                    <label for="input-numar-masa" style="color: #f5b041; font-weight: bold; font-size: 0.95rem; margin-right: 6px; display: flex; align-items: center; gap: 5px; white-space: nowrap;">
+                        <i class="fas fa-utensils"></i> Masă:
+                    </label>
+                    <input type="text" id="input-numar-masa" class="modern-input" value="1" placeholder="Nr"
+                        style="width: 70px; font-size: 1.2rem; font-weight: 900; text-align: center; padding: 2px 4px; border: none; background: transparent; color: #fff;"
+                        maxlength="15" oninput="window.onTableInputChanged(this.value)">
+                </div>
+
+                <!-- Badge Status Masă (Compact) -->
+                <div id="table-visual-status" style="background: #2ecc71; color: #1e293b; padding: 6px 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(46, 204, 113, 0.35); transition: all 0.3s;">
+                    🟢 Liberă
+                </div>
+
+                <!-- Badge Persoane care au comandat (Compact) -->
+                <div id="table-visual-persons" style="background: rgba(245, 176, 65, 0.15); color: #f5b041; border: 1px solid rgba(245, 176, 65, 0.35); padding: 6px 14px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-users"></i> <span id="table-person-count-text">0 Persoane au comandat</span>
+                </div>
+            </div>
+
+            <!-- Buton Eliberare Masă (dacă e ocupată) -->
             <div id="ospatar-free-table-btn-container"></div>
         </div>
 
-        <!-- Cardul Vizual al Mesei (Stilul dreptunghiular mare din poza 2) -->
-        <div id="table-visual-card"
-            style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #1e293b; border-radius: 14px; padding: 16px 20px; text-align: center; box-shadow: 0 4px 18px rgba(46, 204, 113, 0.35); transition: all 0.3s; margin-bottom: 16px;">
-            <div id="table-visual-name" style="font-size: 1.45rem; font-weight: 900; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <i class="fas fa-utensils"></i> Masa 1
-            </div>
-            <div id="table-visual-status" style="font-size: 1rem; font-weight: 800; margin-top: 4px;">
-                🟢 Liberă
-            </div>
-            <div id="table-visual-persons" style="margin-top: 8px; font-size: 0.9rem; font-weight: 700; background: rgba(0, 0, 0, 0.18); color: #ffffff; padding: 4px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fas fa-users"></i> <span id="table-person-count-text">0 Persoane la masă</span>
-            </div>
-        </div>
-
-        <!-- Pasul 2: Adaugi preparatele pentru (Persoană) -->
-        <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <label style="color: #f5b041; font-size: 0.95rem; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-user-friends"></i> Adaugi preparatele pentru:
-                </label>
-                <span id="current-person-active-label" style="color: #2ecc71; font-weight: bold; font-size: 0.88rem;">Selectat: Masa (Împreună)</span>
-            </div>
-
-            <!-- Pastile Persoane -->
-            <div id="person-chips-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; width: 100%;">
-                <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
-                    style="grid-column: 1 / -1; padding: 10px; border-radius: 10px; border: 1px solid #f5b041; background: #f5b041; color: #1e293b; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    👥 Comandă Împreună (Masa)
-                </button>
-                <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')">
-                    👤 Persoana 1
-                </button>
-                <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')">
-                    👤 Persoana 2
-                </button>
-                <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')">
-                    👤 Persoana 3
-                </button>
-                <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')">
-                    👤 Persoana 4
-                </button>
-                <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')">
-                    👤 Persoana 5
-                </button>
-                <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')">
-                    👤 Persoana 6
-                </button>
-            </div>
+        <!-- Rândul 2: Selector Rapid Persoane (Subțire, orizontal pe un singur rând) -->
+        <div style="display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none;">
+            <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
+                style="padding: 8px 14px; border-radius: 8px; border: 1px solid #f5b041; background: #f5b041; color: #1e293b; font-weight: bold; font-size: 0.88rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+                👥 Împreună (Masa)
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')">
+                👤 Pers. 1
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')">
+                👤 Pers. 2
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')">
+                👤 Pers. 3
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')">
+                👤 Pers. 4
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')">
+                👤 Pers. 5
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')">
+                👤 Pers. 6
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 7" onclick="window.selectPersonChip(this, 'Persoana 7')">
+                👤 Pers. 7
+            </button>
+            <button type="button" class="person-chip" data-person="Persoana 8" onclick="window.selectPersonChip(this, 'Persoana 8')">
+                👤 Pers. 8
+            </button>
         </div>
 
         <style>
             .person-chip {
-                padding: 10px 8px;
-                border-radius: 10px;
+                padding: 8px 12px;
+                border-radius: 8px;
                 border: 1px solid rgba(255,255,255,0.2);
-                background: rgba(0,0,0,0.3);
+                background: rgba(0,0,0,0.35);
                 color: white;
-                font-weight: 500;
-                font-size: 0.9rem;
+                font-weight: 600;
+                font-size: 0.88rem;
                 cursor: pointer;
                 transition: all 0.2s;
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                gap: 6px;
+                gap: 5px;
+                white-space: nowrap;
+                flex-shrink: 0;
             }
         </style>
     </div>
