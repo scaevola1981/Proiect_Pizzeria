@@ -51,83 +51,108 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ==========================================
 
 async function initWaiterAuth() {
-    const saved = localStorage.getItem('active_waiter');
-    if (saved) {
+    const active = localStorage.getItem('active_waiter');
+    const savedName = localStorage.getItem('saved_waiter_name');
+
+    const overlay = document.getElementById('waiter-login-overlay');
+    const firstForm = document.getElementById('waiter-first-login-form');
+    const pinScreen = document.getElementById('waiter-remembered-pin-screen');
+    const remNameDisplay = document.getElementById('remembered-waiter-name');
+    const headerName = document.getElementById('current-waiter-name');
+
+    if (active) {
         try {
-            currentWaiter = JSON.parse(saved);
-            const overlay = document.getElementById('waiter-login-overlay');
+            currentWaiter = JSON.parse(active);
             if (overlay) overlay.style.display = 'none';
-            const nameEl = document.getElementById('current-waiter-name');
-            if (nameEl && currentWaiter.nume) nameEl.innerText = currentWaiter.nume;
+            if (headerName && currentWaiter.nume) headerName.innerText = currentWaiter.nume;
             return;
         } catch (e) {
             localStorage.removeItem('active_waiter');
         }
     }
 
-    // Nu e logat -> afișăm overlay-ul de login
-    const overlay = document.getElementById('waiter-login-overlay');
     if (overlay) overlay.style.display = 'flex';
-    await loadWaitersForLogin();
-}
 
-async function loadWaitersForLogin() {
-    const container = document.getElementById('waiter-list-container');
-    if (!container) return;
-
-    container.innerHTML = '<p style="color: #94a3b8;"><i class="fas fa-spinner fa-spin"></i> Se încarcă echipa...</p>';
-
-    // Așteptăm ca funcțiile Supabase să fie disponibile
-    let attempts = 0;
-    while (typeof window.getOspatariList !== 'function' && attempts < 20) {
-        await new Promise(r => setTimeout(r, 150));
-        attempts++;
+    if (savedName) {
+        // Dispozitivul știe deja ospătarul -> arată direct ecranul de PIN
+        if (firstForm) firstForm.style.display = 'none';
+        if (pinScreen) pinScreen.style.display = 'block';
+        if (remNameDisplay) remNameDisplay.innerText = savedName;
+        enteredPin = "";
+        updatePinDots();
+    } else {
+        // Prima oară pe acest telefon/tabletă -> cere Nume + PIN
+        if (firstForm) firstForm.style.display = 'block';
+        if (pinScreen) pinScreen.style.display = 'none';
     }
 
-    const list = typeof window.getOspatariList === 'function' ? await window.getOspatariList() : [];
+    // Atașăm handler pe formularul inițial
+    if (firstForm && !firstForm.dataset.listenerAttached) {
+        firstForm.dataset.listenerAttached = "true";
+        firstForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('waiter-name-input').value.trim();
+            const pin = document.getElementById('waiter-pin-input').value.trim();
+            const err = document.getElementById('waiter-login-error');
+            if (err) err.style.display = 'none';
 
-    if (list.length === 0) {
-        container.innerHTML = '<p style="color: #e74c3c;">Niciun ospătar activ găsit. Contactați administratorul.</p>';
-        return;
+            if (!name || pin.length < 4) {
+                if (err) {
+                    err.innerText = "Completați numele și un PIN de 4 cifre.";
+                    err.style.display = 'block';
+                }
+                return;
+            }
+
+            const btn = document.getElementById('btn-start-first-shift');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Se autentifică...';
+            }
+
+            const res = await window.loginOrCreateWaiterByName(name, pin);
+
+            if (res.success) {
+                currentWaiter = res.waiter || { nume: name };
+                localStorage.setItem('saved_waiter_name', name);
+                localStorage.setItem('active_waiter', JSON.stringify(currentWaiter));
+
+                if (headerName) headerName.innerText = currentWaiter.nume;
+                if (overlay) overlay.style.display = 'none';
+                showNotification(`Bun venit, ${currentWaiter.nume}! Tură activă.`, 'fas fa-check-circle', '#2ecc71');
+            } else {
+                if (err) {
+                    err.innerText = res.message || "PIN incorect.";
+                    err.style.display = 'block';
+                }
+            }
+
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Intră în Tură';
+            }
+        });
     }
-
-    container.innerHTML = '';
-    list.forEach(w => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.style = 'background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; padding: 14px 18px; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s;';
-        btn.innerHTML = `<span><i class="fas fa-user-tie" style="color: #f5b041; margin-right: 10px;"></i> ${escapeHTML(w.nume)}</span> <i class="fas fa-chevron-right" style="color: #94a3b8; font-size: 0.9rem;"></i>`;
-        
-        btn.onclick = () => window.selectWaiterForPin(w);
-        container.appendChild(btn);
-    });
 }
 
-window.selectWaiterForPin = function(waiter) {
-    selectedWaiterForLogin = waiter;
+window.switchWaiterAccount = function() {
+    localStorage.removeItem('saved_waiter_name');
+    localStorage.removeItem('active_waiter');
+    currentWaiter = null;
     enteredPin = "";
-    updatePinDots();
 
+    const firstForm = document.getElementById('waiter-first-login-form');
+    const pinScreen = document.getElementById('waiter-remembered-pin-screen');
     const err = document.getElementById('waiter-login-error');
+
     if (err) err.style.display = 'none';
+    if (firstForm) firstForm.style.display = 'block';
+    if (pinScreen) pinScreen.style.display = 'none';
 
-    document.getElementById('waiter-step-select').style.display = 'none';
-    document.getElementById('waiter-step-pin').style.display = 'block';
-    
-    const display = document.getElementById('selected-waiter-name-display');
-    if (display) display.innerText = waiter.nume;
-};
-
-window.backToWaiterSelect = function() {
-    selectedWaiterForLogin = null;
-    enteredPin = "";
-    updatePinDots();
-
-    const err = document.getElementById('waiter-login-error');
-    if (err) err.style.display = 'none';
-
-    document.getElementById('waiter-step-pin').style.display = 'none';
-    document.getElementById('waiter-step-select').style.display = 'block';
+    const nameInput = document.getElementById('waiter-name-input');
+    const pinInput = document.getElementById('waiter-pin-input');
+    if (nameInput) nameInput.value = '';
+    if (pinInput) pinInput.value = '';
 };
 
 window.pressPinKey = function(digit) {
@@ -136,7 +161,7 @@ window.pressPinKey = function(digit) {
     updatePinDots();
 
     if (enteredPin.length === 4) {
-        setTimeout(() => window.submitWaiterPin(), 100);
+        setTimeout(() => window.submitRememberedPin(), 100);
     }
 };
 
@@ -160,16 +185,17 @@ function updatePinDots() {
     }
 }
 
-window.submitWaiterPin = async function() {
-    if (!selectedWaiterForLogin || enteredPin.length < 4) return;
+window.submitRememberedPin = async function() {
+    const savedName = localStorage.getItem('saved_waiter_name');
+    if (!savedName || enteredPin.length < 4) return;
 
     const err = document.getElementById('waiter-login-error');
     if (err) err.style.display = 'none';
 
-    const result = await window.verifyOspatarPin(selectedWaiterForLogin.id, enteredPin);
+    const result = await window.verifyOspatarPin(savedName, enteredPin);
 
     if (result.valid) {
-        currentWaiter = result.waiter;
+        currentWaiter = result.waiter || { nume: savedName };
         localStorage.setItem('active_waiter', JSON.stringify(currentWaiter));
         
         const nameEl = document.getElementById('current-waiter-name');
@@ -193,13 +219,9 @@ window.logoutWaiter = function() {
     if (confirm("Doriți să ieșiți din tura de ospătar?")) {
         localStorage.removeItem('active_waiter');
         currentWaiter = null;
-        selectedWaiterForLogin = null;
         enteredPin = "";
         
-        window.backToWaiterSelect();
-        const overlay = document.getElementById('waiter-login-overlay');
-        if (overlay) overlay.style.display = 'flex';
-        loadWaitersForLogin();
+        initWaiterAuth();
     }
 };
 

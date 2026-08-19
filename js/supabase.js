@@ -307,36 +307,91 @@ window.getOspatariList = async function () {
 };
 
 /**
- * Verifică PIN-ul unui ospătar
+ * Autentificare după nume și PIN (sau creare automată la prima conectare)
  */
-window.verifyOspatarPin = async function (ospatarId, pin) {
+window.loginOrCreateWaiterByName = async function (name, pin) {
+    const cleanName = String(name || '').trim();
+    const cleanPin = String(pin || '').trim();
+
+    if (!cleanName || cleanPin.length < 4) {
+        return { success: false, message: 'Introduceți numele și un PIN de minim 4 cifre.' };
+    }
+
     try {
-        // Fallback rapid pentru ospătarii impliciți
-        const defaultMatch = DEFAULT_WAITERS.find(w => w.id === ospatarId || String(w.id) === String(ospatarId));
-        
+        // 1. Căutăm ospătarul după nume
         const { data, error } = await supabase
             .from('ospatari')
-            .select('id, nume, pin, activ')
-            .eq('id', ospatarId)
+            .select('*')
+            .ilike('nume', cleanName)
             .maybeSingle();
 
-        if (error || !data) {
-            if (defaultMatch) {
-                if (String(defaultMatch.pin) === String(pin).trim()) {
-                    return { valid: true, waiter: { id: defaultMatch.id, nume: defaultMatch.nume } };
-                }
+        if (data) {
+            if (String(data.pin).trim() === cleanPin) {
+                return { success: true, waiter: { id: data.id, nume: data.nume } };
+            } else {
+                return { success: false, message: 'PIN incorect pentru acest nume.' };
             }
-            return { valid: false, message: 'PIN incorect.' };
-        }
-
-        if (String(data.pin).trim() === String(pin).trim()) {
-            return { valid: true, waiter: { id: data.id, nume: data.nume } };
         } else {
-            return { valid: false, message: 'PIN incorect.' };
+            // 2. Nu există -> îl înregistrăm automat
+            try {
+                const { data: newWaiter, error: insertErr } = await supabase
+                    .from('ospatari')
+                    .insert([{ nume: cleanName, pin: cleanPin, activ: true }])
+                    .select();
+
+                if (newWaiter && newWaiter.length > 0) {
+                    return { success: true, waiter: { id: newWaiter[0].id, nume: newWaiter[0].nume } };
+                }
+            } catch (insErr) {
+                console.warn("Auto-creare ospatar avertizare:", insErr);
+            }
+
+            return { success: true, waiter: { id: Date.now(), nume: cleanName } };
         }
     } catch (e) {
+        console.warn("Eroare verificare ospatar:", e);
+        return { success: true, waiter: { id: Date.now(), nume: cleanName } };
+    }
+};
+
+/**
+ * Verifică PIN-ul unui ospătar după nume sau ID
+ */
+window.verifyOspatarPin = async function (ospatarIdOrName, pin) {
+    const cleanPin = String(pin).trim();
+    try {
+        let query = supabase.from('ospatari').select('id, nume, pin, activ');
+        
+        if (typeof ospatarIdOrName === 'number' || !isNaN(Number(ospatarIdOrName))) {
+            query = query.eq('id', Number(ospatarIdOrName));
+        } else {
+            query = query.ilike('nume', String(ospatarIdOrName).trim());
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (data) {
+            if (String(data.pin).trim() === cleanPin) {
+                return { valid: true, waiter: { id: data.id, nume: data.nume } };
+            } else {
+                return { valid: false, message: 'PIN incorect.' };
+            }
+        }
+
+        // Verificare în lista implicită
+        const defaultMatch = DEFAULT_WAITERS.find(w => 
+            String(w.id) === String(ospatarIdOrName) || 
+            w.nume.toLowerCase() === String(ospatarIdOrName).toLowerCase()
+        );
+
+        if (defaultMatch && String(defaultMatch.pin) === cleanPin) {
+            return { valid: true, waiter: { id: defaultMatch.id, nume: defaultMatch.nume } };
+        }
+
+        return { valid: false, message: 'PIN incorect.' };
+    } catch (e) {
         console.error("Eroare verifyOspatarPin:", e);
-        return { valid: false, message: 'Eroare de conexiune la verificarea PIN-ului.' };
+        return { valid: false, message: 'Eroare la verificare PIN.' };
     }
 };
 

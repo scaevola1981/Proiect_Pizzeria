@@ -24,35 +24,41 @@
     <div id="waiter-login-overlay"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b1120; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
         
-        <div class="glass-panel" style="max-width: 420px; width: 100%; text-align: center; padding: 25px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid rgba(245, 176, 65, 0.4);">
+        <div class="glass-panel" style="max-width: 380px; width: 100%; text-align: center; padding: 25px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid rgba(245, 176, 65, 0.4);">
             <div style="font-size: 2.2rem; color: #f5b041; margin-bottom: 5px;">
                 <i class="fas fa-user-tie"></i>
             </div>
-            <h2 style="color: #fff; margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: 1px;">BELLA ROMA</h2>
-            <p style="color: #f5b041; font-weight: bold; font-size: 0.95rem; margin: 0 0 20px 0;">Autentificare Tură Ospătar</p>
+            <h2 style="color: #fff; margin: 0 0 5px 0; font-size: 1.4rem; letter-spacing: 1px;">BELLA ROMA</h2>
+            <p style="color: #f5b041; font-weight: bold; font-size: 0.9rem; margin: 0 0 18px 0;">Autentificare Tură Ospătar</p>
 
-            <!-- Pasul 1: Selectează Numele -->
-            <div id="waiter-step-select" style="display: block;">
-                <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 12px;">Alege numele tău din listă:</p>
-                <div id="waiter-list-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; margin-bottom: 15px;">
-                    <p style="color: #94a3b8;"><i class="fas fa-spinner fa-spin"></i> Se încarcă echipa...</p>
-                </div>
-            </div>
-
-            <!-- Pasul 2: Introducere PIN -->
-            <div id="waiter-step-pin" style="display: none;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <button onclick="window.backToWaiterSelect()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
-                        <i class="fas fa-arrow-left"></i> Înapoi
-                    </button>
-                    <span id="selected-waiter-name-display" style="color: #2ecc71; font-weight: bold; font-size: 1.05rem;"></span>
-                    <div style="width: 50px;"></div>
+            <!-- 1. Formular Inițial: Nume + PIN (prima oară pe acest dispozitiv) -->
+            <form id="waiter-first-login-form" style="display: block; text-align: left;">
+                <div style="margin-bottom: 14px;">
+                    <label for="waiter-name-input" style="display: block; color: #cbd5e1; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">Nume Ospătar:</label>
+                    <input type="text" id="waiter-name-input" required placeholder="ex: Maria, Andrei..." class="modern-input" style="width: 100%; font-size: 1rem; padding: 12px;" maxlength="50" autocomplete="name">
                 </div>
 
-                <p style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 15px;">Introduceți PIN-ul de 4 cifre:</p>
+                <div style="margin-bottom: 18px;">
+                    <label for="waiter-pin-input" style="display: block; color: #cbd5e1; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">PIN Acces (4 cifre):</label>
+                    <input type="password" id="waiter-pin-input" required placeholder="••••" class="modern-input" style="width: 100%; font-size: 1.3rem; padding: 10px; text-align: center; letter-spacing: 6px;" maxlength="4" inputmode="numeric">
+                </div>
+
+                <button type="submit" id="btn-start-first-shift" class="modern-form-btn" style="background: #27ae60; color: white; width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
+                    <i class="fas fa-sign-in-alt"></i> Intră în Tură
+                </button>
+            </form>
+
+            <!-- 2. Formular Rapid: Doar PIN (pentru utilizări ulterioare) -->
+            <div id="waiter-remembered-pin-screen" style="display: none;">
+                <div style="background: rgba(255,255,255,0.06); padding: 10px 14px; border-radius: 12px; margin-bottom: 15px; display: inline-flex; align-items: center; gap: 8px;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;">Ospătar:</span>
+                    <strong id="remembered-waiter-name" style="color: #2ecc71; font-size: 1.1rem;"></strong>
+                </div>
+
+                <p style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 12px;">Introduceți PIN-ul de 4 cifre:</p>
 
                 <!-- Buline PIN -->
-                <div id="pin-dots-container" style="display: flex; justify-content: center; gap: 14px; margin-bottom: 20px;">
+                <div id="pin-dots-container" style="display: flex; justify-content: center; gap: 14px; margin-bottom: 18px;">
                     <span class="pin-dot" id="dot-0" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
                     <span class="pin-dot" id="dot-1" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
                     <span class="pin-dot" id="dot-2" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
@@ -60,7 +66,7 @@
                 </div>
 
                 <!-- Tastatură Numerică (PIN Pad) -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto 15px auto;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto 12px auto;">
                     <button class="pin-key-btn" onclick="window.pressPinKey('1')">1</button>
                     <button class="pin-key-btn" onclick="window.pressPinKey('2')">2</button>
                     <button class="pin-key-btn" onclick="window.pressPinKey('3')">3</button>
@@ -72,17 +78,21 @@
                     <button class="pin-key-btn" onclick="window.pressPinKey('9')">9</button>
                     <button class="pin-key-btn" onclick="window.clearPinKey()" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border-color: #e74c3c;">C</button>
                     <button class="pin-key-btn" onclick="window.pressPinKey('0')">0</button>
-                    <button class="pin-key-btn" onclick="window.submitWaiterPin()" style="background: rgba(46, 204, 113, 0.3); color: #2ecc71; border-color: #2ecc71;"><i class="fas fa-check"></i></button>
+                    <button class="pin-key-btn" onclick="window.submitRememberedPin()" style="background: rgba(46, 204, 113, 0.3); color: #2ecc71; border-color: #2ecc71;"><i class="fas fa-check"></i></button>
                 </div>
+
+                <button type="button" onclick="window.switchWaiterAccount()" style="background: transparent; border: none; color: #94a3b8; font-size: 0.85rem; cursor: pointer; text-decoration: underline; padding: 6px;">
+                    <i class="fas fa-user-friends"></i> Alt ospătar / Schimbă numele
+                </button>
 
                 <style>
                     .pin-key-btn {
                         background: rgba(255, 255, 255, 0.08);
                         border: 1px solid rgba(255, 255, 255, 0.2);
                         color: #ffffff;
-                        font-size: 1.4rem;
+                        font-size: 1.35rem;
                         font-weight: bold;
-                        padding: 14px 0;
+                        padding: 12px 0;
                         border-radius: 12px;
                         cursor: pointer;
                         transition: all 0.15s;
