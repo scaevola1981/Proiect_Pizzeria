@@ -362,76 +362,53 @@ function subscribeToRealtimeTableStatus() {
 // GESTIUNE MASĂ & PERSOANE ACTIVE
 // ==========================================
 
-window.toggleTableInputSection = function () {
-    const section = document.getElementById('table-input-section');
-    if (!section) return;
-    if (section.style.display === 'none' || section.style.display === '') {
-        section.style.display = 'block';
-        const input = document.getElementById('input-numar-masa');
-        if (input) {
-            input.value = selectedMasa;
-            setTimeout(() => input.focus(), 50);
-        }
-    } else {
-        section.style.display = 'none';
-    }
-};
-
-window.confirmTableInput = function () {
-    const input = document.getElementById('input-numar-masa');
-    if (!input) return;
-    const val = input.value.trim();
-    if (!val) {
-        showNotification("Introduceți un număr de masă.", "fas fa-exclamation-circle", "#f39c12");
-        return;
-    }
-    selectedMasa = val;
-    const section = document.getElementById('table-input-section');
-    if (section) section.style.display = 'none';
-    
+window.onTableInputChanged = function (val) {
+    const clean = String(val || '').trim();
+    selectedMasa = clean || "1";
     window.updateTableAndPersonUI();
     renderProducts();
-    showNotification(`Masa activă setată: Masa ${selectedMasa}`, "fas fa-utensils", "#2ecc71");
-};
-
-window.setTableQuick = function (nr) {
-    selectedMasa = String(nr);
-    const section = document.getElementById('table-input-section');
-    if (section) section.style.display = 'none';
-    
-    window.updateTableAndPersonUI();
-    renderProducts();
-    showNotification(`Masa activă setată: Masa ${selectedMasa}`, "fas fa-utensils", "#2ecc71");
 };
 
 window.selectMasa = function (masaStr) {
-    selectedMasa = String(masaStr);
+    selectedMasa = String(masaStr || '1').trim();
+    const inp = document.getElementById('input-numar-masa');
+    if (inp) inp.value = selectedMasa;
     window.updateTableAndPersonUI();
     renderProducts();
 };
 
 window.updateTableAndPersonUI = function () {
-    // 1. Titlu Masă
-    const titleEl = document.getElementById('active-table-title');
-    if (titleEl) titleEl.innerText = `Masa ${selectedMasa}`;
+    // 1. Sincronizăm inputul dacă nu este în editare
+    const inp = document.getElementById('input-numar-masa');
+    if (inp && document.activeElement !== inp && inp.value !== selectedMasa) {
+        inp.value = selectedMasa;
+    }
 
-    // 2. Status Masă (Liberă vs Ocupată)
-    const cleanNr = String(selectedMasa).replace(/^masa\s*/i, '').trim();
-    const currentOccupied = activeTableOrdersMap[selectedMasa] || activeTableOrdersMap[cleanNr];
-    const statusBadge = document.getElementById('active-table-status-badge');
+    // 2. Titlu Masă și Card Vizual (Stilul din poza 2)
+    const cardEl = document.getElementById('table-visual-card');
+    const nameEl = document.getElementById('table-visual-name');
+    const statusEl = document.getElementById('table-visual-status');
     const freeBtnContainer = document.getElementById('ospatar-free-table-btn-container');
 
-    if (statusBadge) {
+    if (nameEl) {
+        nameEl.innerHTML = `<i class="fas fa-utensils"></i> Masa ${escapeHTML(selectedMasa)}`;
+    }
+
+    // 3. Status Masă (Liberă vs Ocupată)
+    const cleanNr = String(selectedMasa).replace(/^masa\s*/i, '').trim();
+    const currentOccupied = activeTableOrdersMap[selectedMasa] || activeTableOrdersMap[cleanNr];
+
+    if (cardEl && statusEl) {
         if (currentOccupied) {
-            statusBadge.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
-            statusBadge.style.color = '#fff';
-            statusBadge.style.boxShadow = '0 0 15px rgba(230, 126, 34, 0.6)';
-            statusBadge.innerHTML = `🔴 Ocupată (${currentOccupied.total.toFixed(2)} Lei)`;
+            cardEl.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+            cardEl.style.color = '#ffffff';
+            cardEl.style.boxShadow = '0 4px 18px rgba(230, 126, 34, 0.45)';
+            statusEl.innerHTML = `🔴 Ocupată (${currentOccupied.total.toFixed(2)} Lei)`;
         } else {
-            statusBadge.style.background = '#2ecc71';
-            statusBadge.style.color = '#1e293b';
-            statusBadge.style.boxShadow = '0 0 12px rgba(46, 204, 113, 0.4)';
-            statusBadge.innerHTML = `🟢 Liberă`;
+            cardEl.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+            cardEl.style.color = '#1e293b';
+            cardEl.style.boxShadow = '0 4px 18px rgba(46, 204, 113, 0.35)';
+            statusEl.innerHTML = `🟢 Liberă`;
         }
     }
 
@@ -439,8 +416,8 @@ window.updateTableAndPersonUI = function () {
         if (currentOccupied) {
             freeBtnContainer.innerHTML = `
                 <button type="button" onclick="window.freeActiveTable('${escapeHTML(selectedMasa)}')"
-                    style="background: #e74c3c; color: white; border: none; padding: 7px 14px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);">
-                    <i class="fas fa-broom"></i> Eliberează Masa
+                    style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);">
+                    <i class="fas fa-broom"></i> Eliberează Masa ${escapeHTML(selectedMasa)}
                 </button>
             `;
         } else {
@@ -448,7 +425,7 @@ window.updateTableAndPersonUI = function () {
         }
     }
 
-    // 3. Calcul Număr Persoane Active la Masă
+    // 4. Calcul Număr Persoane Active la Masă
     // Aflăm toate persoanele distincte care au comenzi în coșul curent
     const cartPersons = [...new Set(cart.map(i => i.customer_name).filter(p => p && p !== 'Masa'))];
     const hasMasaGeneral = cart.some(i => i.customer_name === 'Masa');
@@ -462,11 +439,11 @@ window.updateTableAndPersonUI = function () {
         } else if (hasMasaGeneral) {
             personCountText.innerHTML = `<b>Comandă Împreună (Masa)</b>`;
         } else {
-            personCountText.innerHTML = `0 Persoane comandat`;
+            personCountText.innerHTML = `0 Persoane la masă`;
         }
     }
 
-    // 4. Actualizare Butoane Persoane (pastile)
+    // 5. Actualizare Butoane Persoane (pastile)
     const personLabel = document.getElementById('current-person-active-label');
     if (personLabel) {
         personLabel.innerText = `Selectat: ${currentPerson === 'Masa' ? 'Masa (Împreună)' : currentPerson}`;

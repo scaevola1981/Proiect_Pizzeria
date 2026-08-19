@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Ospătar Bella">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest-ospatar.json">
-  <script type="module" crossorigin src="/assets/ospatar-B2hhfsAM.js"></script>
+  <script type="module" crossorigin src="/assets/ospatar-DeOoFYHq.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/supabase-DXDZE2uf.js">
   <link rel="modulepreload" crossorigin href="/assets/security-Bv09CpAF.js">
   <link rel="stylesheet" crossorigin href="/assets/supabase-DN60NlFN.css">
@@ -130,59 +130,34 @@
         </div>
     </header>
 
-    <!-- Selector Modern Masă & Status & Persoane Active -->
+    <!-- Selector Modern Masă + Card Automat (Foto Stil 2) -->
     <div class="glass-panel" style="margin-bottom: 20px; padding: 18px;">
         
-        <!-- Zona 1: Formular Schimbare Masă (Input Modern & Rapid) -->
-        <div id="table-input-section" style="display: none; margin-bottom: 15px; background: rgba(0,0,0,0.35); padding: 16px; border-radius: 14px; border: 1px solid rgba(245, 176, 65, 0.4);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <label for="input-numar-masa" style="color: #f5b041; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-edit"></i> Introduceți Numărul Mesei:
+        <!-- Rând Input Număr Masă -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px;">
+                <label for="input-numar-masa" style="color: #f5b041; font-weight: bold; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+                    <i class="fas fa-edit"></i> Număr Masă:
                 </label>
-                <button type="button" onclick="window.toggleTableInputSection()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer;">
-                    <i class="fas fa-times"></i>
-                </button>
+                <input type="text" id="input-numar-masa" class="modern-input" value="1" placeholder="ex: 1, 2, 5, 14..."
+                    style="max-width: 140px; font-size: 1.25rem; font-weight: 900; text-align: center; padding: 8px 12px; border: 2px solid #f5b041; background: rgba(0,0,0,0.5); color: #fff; border-radius: 10px;"
+                    maxlength="20" oninput="window.onTableInputChanged(this.value)">
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="input-numar-masa" class="modern-input" placeholder="ex: 1, 2, 5, 14, T3..." style="flex: 1; font-size: 1.15rem; font-weight: bold; padding: 12px; text-align: center;" maxlength="20">
-                <button type="button" onclick="window.confirmTableInput()" class="modern-form-btn" style="background: #27ae60; color: white; padding: 12px 22px; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <i class="fas fa-check"></i> Setează
-                </button>
-            </div>
-            <!-- Butoane rapide 1-8 pentru comenzi instant -->
-            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; justify-content: center; align-items: center;">
-                <span style="color: #94a3b8; font-size: 0.8rem; margin-right: 4px;">Comenzi rapide:</span>
-                <button type="button" onclick="window.setTableQuick('1')" class="quick-table-chip">Masa 1</button>
-                <button type="button" onclick="window.setTableQuick('2')" class="quick-table-chip">Masa 2</button>
-                <button type="button" onclick="window.setTableQuick('3')" class="quick-table-chip">Masa 3</button>
-                <button type="button" onclick="window.setTableQuick('4')" class="quick-table-chip">Masa 4</button>
-                <button type="button" onclick="window.setTableQuick('5')" class="quick-table-chip">Masa 5</button>
-                <button type="button" onclick="window.setTableQuick('6')" class="quick-table-chip">Masa 6</button>
-                <button type="button" onclick="window.setTableQuick('7')" class="quick-table-chip">Masa 7</button>
-                <button type="button" onclick="window.setTableQuick('8')" class="quick-table-chip">Masa 8</button>
-            </div>
+            
+            <div id="ospatar-free-table-btn-container"></div>
         </div>
 
-        <!-- Zona 2: Cardul Activ al Mesei (compact, elegant, cu info status & număr persoane) -->
-        <div id="table-active-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 16px; padding: 14px 18px; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="color: #94a3b8; font-size: 0.78rem; font-weight: bold; text-transform: uppercase;">Masă Activă</span>
-                    <span id="active-table-title" style="color: #fff; font-size: 1.35rem; font-weight: 900; letter-spacing: 0.5px;">Masa 1</span>
-                </div>
-                <div id="active-table-status-badge" style="background: #2ecc71; color: #1e293b; padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);">
-                    🟢 Liberă
-                </div>
-                <div id="active-table-persons-info" style="background: rgba(245, 176, 65, 0.15); color: #f5b041; border: 1px solid rgba(245, 176, 65, 0.35); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
-                    <i class="fas fa-users"></i> <span id="table-person-count-text">0 Persoane la masă</span>
-                </div>
+        <!-- Cardul Vizual al Mesei (Stilul dreptunghiular mare din poza 2) -->
+        <div id="table-visual-card"
+            style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #1e293b; border-radius: 14px; padding: 16px 20px; text-align: center; box-shadow: 0 4px 18px rgba(46, 204, 113, 0.35); transition: all 0.3s; margin-bottom: 16px;">
+            <div id="table-visual-name" style="font-size: 1.45rem; font-weight: 900; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-utensils"></i> Masa 1
             </div>
-
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div id="ospatar-free-table-btn-container"></div>
-                <button type="button" onclick="window.toggleTableInputSection()" style="background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25); padding: 8px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                    <i class="fas fa-exchange-alt"></i> Schimbă Masa
-                </button>
+            <div id="table-visual-status" style="font-size: 1rem; font-weight: 800; margin-top: 4px;">
+                🟢 Liberă
+            </div>
+            <div id="table-visual-persons" style="margin-top: 8px; font-size: 0.9rem; font-weight: 700; background: rgba(0, 0, 0, 0.18); color: #ffffff; padding: 4px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-users"></i> <span id="table-person-count-text">0 Persoane la masă</span>
             </div>
         </div>
 
@@ -197,47 +172,32 @@
 
             <!-- Pastile Persoane -->
             <div id="person-chips-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; width: 100%;">
-                <button type="button" id="person-btn-masa" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
+                <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')"
                     style="grid-column: 1 / -1; padding: 10px; border-radius: 10px; border: 1px solid #f5b041; background: #f5b041; color: #1e293b; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                     👥 Comandă Împreună (Masa)
                 </button>
-                <button type="button" id="person-btn-1" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')">
+                <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')">
                     👤 Persoana 1
                 </button>
-                <button type="button" id="person-btn-2" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')">
+                <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')">
                     👤 Persoana 2
                 </button>
-                <button type="button" id="person-btn-3" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')">
+                <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')">
                     👤 Persoana 3
                 </button>
-                <button type="button" id="person-btn-4" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')">
+                <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')">
                     👤 Persoana 4
                 </button>
-                <button type="button" id="person-btn-5" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')">
+                <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')">
                     👤 Persoana 5
                 </button>
-                <button type="button" id="person-btn-6" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')">
+                <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')">
                     👤 Persoana 6
                 </button>
             </div>
         </div>
 
         <style>
-            .quick-table-chip {
-                background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                color: #fff;
-                padding: 6px 12px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 0.85rem;
-                cursor: pointer;
-                transition: all 0.15s;
-            }
-            .quick-table-chip:hover {
-                background: rgba(245, 176, 65, 0.3);
-                border-color: #f5b041;
-            }
             .person-chip {
                 padding: 10px 8px;
                 border-radius: 10px;
