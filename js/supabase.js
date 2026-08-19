@@ -193,24 +193,6 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
         return null;
     }
 
-    let orderData = {
-        numar_masa: String(masa),
-        status: 'noua'
-    };
-
-    if (waiterName) {
-        orderData.ospatar_nume = waiterName;
-    }
-    
-    if (pushSubscription) {
-        orderData.push_subscription = pushSubscription;
-    }
-
-    if (clientCoords) {
-        orderData.client_lat = clientCoords.lat;
-        orderData.client_lng = clientCoords.lng;
-    }
-
     if (existingOrders && existingOrders.length > 0) {
         // Dacă EXISTĂ o comandă activă, o suplimentăm
         const existingOrder = existingOrders[0];
@@ -220,68 +202,50 @@ window.sendOrderToDatabase = async function (masa, cart, total, pushSubscription
         const newDetails = [...currentDetails, ...cartWithFlags];
         const newTotal = parseFloat(existingOrder.total || 0) + parseFloat(total || 0);
 
-        orderData.detalii_comanda = newDetails;
-        orderData.total = newTotal;
-        if (!orderData.ospatar_nume && existingOrder.ospatar_nume) {
-            orderData.ospatar_nume = existingOrder.ospatar_nume;
-        }
+        const updateData = {
+            numar_masa: String(masa),
+            status: 'noua',
+            detalii_comanda: newDetails,
+            total: newTotal
+        };
 
-        let { data, error } = await supabase
+        const { data, error } = await supabase
             .from('comenzi')
-            .update(orderData)
+            .update(updateData)
             .eq('id', existingOrder.id)
             .select();
             
         if (error) {
-            console.warn("Avertizare update comanda cu coloane opționale:", error.message || error);
-            // Încercăm fallback curat doar cu coloanele de bază garantate
-            const fallbackData = {
-                numar_masa: String(masa),
-                status: 'noua',
-                detalii_comanda: newDetails,
-                total: newTotal
-            };
-            const retry = await supabase
-                .from('comenzi')
-                .update(fallbackData)
-                .eq('id', existingOrder.id)
-                .select();
-            if (retry.error) {
-                console.error("Eroare la suplimentare comandă (fallback):", retry.error);
-                return null;
-            }
-            return retry.data[0];
+            console.error("Eroare la suplimentare comandă:", error);
+            return null;
         }
         return data[0];
 
     } else {
         // Dacă NU există comandă activă, creăm una nouă
-        orderData.detalii_comanda = cartWithFlags;
-        orderData.total = total;
+        const insertData = {
+            numar_masa: String(masa),
+            status: 'noua',
+            detalii_comanda: cartWithFlags,
+            total: total
+        };
 
-        let { data, error } = await supabase
+        if (pushSubscription) {
+            insertData.push_subscription = pushSubscription;
+        }
+        if (clientCoords) {
+            insertData.client_lat = clientCoords.lat;
+            insertData.client_lng = clientCoords.lng;
+        }
+
+        const { data, error } = await supabase
             .from('comenzi')
-            .insert([orderData])
+            .insert([insertData])
             .select();
             
         if (error) {
-            console.warn("Avertizare inserare comanda cu coloane opționale:", error.message || error);
-            // Încercăm fallback curat doar cu coloanele de bază garantate
-            const fallbackData = {
-                numar_masa: String(masa),
-                status: 'noua',
-                detalii_comanda: cartWithFlags,
-                total: total
-            };
-            const retry = await supabase
-                .from('comenzi')
-                .insert([fallbackData])
-                .select();
-            if (retry.error) {
-                console.error("Eroare la inserare (fallback):", retry.error);
-                return null;
-            }
-            return retry.data[0];
+            console.error("Eroare la inserare:", error);
+            return null;
         }
         return data[0];
     }
