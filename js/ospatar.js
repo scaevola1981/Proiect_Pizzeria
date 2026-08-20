@@ -5,7 +5,7 @@
 
 let produse = [];
 let cart = [];
-let selectedMasa = "1";
+let selectedMasa = "";
 let currentPerson = "Masa";
 let currentTab = 'restaurant';
 let searchQuery = '';
@@ -14,6 +14,9 @@ let searchQuery = '';
 let currentWaiter = null;
 let selectedWaiterForLogin = null;
 let enteredPin = "";
+
+// Tastatură Numerică Masă
+let numpadTableValue = "";
 
 // Hartă pentru stocarea meselor ocupate și totalul lor curent
 let activeTableOrdersMap = {};
@@ -56,8 +59,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 5. Suport Tastatură Fizică (0-9, Numpad, Backspace, Enter, Esc) pentru PIN
+    // 5. Suport Tastatură Fizică (0-9, Numpad, Backspace, Enter, Esc)
     document.addEventListener('keydown', (e) => {
+        // A. Verificăm dacă e deschis Modalul Tastaturii Numerice de Masă
+        const numpadModal = document.getElementById('table-numpad-modal');
+        if (numpadModal && numpadModal.style.display !== 'none') {
+            if (e.key >= '0' && e.key <= '9') {
+                e.preventDefault();
+                window.pressTableNumpad(e.key);
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                window.backspaceTableNumpad();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                window.confirmTableNumpad();
+            } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                window.closeTableNumpadModal();
+            }
+            return;
+        }
+
+        // B. Verificăm dacă e deschis ecranul de PIN Ospătar
         const overlay = document.getElementById('waiter-login-overlay');
         const pinScreen = document.getElementById('waiter-remembered-pin-screen');
         if (!overlay || overlay.style.display === 'none') return;
@@ -377,12 +400,59 @@ function subscribeToRealtimeTableStatus() {
 }
 
 // ==========================================
-// GESTIUNE MASĂ & PERSOANE ACTIVE
+// GESTIUNE MASĂ & TASTATURĂ NUMERICĂ
 // ==========================================
+
+window.openTableNumpadModal = function () {
+    numpadTableValue = selectedMasa ? String(selectedMasa).replace(/^masa\s*/i, '').trim() : "";
+    updateTableNumpadPreview();
+    const modal = document.getElementById('table-numpad-modal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.closeTableNumpadModal = function () {
+    const modal = document.getElementById('table-numpad-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.pressTableNumpad = function (digit) {
+    if (numpadTableValue.length >= 4) return;
+    numpadTableValue += String(digit);
+    updateTableNumpadPreview();
+};
+
+window.clearTableNumpad = function () {
+    numpadTableValue = "";
+    updateTableNumpadPreview();
+};
+
+window.backspaceTableNumpad = function () {
+    numpadTableValue = numpadTableValue.slice(0, -1);
+    updateTableNumpadPreview();
+};
+
+function updateTableNumpadPreview() {
+    const previewEl = document.getElementById('numpad-table-preview');
+    if (previewEl) {
+        previewEl.innerText = numpadTableValue ? `Masa ${numpadTableValue}` : '-';
+        previewEl.style.color = numpadTableValue ? '#2ecc71' : '#ffffff';
+    }
+}
+
+window.confirmTableNumpad = function () {
+    const val = numpadTableValue.trim();
+    if (!val) {
+        showNotification("Vă rugăm să introduceți numărul mesei!", "fas fa-exclamation-circle", "#e74c3c");
+        return;
+    }
+    window.selectMasa(val);
+    window.closeTableNumpadModal();
+    showNotification(`Masa ${val} a fost selectată!`, "fas fa-check-circle", "#2ecc71");
+};
 
 window.onTableInputChanged = function (val) {
     const clean = String(val || '').trim();
-    selectedMasa = clean || "1";
+    selectedMasa = clean;
     window.updateTableAndPersonUI();
     renderProducts();
 };
@@ -396,7 +466,7 @@ window.confirmTableInput = function () {
 };
 
 window.selectMasa = function (masaStr) {
-    selectedMasa = String(masaStr || '1').trim();
+    selectedMasa = String(masaStr || '').trim();
     const inp = document.getElementById('input-numar-masa');
     if (inp) inp.value = selectedMasa;
     window.updateTableAndPersonUI();
@@ -413,16 +483,24 @@ window.onTablePillClicked = function (masaStr) {
 };
 
 window.updateTableAndPersonUI = function () {
-    // 1. Sincronizăm inputul dacă nu este în editare
-    const inp = document.getElementById('input-numar-masa');
-    if (inp && document.activeElement !== inp && inp.value !== selectedMasa) {
-        inp.value = selectedMasa;
+    // 1. Sincronizăm textul din bara de deschidere masă
+    const tableDisplayVal = document.getElementById('table-display-val');
+    if (tableDisplayVal) {
+        if (selectedMasa && selectedMasa !== "") {
+            tableDisplayVal.innerHTML = `Masa ${escapeHTML(selectedMasa)}`;
+            tableDisplayVal.style.color = '#2ecc71';
+            tableDisplayVal.style.fontSize = '1.15rem';
+        } else {
+            tableDisplayVal.innerHTML = `Apasă pentru a alege masa`;
+            tableDisplayVal.style.color = '#94a3b8';
+            tableDisplayVal.style.fontSize = '0.95rem';
+        }
     }
 
-    const currentClean = String(selectedMasa).replace(/^masa\s*/i, '').trim() || "1";
-    const currentOccupied = activeTableOrdersMap[selectedMasa] || activeTableOrdersMap[currentClean];
+    const currentClean = String(selectedMasa || '').replace(/^masa\s*/i, '').trim();
+    const currentOccupied = currentClean ? (activeTableOrdersMap[selectedMasa] || activeTableOrdersMap[currentClean]) : null;
 
-    // 2. Generăm Pilulele pentru Mese Active / Selectate (Stil Foto 2: Fără cuvântul "OCUPATĂ", fără preț)
+    // 2. Generăm Pilulele pentru Mese Active / Selectate (Exact 3 pe rând, stil Foto 2)
     const pillsContainer = document.getElementById('active-tables-pills-container');
     if (pillsContainer) {
         // Obținem toate mesele care au comenzi active în sistem
@@ -430,7 +508,12 @@ window.updateTableAndPersonUI = function () {
             .map(k => String(k).replace(/^masa\s*/i, '').trim())
             .filter(k => k !== '');
 
-        const allVisibleTables = Array.from(new Set([currentClean, ...activeTableKeys]))
+        // Dacă o masă este selectată, o includem în listă
+        const tablesToDisplay = currentClean 
+            ? Array.from(new Set([currentClean, ...activeTableKeys]))
+            : Array.from(new Set(activeTableKeys));
+
+        const allVisibleTables = tablesToDisplay
             .filter(Boolean)
             .sort((a, b) => {
                 const na = parseInt(a), nb = parseInt(b);
@@ -536,7 +619,10 @@ window.updateTableAndPersonUI = function () {
     });
 
     const tableDisplay = document.getElementById('cart-table-display');
-    if (tableDisplay) tableDisplay.innerText = `Masa ${selectedMasa}`;
+    if (tableDisplay) tableDisplay.innerText = selectedMasa ? `Masa ${selectedMasa}` : 'Neselectată';
+
+    const quickMasa = document.getElementById('quick-bar-masa');
+    if (quickMasa) quickMasa.innerText = selectedMasa ? `Masa ${selectedMasa}` : 'Alege Masă';
 };
 
 // ==========================================
@@ -872,6 +958,12 @@ function renderProducts() {
 }
 
 window.addToCartOspatar = function (productId) {
+    if (!selectedMasa || selectedMasa === "") {
+        showNotification("Alegeți o masă înainte de a adăuga produse!", "fas fa-utensils", "#f5b041");
+        window.openTableNumpadModal();
+        return;
+    }
+
     const product = produse.find(p => p.id === productId);
     if (!product) return;
 
@@ -928,12 +1020,13 @@ function updateCartUI() {
     const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
     const total = cart.reduce((sum, item) => sum + (item.product.pret * item.quantity), 0);
 
-    if (quickMasa) quickMasa.innerText = selectedMasa;
+    if (quickMasa) quickMasa.innerText = selectedMasa ? `Masa ${selectedMasa}` : 'Alege Masă';
     if (quickCount) quickCount.innerText = String(totalCount);
     if (quickTotal) quickTotal.innerText = total.toFixed(2);
 
     if (cart.length === 0) {
-        if (container) container.innerHTML = `<p class="empty-cart">Comanda pentru <strong>Masa ${escapeHTML(selectedMasa)}</strong> este goală.</p>`;
+        const masaLabel = selectedMasa ? `Masa ${escapeHTML(selectedMasa)}` : 'masa selectată';
+        if (container) container.innerHTML = `<p class="empty-cart">Comanda pentru <strong>${masaLabel}</strong> este goală.</p>`;
         if (btnSubmit) btnSubmit.disabled = true;
         if (quickBtnSubmit) quickBtnSubmit.disabled = true;
         if (totalEl) totalEl.innerText = "0.00";
@@ -1008,6 +1101,11 @@ function updateAllProductButtons() {
 }
 
 window.sendWaiterOrder = async function () {
+    if (!selectedMasa || selectedMasa === "") {
+        showNotification("Alegeți o masă înainte de a trimite comanda!", "fas fa-utensils", "#f5b041");
+        window.openTableNumpadModal();
+        return;
+    }
     if (cart.length === 0) return;
 
     const btnSubmit = document.getElementById('btn-trimite-comanda-ospatar');
