@@ -610,6 +610,25 @@ function renderOrderItemsGroupedByPerson(detaliiComanda) {
 async function printReceiptForOrder(order) {
     if (!order) return;
 
+    // 1. Încercăm mai întâi prin Serviciul In-House de Printare (localhost:4000)
+    try {
+        const response = await fetch('http://localhost:4000/print', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(order),
+            signal: AbortSignal.timeout(2000)
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                console.log(`✅ Bon printat via Serviciu In-House USB (Comanda #${order.id})`);
+                return;
+            }
+        }
+    } catch (_) {
+        // Fallback silențios la QZ Tray dacă serviciul local nu rulează
+    }
+
     const detalii = order.detalii_comanda || [];
     const masaStr = String(order.numar_masa || '?');
     const totalStr = parseFloat(order.total || 0).toFixed(2);
@@ -960,9 +979,29 @@ async function detectPrinter() {
     }
 }
 
+let inHouseServiceActive = false;
+
+async function checkInHousePrintService() {
+    try {
+        const res = await fetch('http://localhost:4000/status', { signal: AbortSignal.timeout(1500) });
+        if (res.ok) {
+            const data = await res.json();
+            inHouseServiceActive = true;
+            updateQZBadge(`In-House USB Activ (${data.printer || 'POS-80'})`, '#2ecc71');
+            return true;
+        }
+    } catch (_) {
+        inHouseServiceActive = false;
+    }
+    return false;
+}
+
 async function initQZTrayConnection() {
+    const inHouse = await checkInHousePrintService();
+    if (inHouse) return true;
+
     if (typeof qz === 'undefined') {
-        updateQZBadge('Lipsă SDK QZ', '#e74c3c');
+        updateQZBadge('Deconectat', '#e74c3c');
         return false;
     }
     return await connectToQZ();
@@ -976,13 +1015,27 @@ function updateQZBadge(text, color) {
         badge.style.background = `rgba(${rgb}, 0.2)`;
         badge.style.color = color;
         badge.style.borderColor = color;
-        badge.innerHTML = `<i class="fas fa-print"></i> QZ Tray: ${text}`;
+        badge.innerHTML = `<i class="fas fa-print"></i> Print: ${text}`;
     }
 }
 
 window.testQZPrint = async function () {
+    const isInHouseActive = await checkInHousePrintService();
+    if (isInHouseActive) {
+        try {
+            const res = await fetch('http://localhost:4000/test-print');
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ Test trimis cu succes prin Serviciul In-House pe imprimanta USB "${data.printer || 'POS-80'}"!\nBonul a fost tipărit direct fără QZ Tray!`);
+                return;
+            }
+        } catch (e) {
+            console.warn("Eroare test print in-house:", e);
+        }
+    }
+
     const isConnected = await initQZTrayConnection();
-    if (isConnected && qz.websocket.isActive()) {
+    if (isConnected && typeof qz !== 'undefined' && qz.websocket.isActive()) {
         try {
             const printerName = qzTargetPrinter || await qz.printers.getDefault();
             const config = qz.configs.create(printerName);
@@ -1007,7 +1060,7 @@ window.testQZPrint = async function () {
             alert('❌ Eroare la printare prin QZ Tray: ' + (e.message || e));
         }
     } else {
-        alert('❌ QZ Tray nu este pornit pe laptop.\n\n1. Deschide aplicația QZ Tray pe Windows\n2. Verifică iconița verde lângă ceas\n3. Apasă din nou Test');
+        alert('❌ Niciun serviciu de printare nu este pornit pe laptop.\n\n1. Porniți Serviciul In-House (start-service.bat) sau QZ Tray\n2. Apăsați din nou Test');
     }
 };
 
@@ -1025,18 +1078,19 @@ window.printOrderReceipt = function(orderId) {
 };
 
 // ==========================================
-// INIȚIALIZARE & KEEP-ALIVE QZ TRAY
+// INIȚIALIZARE & KEEP-ALIVE SERVICIU PRINTARE
 // ==========================================
 
 initOwnerAuth();
 
-// Conectare inițială la QZ Tray după 1 secundă (după ce SDK-ul s-a încărcat)
+// Conectare inițială după 1 secundă
 setTimeout(initQZTrayConnection, 1000);
 
-// Keep-alive: verifică conexiunea la fiecare 10 secunde și reconectează dacă s-a pierdut
+// Keep-alive: verifică mai întâi serviciul In-House, apoi fallback la QZ Tray
 setInterval(async () => {
-    if (typeof qz !== 'undefined' && !qz.websocket.isActive() && !qzConnecting) {
-        console.log("🔄 QZ Tray: Keep-alive reconectare...");
+    const inHouse = await checkInHousePrintService();
+    if (!inHouse && typeof qz !== 'undefined' && !qz.websocket.isActive() && !qzConnecting) {
+        console.log("🔄 Keep-alive QZ Tray reconectare...");
         await connectToQZ();
     }
-}, 10000);
+}, 8000);

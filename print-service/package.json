@@ -1,0 +1,31 @@
+{
+  "name": "bella-print-service",
+  "version": "1.0.0",
+  "description": "In-house autonomous background print service for Bella Roma POS (USB ESC/POS)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test-print": "node test-print.js",
+    "build-exe": "npx -y pkg index.js --target node18-win-x64 --output dist/bella-print-service.exe"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "pkg": {
+    "assets": [
+      "config.json"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
+  },
+  "keywords": [
+    "pos",
+    "thermal-printer",
+    "escpos",
+    "supabase",
+    "bella-roma"
+  ],
+  "author": "Bella Roma",
+  "license": "ISC"
+}

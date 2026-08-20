@@ -1,0 +1,14 @@
+{
+  "connection_type": "USB",
+  "printer_name": "POS-80",
+  "printer_name_regex": "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80)",
+  "supabase_url": "https://tzdtssvjsrhyocskivmm.supabase.co",
+  "supabase_key": "sb_publishable_JRIxO4MMjth3IkqfaOCPmw_e69T87UP",
+  "auto_cut": true,
+  "beep_on_order": true,
+  "beep_count": 2,
+  "http_port": 4000,
+  "poll_interval_seconds": 15,
+  "retry_delay_seconds": 3,
+  "max_retries": 5
+}
