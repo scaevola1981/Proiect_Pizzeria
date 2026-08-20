@@ -50,7 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         tableInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                window.confirmTableInput();
+                window.onTableInputChanged(tableInput.value);
+                tableInput.blur();
             }
         });
     }
@@ -379,6 +380,14 @@ window.onTableInputChanged = function (val) {
     selectedMasa = clean || "1";
     window.updateTableAndPersonUI();
     renderProducts();
+};
+
+window.confirmTableInput = function () {
+    const inp = document.getElementById('input-numar-masa');
+    if (inp) {
+        window.onTableInputChanged(inp.value);
+        inp.blur();
+    }
 };
 
 window.selectMasa = function (masaStr) {
