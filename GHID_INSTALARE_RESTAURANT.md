@@ -6,29 +6,31 @@ Acest document conține instrucțiunile complete pas-cu-pas pentru instalarea si
 ---
 
 ## 🖥️ PARTEA 1: CONFIGURARE CALCULATOR POS / TOUCHSCREEN (BAR / RECEPȚIE)
-*(Durată: ~3 minute | Conectat prin USB la imprimanta OCPP-80K)*
+*(Durată: ~2 minute | Conectat prin USB la imprimanta POS-80 / OCPP-80K)*
 
-### Pasul 1.1: Instalare QZ Tray
-1. Deschide browserul pe PC-ul POS și intră pe:
-   👉 **`https://qz.io/download/`**
-2. Descarcă și instalează **QZ Tray** (apasă Next -> Next -> Install).
-3. La final, verifică să apară iconița verde QZ Tray în colțul din dreapta jos (lângă ceas).
+### Pasul 1.1: Copiere Serviciu de Printare de pe Stick USB
+1. Copiază folderul **`print-service/`** de pe stick-ul USB pe calculatorul POS (de exemplu în `C:\BellaRomaPOS\print-service\` sau direct pe Desktop).
+2. Deschide folderul `print-service`.
 
-### Pasul 1.2: Configurare Certificat & Permisiuni (1 Click)
-1. În browserul de pe POS, accesează:
-   👉 **`https://proiect-pizzeria.vercel.app/setup-qz-tray.bat`**
-2. Se va descărca fișierul `setup-qz-tray.bat`.
-3. Mergi în **Downloads**, dă **Click Dreapta** pe `setup-qz-tray.bat` -> **Run as Administrator** *(Execută ca administrator)*.
-4. Va apărea o fereastră neagră cu mesajul *"INSTALARE COMPLETĂ"*. Apasă orice tastă pentru a închide.
+### Pasul 1.2: Testare Imprimantă (1 Click)
+1. Asigură-te că imprimanta este conectată prin cablu USB și pornită (LED albastru/verde aprins).
+2. Dă dublu-click pe fișierul **`test-print.bat`**.
+3. Imprimanta va tipări instant un bon de test cu produse îngroșate (**Bold**), va tăia hârtia și va da 2 bipuri sonore!
 
-### Pasul 1.3: Deschiderea Panoului de Recepție & Salvare pe Desktop
-1. Deschide în browser:
+### Pasul 1.3: Pornire Automată odată cu Windows (Startup)
+Pentru ca serviciul să ruleze permanent în fundal fără nicio intervenție manuală:
+1. Pe tastatura POS-ului, apasă tastele **`Win + R`**.
+2. Tastați **`shell:startup`** și apăsați **Enter** (se va deschide folderul Windows Startup).
+3. Trageți sau faceți **Click Dreapta ➔ Creare Scurtătură (Shortcut)** către fișierul `start-service.bat`.
+4. Dă dublu-click pe scurtătură pentru a-l porni acum.
+
+### Pasul 1.4: Deschiderea Panoului de Recepție pe Ecran
+1. Deschide în browser (Google Chrome sau Microsoft Edge):
    👉 **`https://proiect-pizzeria.vercel.app/receptie.html`**
 2. Autentifică-te cu contul de recepție.
-3. Creează scurtătură / aplicație pe Desktop:
+3. În bara de sus va apărea cu verde: **`🟢 Print: In-House USB Activ (POS-80)`**.
+4. Creează scurtătură / aplicație pe Desktop:
    - În Chrome/Edge: Meniu (3 puncte dreapta sus) -> **Save and Share** -> **Create Shortcut** (bifează *Open as window*).
-4. Verifică bara de sus: trebuie să scrie cu verde **`🖨️ QZ Tray: Conectat (OCPP-80K / POS-80)`**.
-5. Apasă butonul **„Test Imprimantă”** -> bonul de test trebuie să iasă instant din imprimantă!
 
 ---
 
