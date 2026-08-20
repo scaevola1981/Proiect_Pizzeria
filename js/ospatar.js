@@ -967,7 +967,7 @@ function renderProducts() {
 
     // CAZ 2: Mod Normal Fără Scrolling Lung ➔ Grid Modern de Carduri de Categorii
     const catGrid = document.createElement('div');
-    catGrid.style = "display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px;";
+    catGrid.style = "display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; padding-bottom: 60px;";
 
     sortedSubcats.forEach(catName => {
         const prods = grouped[catName];

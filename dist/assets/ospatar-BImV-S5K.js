@@ -32,7 +32,7 @@ import"./supabase-CdU8ZLGB.js";import"./security-Bv09CpAF.js";let P=[],x=[],w=""
                     style="width: 100%; padding: 11px; ${S} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.92rem; transition: all 0.2s;">
                     ${R}
                 </button>
-            `,l.appendChild(y)}),e.appendChild(l);return}const r=document.createElement("div");r.style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px;",u.forEach(i=>{const l=s[i],o=l.length,d=V[i]||"fas fa-utensils",f=x.filter(p=>l.some(y=>String(y.id)===String(p.product.id))).reduce((p,y)=>p+y.quantity,0),g=document.createElement("div");g.className="category-touch-tile",g.onclick=()=>window.openCategoryModal(i),g.style=`
+            `,l.appendChild(y)}),e.appendChild(l);return}const r=document.createElement("div");r.style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; padding-bottom: 60px;",u.forEach(i=>{const l=s[i],o=l.length,d=V[i]||"fas fa-utensils",f=x.filter(p=>l.some(y=>String(y.id)===String(p.product.id))).reduce((p,y)=>p+y.quantity,0),g=document.createElement("div");g.className="category-touch-tile",g.onclick=()=>window.openCategoryModal(i),g.style=`
             background: rgba(255, 255, 255, 0.07);
             border: 1.5px solid rgba(255, 255, 255, 0.15);
             border-radius: 16px;
