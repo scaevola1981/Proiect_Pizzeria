@@ -340,11 +340,12 @@ async function loadActiveTableStatus() {
 
             keysToSet.forEach(k => {
                 if (!activeTableOrdersMap[k]) {
-                    activeTableOrdersMap[k] = { count: 0, total: 0, orderIds: [], orderedPersons: new Set() };
+                    activeTableOrdersMap[k] = { count: 0, total: 0, orderIds: [], orders: [], orderedPersons: new Set() };
                 }
                 activeTableOrdersMap[k].count += 1;
                 activeTableOrdersMap[k].total += parseFloat(order.total || 0);
                 activeTableOrdersMap[k].orderIds.push(order.id);
+                activeTableOrdersMap[k].orders.push(order);
                 personsInOrder.forEach(p => activeTableOrdersMap[k].orderedPersons.add(p));
             });
         });
@@ -396,6 +397,15 @@ window.selectMasa = function (masaStr) {
     if (inp) inp.value = selectedMasa;
     window.updateTableAndPersonUI();
     renderProducts();
+};
+
+window.onTablePillClicked = function (masaStr) {
+    window.selectMasa(masaStr);
+    const cleanNr = String(masaStr).replace(/^masa\s*/i, '').trim();
+    const occ = activeTableOrdersMap[masaStr] || activeTableOrdersMap[cleanNr];
+    if (occ && occ.orders && occ.orders.length > 0) {
+        window.showTableOrderDetails(masaStr);
+    }
 };
 
 window.updateTableAndPersonUI = function () {
@@ -460,7 +470,7 @@ window.updateTableAndPersonUI = function () {
             }
 
             pillsHtml += `
-                <button type="button" class="table-pill-chip" onclick="window.selectMasa('${escapeHTML(t)}')"
+                <button type="button" class="table-pill-chip" onclick="window.onTablePillClicked('${escapeHTML(t)}')"
                     style="background: ${bg}; color: ${color}; border: ${border}; ${shadow}">
                     <i class="fas fa-utensils"></i> Masa ${escapeHTML(t)}
                 </button>
@@ -472,24 +482,6 @@ window.updateTableAndPersonUI = function () {
 
     // 3. Calcul Număr Persoane care au comandat la această masă (din DB + Coș curent)
     const dbPersons = currentOccupied && currentOccupied.orderedPersons ? Array.from(currentOccupied.orderedPersons) : [];
-    const cartPersons = [...new Set(cart.map(i => i.customer_name).filter(p => p && p !== 'Masa'))];
-    
-    // Lista unică cu toate persoanele care au comandat
-    const allOrderedPersons = [...new Set([...dbPersons, ...cartPersons])];
-    const hasMasaInCart = cart.some(i => i.customer_name === 'Masa');
-
-    const personCountText = document.getElementById('table-person-count-text');
-    if (personCountText) {
-        if (allOrderedPersons.length > 0) {
-            const count = allOrderedPersons.length;
-            const shortNames = allOrderedPersons.map(p => p.replace(/^Persoana\s*/i, 'P')).join(', ');
-            personCountText.innerHTML = `<b>${count} ${count === 1 ? 'Pers. a comandat' : 'Pers. au comandat'}</b> (${shortNames})`;
-        } else if (hasMasaInCart) {
-            personCountText.innerHTML = `<b>Comandă Împreună</b>`;
-        } else {
-            personCountText.innerHTML = `0 Pers. au comandat`;
-        }
-    }
 
     // 4. Actualizare Butoane Persoane (pastile)
     document.querySelectorAll('.person-chip').forEach(btn => {
@@ -541,6 +533,130 @@ window.updateTableAndPersonUI = function () {
 
     const tableDisplay = document.getElementById('cart-table-display');
     if (tableDisplay) tableDisplay.innerText = `Masa ${selectedMasa}`;
+};
+
+// ==========================================
+// MODAL DETALII COMANDĂ MASĂ (CARD RECEPȚIE)
+// ==========================================
+
+function renderOrderItemsGroupedByPerson(detaliiComanda) {
+    if (!detaliiComanda || !Array.isArray(detaliiComanda) || detaliiComanda.length === 0) {
+        return '<p style="color: #cbd5e1; font-style: italic; text-align: center;">Fără detalii înregistrate.</p>';
+    }
+
+    const grouped = {};
+    detaliiComanda.forEach(item => {
+        const person = item.customer_name && item.customer_name.trim() !== '' ? item.customer_name : 'Masa';
+        if (!grouped[person]) {
+            grouped[person] = [];
+        }
+        grouped[person].push(item);
+    });
+
+    let html = '';
+    const badgeColors = ['#f5b041', '#3498db', '#9b59b6', '#2ecc71', '#e67e22', '#1abc9c'];
+    let colorIdx = 0;
+
+    for (const [person, items] of Object.entries(grouped)) {
+        let personTotal = 0;
+        const itemsHtml = items.map(i => {
+            const price = parseFloat(i.product?.pret || 0);
+            const qty = parseInt(i.quantity || 1);
+            const lineTotal = price * qty;
+            personTotal += lineTotal;
+
+            const noteHtml = i.notes ? `<br><small style="color: #e74c3c; font-weight: bold;">* Observații: ${escapeHTML(i.notes)}</small>` : '';
+            return `<div style="color: #fff; font-size: 0.92rem; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span><b>${qty}x</b> ${escapeHTML(i.product?.nume || 'Produs')}</span>
+                <span style="color: rgba(255,255,255,0.75); font-size: 0.88rem; font-weight: 600;">${lineTotal.toFixed(2)} Lei</span>
+            </div>${noteHtml}`;
+        }).join('');
+
+        const accentColor = badgeColors[colorIdx % badgeColors.length];
+        colorIdx++;
+
+        const isMasaGroup = (person === 'Masa');
+        const displayLabel = isMasaGroup ? '👥 Comandă Împreună' : `👤 ${escapeHTML(person)}`;
+
+        html += `
+            <div style="margin-bottom: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.45); border-radius: 12px; border-left: 4px solid ${accentColor}; border: 1px solid rgba(255,255,255,0.15); border-left-width: 4px; border-left-color: ${accentColor};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.15);">
+                    <span style="color: ${accentColor}; font-weight: 800; font-size: 0.95rem;">
+                        ${displayLabel}
+                    </span>
+                    <span style="background: rgba(46, 204, 113, 0.25); color: #2ecc71; font-weight: 800; font-size: 0.85rem; padding: 2px 8px; border-radius: 10px; border: 1px solid #2ecc71;">
+                        De plată: ${personTotal.toFixed(2)} Lei
+                    </span>
+                </div>
+                ${itemsHtml}
+            </div>
+        `;
+    }
+
+    return html;
+}
+
+window.showTableOrderDetails = function (masaStr) {
+    const cleanNr = String(masaStr).replace(/^masa\s*/i, '').trim();
+    const occ = activeTableOrdersMap[masaStr] || activeTableOrdersMap[cleanNr];
+    if (!occ || !occ.orders || occ.orders.length === 0) return;
+
+    const modal = document.getElementById('table-order-modal');
+    const nrEl = document.getElementById('table-modal-nr');
+    const totalEl = document.getElementById('table-modal-total');
+    const subtitleEl = document.getElementById('table-modal-subtitle');
+    const contentEl = document.getElementById('table-modal-content');
+
+    if (nrEl) nrEl.innerText = cleanNr;
+    if (totalEl) totalEl.innerText = occ.total.toFixed(2);
+
+    let allItems = [];
+    let latestStatus = 'noua';
+    let waiterName = null;
+
+    occ.orders.forEach(ord => {
+        if (ord.status) latestStatus = ord.status;
+        if (ord.ospatar_nume) waiterName = ord.ospatar_nume;
+        if (Array.isArray(ord.detalii_comanda)) {
+            allItems.push(...ord.detalii_comanda);
+            if (!waiterName) {
+                const found = ord.detalii_comanda.find(i => i.ospatar_nume);
+                if (found) waiterName = found.ospatar_nume;
+            }
+        }
+    });
+
+    let statusText = 'NOUĂ';
+    let statusBg = '#e67e22';
+    if (latestStatus === 'in_preparare') {
+        statusText = 'PRINTATĂ / ÎN PREPARARE';
+        statusBg = '#27ae60';
+    } else if (latestStatus === 'servita') {
+        statusText = 'SERVITĂ LA MASĂ';
+        statusBg = '#3498db';
+    }
+
+    if (subtitleEl) {
+        subtitleEl.innerHTML = `
+            <span style="background: ${statusBg}; color: white; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 0.78rem; margin-right: 6px;">
+                ${statusText}
+            </span>
+            ${waiterName ? `<span style="color: #2ecc71; font-weight: bold;"><i class="fas fa-user-tie"></i> ${escapeHTML(waiterName)}</span>` : ''}
+        `;
+    }
+
+    if (contentEl) {
+        contentEl.innerHTML = renderOrderItemsGroupedByPerson(allItems);
+    }
+
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+};
+
+window.closeTableOrderModal = function () {
+    const modal = document.getElementById('table-order-modal');
+    if (modal) modal.style.display = 'none';
 };
 
 window.selectPersonChip = function (btnElement, personValue) {

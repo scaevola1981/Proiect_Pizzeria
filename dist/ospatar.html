@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Ospătar Bella">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest-ospatar.json">
-  <script type="module" crossorigin src="/assets/ospatar-B958oFeF.js"></script>
+  <script type="module" crossorigin src="/assets/ospatar-I8-ITT7U.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/supabase-CdU8ZLGB.js">
   <link rel="modulepreload" crossorigin href="/assets/security-Bv09CpAF.js">
   <link rel="stylesheet" crossorigin href="/assets/supabase-DN60NlFN.css">
@@ -151,11 +151,6 @@
                 <div id="active-tables-pills-container" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <!-- Generat dinamic: [🍽️ Masa 1] [🍽️ Masa 3] [🍽️ Masa 7] -->
                 </div>
-
-                <!-- Badge Persoane care au comandat (pentru masa curentă) -->
-                <div id="table-visual-persons" style="background: rgba(245, 176, 65, 0.15); color: #f5b041; border: 1px solid rgba(245, 176, 65, 0.35); padding: 6px 14px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; margin-left: auto;">
-                    <i class="fas fa-users"></i> <span id="table-person-count-text">0 Pers. au comandat</span>
-                </div>
             </div>
         </div>
 
@@ -284,6 +279,54 @@
                     style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #1e293b; font-weight: 800; font-size: 1.15rem; padding: 15px; border-radius: 14px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); border: none; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;">
                     <i class="fas fa-paper-plane"></i> Trimite Comanda la Recepție
                 </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Detalii Comandă Masă Activă (Card stil Recepție) -->
+    <div id="table-order-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;">
+        <div class="glass-panel"
+            style="width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); overflow: hidden; animation: fadeIn 0.25s ease;">
+            
+            <!-- Header Modal stil Recepție -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(230, 126, 34, 0.3) 0%, rgba(15, 23, 42, 0.9) 100%);">
+                <div>
+                    <h2 id="table-modal-title" style="margin: 0; font-size: 1.3rem; color: #f5b041; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-utensils"></i> Masa <span id="table-modal-nr">1</span>
+                    </h2>
+                    <div id="table-modal-subtitle" style="font-size: 0.85rem; color: #94a3b8; margin-top: 3px;">
+                        Comandă Activă
+                    </div>
+                </div>
+                <button onclick="window.closeTableOrderModal()"
+                    style="background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Conținut Comandă (Scrollabil) -->
+            <div id="table-modal-content" style="padding: 16px 20px; overflow-y: auto; flex: 1; min-height: 180px; max-height: 55vh;">
+                <!-- Se va genera dinamic cu produsele grupate pe persoane -->
+            </div>
+
+            <!-- Footer Modal cu Total și Acțiuni -->
+            <div style="padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #aaa; font-size: 1.05rem; font-weight: 600;">Total Masă:</span>
+                    <span style="color: #2ecc71; font-size: 1.5rem; font-weight: 800;"><span id="table-modal-total">0.00</span> Lei</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="window.closeTableOrderModal()"
+                        style="flex: 1; background: linear-gradient(135deg, #f5b041 0%, #e67e22 100%); color: #1e293b; font-weight: 800; font-size: 1rem; padding: 13px; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(245, 176, 65, 0.35);">
+                        <i class="fas fa-plus-circle"></i> + Adaugă Produse Noi
+                    </button>
+                    <button type="button" onclick="window.closeTableOrderModal()"
+                        style="background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.25); padding: 13px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.95rem;">
+                        Închide
+                    </button>
+                </div>
             </div>
 
         </div>
