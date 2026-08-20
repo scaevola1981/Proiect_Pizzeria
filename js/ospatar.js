@@ -323,9 +323,9 @@ async function loadActiveTableStatus() {
             const rawMasa = String(order.numar_masa || '').trim();
             if (!rawMasa) return;
 
-            // Normalizăm "Masa 1" -> "1" pentru căutare exactă
+            // Normalizăm "Masa 1" -> "1" pentru cheie canonică unică
             const cleanMasa = rawMasa.replace(/^masa\s*/i, '').trim();
-            const keysToSet = [cleanMasa, rawMasa];
+            if (!cleanMasa) return;
 
             // Extragem persoanele care au produse în această comandă
             const personsInOrder = new Set();
@@ -338,16 +338,20 @@ async function loadActiveTableStatus() {
                 });
             }
 
-            keysToSet.forEach(k => {
-                if (!activeTableOrdersMap[k]) {
-                    activeTableOrdersMap[k] = { count: 0, total: 0, orderIds: [], orders: [], orderedPersons: new Set() };
-                }
-                activeTableOrdersMap[k].count += 1;
-                activeTableOrdersMap[k].total += parseFloat(order.total || 0);
-                activeTableOrdersMap[k].orderIds.push(order.id);
-                activeTableOrdersMap[k].orders.push(order);
-                personsInOrder.forEach(p => activeTableOrdersMap[k].orderedPersons.add(p));
-            });
+            if (!activeTableOrdersMap[cleanMasa]) {
+                activeTableOrdersMap[cleanMasa] = { count: 0, total: 0, orderIds: [], orders: [], orderedPersons: new Set() };
+            }
+            activeTableOrdersMap[cleanMasa].count += 1;
+            activeTableOrdersMap[cleanMasa].total += parseFloat(order.total || 0);
+            activeTableOrdersMap[cleanMasa].orderIds.push(order.id);
+            activeTableOrdersMap[cleanMasa].orders.push(order);
+            personsInOrder.forEach(p => activeTableOrdersMap[cleanMasa].orderedPersons.add(p));
+
+            // Mapăm aliasurile pentru căutare rapidă (fără a duplica calculul)
+            if (rawMasa !== cleanMasa) {
+                activeTableOrdersMap[rawMasa] = activeTableOrdersMap[cleanMasa];
+            }
+            activeTableOrdersMap[`Masa ${cleanMasa}`] = activeTableOrdersMap[cleanMasa];
         });
 
         renderProducts();
@@ -614,7 +618,16 @@ window.showTableOrderDetails = function (masaStr) {
     let latestStatus = 'noua';
     let waiterName = null;
 
+    const uniqueOrders = [];
+    const seenIds = new Set();
     occ.orders.forEach(ord => {
+        if (ord && !seenIds.has(ord.id)) {
+            seenIds.add(ord.id);
+            uniqueOrders.push(ord);
+        }
+    });
+
+    uniqueOrders.forEach(ord => {
         if (ord.status) latestStatus = ord.status;
         if (ord.ospatar_nume) waiterName = ord.ospatar_nume;
         if (Array.isArray(ord.detalii_comanda)) {
