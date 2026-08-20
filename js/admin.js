@@ -259,15 +259,17 @@ function renderAdminProducts() {
             card.className = 'product-card';
             card.style.background = 'rgba(255, 255, 255, 0.1)';
             card.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+            card.style.overflow = 'hidden';
+            card.style.boxSizing = 'border-box';
 
             card.innerHTML = `
                 <img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(p.nume)}" style="${imgStyle}">
-                <h3 style="color: #fff;">${escapeHTML(p.nume)}</h3>
-                <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 15px; font-size: 0.9rem;">${p.displayDesc || '-'}</p>
+                <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 6px; word-break: break-word;">${escapeHTML(p.nume)}</h3>
+                <p style="color: #cbd5e1; flex-grow: 1; margin-bottom: 12px; font-size: 0.85rem; line-height: 1.35;">${p.displayDesc || '-'}</p>
                 ${priceHTML}
-                <div style="display: flex; gap: 10px; margin-top: auto;">
-                    <button onclick="window.openEditModal('${p.id}')" style="flex: 1; background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);"><i class="fas fa-edit"></i> Editează</button>
-                    <button onclick="window.deleteProduct(${parseInt(p.id)})" style="flex: 1; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fas fa-trash"></i> Șterge</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; width: 100%; box-sizing: border-box;">
+                    <button onclick="window.openEditModal('${p.id}')" style="width: 100%; background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); border: none; padding: 10px 4px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35); font-size: 0.88rem; box-sizing: border-box; min-width: 0;"><i class="fas fa-edit"></i> Editează</button>
+                    <button onclick="window.deleteProduct(${parseInt(p.id)})" style="width: 100%; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 10px 4px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.88rem; box-sizing: border-box; min-width: 0;"><i class="fas fa-trash"></i> Șterge</button>
                 </div>
             `;
             grid.appendChild(card);
