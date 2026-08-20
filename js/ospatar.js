@@ -761,7 +761,11 @@ window.closeTableOrderModal = function () {
 window.selectPersonChip = function (btnElement, personValue) {
     currentPerson = personValue;
     window.updateTableAndPersonUI();
+    updateAllProductButtons();
     renderProducts();
+    if (currentModalCategory) {
+        renderCategoryModalContent();
+    }
 };
 
 async function loadMenuProducts() {
@@ -785,6 +789,40 @@ async function loadMenuProducts() {
     }
 }
 
+const categoryIcons = {
+    "Pizza": "fas fa-pizza-slice",
+    "Focaccia": "fas fa-bread-slice",
+    "Paste": "fas fa-utensils",
+    "Antipasti": "fas fa-cheese",
+    "Fel Principal": "fas fa-drumstick-bite",
+    "Desert": "fas fa-birthday-cake",
+    "Înghețată": "fas fa-ice-cream",
+    "Vin Alb": "fas fa-wine-glass-alt",
+    "Vin Rosé": "fas fa-wine-glass-alt",
+    "Vin Roșu": "fas fa-wine-glass",
+    "Spumante": "fas fa-wine-bottle",
+    "Cocktailuri": "fas fa-cocktail",
+    "Vodcă": "fas fa-glass-whiskey",
+    "Whisky": "fas fa-glass-whiskey",
+    "Gin": "fas fa-cocktail",
+    "Rom": "fas fa-glass-whiskey",
+    "Tequila": "fas fa-glass-whiskey",
+    "Brandy / Cognac": "fas fa-glass-whiskey",
+    "Bitter / Lichior": "fas fa-wine-bottle",
+    "Cafea": "fas fa-coffee",
+    "Răcoritoare": "fas fa-wine-bottle",
+    "Apă": "fas fa-tint",
+    "Energizant": "fas fa-bolt",
+    "Bere Draft": "fas fa-beer",
+    "Bere": "fas fa-beer",
+    "Special": "fas fa-star",
+    "Altele": "fas fa-list"
+};
+
+let currentModalCategory = null;
+let currentModalSearchQuery = '';
+window.cachedGroupedProducts = {};
+
 function renderProducts() {
     const container = document.getElementById('produse-container');
     const navBar = document.getElementById('subcategory-nav');
@@ -801,7 +839,7 @@ function renderProducts() {
         return;
     }
 
-    // 1. Filtrare produse
+    // 1. Filtrare produse după Tab (Restaurant vs Bar) sau Căutare Globală
     let filteredProducts = produse.filter(p => {
         const pCat = (p.categorie || '').toLowerCase().trim();
         let isBautura = false;
@@ -855,6 +893,8 @@ function renderProducts() {
         grouped[subcat].push({ ...p, displayDesc });
     });
 
+    window.cachedGroupedProducts = grouped;
+
     // Ordonare logică a subcategoriilor
     const preferredOrder = [
         "Pizza", "Focaccia", "Paste", "Antipasti", "Fel Principal", "Desert", "Înghețată",
@@ -870,60 +910,29 @@ function renderProducts() {
         return posA - posB;
     });
 
-    // 3. Generare Navigatie Orizontală Subcategorii (doar dacă nu este căutare activă)
-    if (navBar && !searchQuery && sortedSubcats.length > 1) {
-        navBar.classList.remove('hidden');
-
-        sortedSubcats.forEach(cat => {
-            const btn = document.createElement('a');
-            btn.href = `#ospatar-cat-${escapeHTML(cat.replace(/\s+/g, '-'))}`;
-            btn.className = 'subcategory-btn';
-            btn.innerText = cat;
-
-            btn.addEventListener('click', (e) => {
-                navBar.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-            });
-
-            navBar.appendChild(btn);
-        });
-
-        if (navBar.firstChild) navBar.firstChild.classList.add('active');
-    }
-
-    // 4. Randare pe sectiuni de categorii
-    for (const catName of sortedSubcats) {
-        const prods = grouped[catName];
-        const sectionId = `ospatar-cat-${escapeHTML(catName.replace(/\s+/g, '-'))}`;
-
-        const section = document.createElement('div');
-        section.className = 'category-section';
-        section.id = sectionId;
-
-        const sectionTitle = document.createElement('h2');
-        sectionTitle.style.color = '#f5b041';
-        sectionTitle.style.borderBottom = '1px solid rgba(245,176,65,0.3)';
-        sectionTitle.style.paddingBottom = '5px';
-        sectionTitle.style.marginBottom = '15px';
-        sectionTitle.innerText = catName;
-        section.appendChild(sectionTitle);
+    // CAZ 1: Căutare Globală activă în Search Bar ➔ Afișăm direct rezultatele
+    if (searchQuery) {
+        const searchHeader = document.createElement('div');
+        searchHeader.style = "color: #f5b041; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;";
+        searchHeader.innerHTML = `<i class="fas fa-search"></i> Rezultate pentru "${escapeHTML(searchQuery)}" (${filteredProducts.length})`;
+        container.appendChild(searchHeader);
 
         const grid = document.createElement('div');
         grid.className = 'products-grid';
 
-        prods.forEach(p => {
+        filteredProducts.forEach(p => {
             const safeName = escapeHTML(p.nume);
             const safePrice = escapeHTML(String(p.pret));
             const safeImage = escapeHTML(p.imagine_url || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60');
 
             const isDrink = currentTab === 'bar' || (p.categorie && p.categorie.toLowerCase() === 'bar');
             const imgStyle = isDrink ?
-                'width: 100%; height: 160px; object-fit: contain; background: #ffffff; border-radius: 10px; padding: 6px; margin-bottom: 12px; box-sizing: border-box;' :
-                'width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 12px;';
+                'width: 100%; height: 150px; object-fit: contain; background: #ffffff; border-radius: 10px; padding: 6px; margin-bottom: 10px; box-sizing: border-box;' :
+                'width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;';
 
             const div = document.createElement('div');
             div.className = 'product-card glass-panel';
-            div.style.padding = '15px';
+            div.style.padding = '12px';
             div.style.display = 'flex';
             div.style.flexDirection = 'column';
 
@@ -941,20 +950,186 @@ function renderProducts() {
 
             div.innerHTML = `
                 <img src="${safeImage}" alt="${safeName}" style="${imgStyle}">
-                <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 5px;">${safeName}</h3>
-                <p style="color: #cbd5e1; font-size: 0.85rem; flex: 1; margin-bottom: 10px;">${p.displayDesc || '-'}</p>
-                <h4 style="color: #f5b041; font-size: 1.15rem; margin-bottom: 12px;">${safePrice} Lei</h4>
+                <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 4px;">${safeName}</h3>
+                <p style="color: #cbd5e1; font-size: 0.82rem; flex: 1; margin-bottom: 8px;">${p.displayDesc || '-'}</p>
+                <h4 style="color: #f5b041; font-size: 1.15rem; margin-bottom: 10px;">${safePrice} Lei</h4>
                 <button id="add-btn-${p.id}" onclick="window.addToCartOspatar(${parseInt(p.id)})"
-                    style="width: 100%; padding: 12px; ${btnBg} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: all 0.2s;">
+                    style="width: 100%; padding: 11px; ${btnBg} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.92rem; transition: all 0.2s;">
                     ${btnContent}
                 </button>
             `;
             grid.appendChild(div);
         });
 
-        section.appendChild(grid);
-        container.appendChild(section);
+        container.appendChild(grid);
+        return;
     }
+
+    // CAZ 2: Mod Normal Fără Scrolling Lung ➔ Grid Modern de Carduri de Categorii
+    const catGrid = document.createElement('div');
+    catGrid.style = "display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px;";
+
+    sortedSubcats.forEach(catName => {
+        const prods = grouped[catName];
+        const count = prods.length;
+        const iconClass = categoryIcons[catName] || "fas fa-utensils";
+
+        // Verificăm dacă sunt produse din această categorie în coș
+        const inCartCount = cart.filter(item => {
+            return prods.some(p => String(p.id) === String(item.product.id));
+        }).reduce((sum, item) => sum + item.quantity, 0);
+
+        const card = document.createElement('div');
+        card.className = 'category-touch-tile';
+        card.onclick = () => window.openCategoryModal(catName);
+        card.style = `
+            background: rgba(255, 255, 255, 0.07);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 95px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        `;
+
+        let badgeHtml = '';
+        if (inCartCount > 0) {
+            badgeHtml = `
+                <div style="position: absolute; top: 6px; right: 6px; background: #2ecc71; color: #1e293b; font-weight: 900; font-size: 0.75rem; padding: 2px 7px; border-radius: 10px; box-shadow: 0 2px 6px rgba(46,204,113,0.5);">
+                    🛒 ${inCartCount}
+                </div>
+            `;
+        }
+
+        card.innerHTML = `
+            ${badgeHtml}
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(245, 176, 65, 0.15); border: 1px solid rgba(245, 176, 65, 0.3); display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                <i class="${iconClass}" style="color: #f5b041; font-size: 1.3rem;"></i>
+            </div>
+            <div style="color: #ffffff; font-weight: 800; font-size: 0.95rem; line-height: 1.2; margin-bottom: 4px;">
+                ${escapeHTML(catName)}
+            </div>
+            <div style="color: #94a3b8; font-size: 0.78rem; font-weight: 600;">
+                ${count} ${currentTab === 'bar' ? 'băuturi' : 'preparate'}
+            </div>
+        `;
+
+        catGrid.appendChild(card);
+    });
+
+    container.appendChild(catGrid);
+}
+
+// ==========================================
+// MODAL SPECIAL CATEGORIE (FĂRĂ SCROLL PE PAGINĂ)
+// ==========================================
+
+window.openCategoryModal = function (catName) {
+    currentModalCategory = catName;
+    currentModalSearchQuery = '';
+
+    const modal = document.getElementById('category-modal');
+    const searchInp = document.getElementById('category-modal-search');
+    if (searchInp) searchInp.value = '';
+
+    renderCategoryModalContent();
+
+    if (modal) modal.style.display = 'flex';
+};
+
+window.closeCategoryModal = function () {
+    const modal = document.getElementById('category-modal');
+    if (modal) modal.style.display = 'none';
+    currentModalCategory = null;
+    renderProducts();
+};
+
+window.filterCategoryModalProducts = function (query) {
+    currentModalSearchQuery = (query || '').toLowerCase().trim();
+    renderCategoryModalContent();
+};
+
+function renderCategoryModalContent() {
+    if (!currentModalCategory) return;
+
+    const titleEl = document.getElementById('category-modal-title');
+    const countEl = document.getElementById('category-modal-count');
+    const container = document.getElementById('category-modal-products');
+    if (!container) return;
+
+    const iconClass = categoryIcons[currentModalCategory] || "fas fa-utensils";
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="${iconClass}" style="color: #f5b041;"></i> ${escapeHTML(currentModalCategory)}`;
+    }
+
+    const allProdsInCat = (window.cachedGroupedProducts && window.cachedGroupedProducts[currentModalCategory]) || [];
+
+    let filtered = allProdsInCat;
+    if (currentModalSearchQuery) {
+        filtered = allProdsInCat.filter(p =>
+            p.nume.toLowerCase().includes(currentModalSearchQuery) ||
+            (p.descriere && p.descriere.toLowerCase().includes(currentModalSearchQuery))
+        );
+    }
+
+    if (countEl) {
+        countEl.innerText = `${filtered.length} produse disponibile`;
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: #94a3b8; padding: 30px 0;">Niciun produs găsit în această categorie.</p>`;
+        return;
+    }
+
+    let html = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">`;
+
+    filtered.forEach(p => {
+        const safeName = escapeHTML(p.nume);
+        const safePrice = escapeHTML(String(p.pret));
+        const safeImage = escapeHTML(p.imagine_url || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=60');
+
+        const isDrink = currentTab === 'bar' || (p.categorie && p.categorie.toLowerCase() === 'bar');
+        const imgStyle = isDrink ?
+            'width: 100%; height: 130px; object-fit: contain; background: #ffffff; border-radius: 10px; padding: 6px; margin-bottom: 8px; box-sizing: border-box;' :
+            'width: 100%; height: 125px; object-fit: cover; border-radius: 10px; margin-bottom: 8px;';
+
+        const qtyInCart = cart
+            .filter(item => String(item.product.id) === String(p.id))
+            .reduce((sum, item) => sum + item.quantity, 0);
+
+        let btnBg = 'background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);';
+        let btnContent = `<i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})`;
+
+        if (qtyInCart > 0) {
+            btnBg = 'background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.45); transform: scale(1.02);';
+            btnContent = `<i class="fas fa-check-circle"></i> Adăugat (${qtyInCart}) — ${escapeHTML(currentPerson)}`;
+        }
+
+        html += `
+            <div class="product-card glass-panel" style="padding: 10px; display: flex; flex-direction: column; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px;">
+                <img src="${safeImage}" alt="${safeName}" style="${imgStyle}">
+                <h3 style="color: #fff; font-size: 1rem; margin: 0 0 3px 0; line-height: 1.2;">${safeName}</h3>
+                <p style="color: #cbd5e1; font-size: 0.8rem; flex: 1; margin: 0 0 6px 0; line-height: 1.2;">${p.displayDesc || '-'}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: #f5b041; font-size: 1.1rem; font-weight: 800;">${safePrice} Lei</span>
+                </div>
+                <button id="modal-add-btn-${p.id}" onclick="window.addToCartOspatar(${parseInt(p.id)})"
+                    style="width: 100%; padding: 10px; ${btnBg} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;">
+                    ${btnContent}
+                </button>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
 }
 
 window.addToCartOspatar = function (productId) {
@@ -1081,21 +1256,33 @@ function updateCartUI() {
 
 function updateAllProductButtons() {
     produse.forEach(p => {
-        const btn = document.getElementById(`add-btn-${p.id}`);
-        if (!btn) return;
-
         const qtyInCart = cart
             .filter(item => String(item.product.id) === String(p.id))
             .reduce((sum, item) => sum + item.quantity, 0);
 
+        let btnBg, btnShadow, btnContent;
         if (qtyInCart > 0) {
-            btn.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
-            btn.style.boxShadow = '0 4px 15px rgba(46, 204, 113, 0.45)';
-            btn.innerHTML = `<i class="fas fa-check-circle"></i> Adăugat (${qtyInCart}) — ${escapeHTML(currentPerson)}`;
+            btnBg = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+            btnShadow = '0 4px 15px rgba(46, 204, 113, 0.45)';
+            btnContent = `<i class="fas fa-check-circle"></i> Adăugat (${qtyInCart}) — ${escapeHTML(currentPerson)}`;
         } else {
-            btn.style.background = 'linear-gradient(to right, #29EAC4, #4284DB)';
-            btn.style.boxShadow = '0 4px 12px rgba(41, 234, 196, 0.35)';
-            btn.innerHTML = `<i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})`;
+            btnBg = 'linear-gradient(to right, #29EAC4, #4284DB)';
+            btnShadow = '0 4px 12px rgba(41, 234, 196, 0.35)';
+            btnContent = `<i class="fas fa-plus"></i> Adaugă (${escapeHTML(currentPerson)})`;
+        }
+
+        const mainBtn = document.getElementById(`add-btn-${p.id}`);
+        if (mainBtn) {
+            mainBtn.style.background = btnBg;
+            mainBtn.style.boxShadow = btnShadow;
+            mainBtn.innerHTML = btnContent;
+        }
+
+        const modalBtn = document.getElementById(`modal-add-btn-${p.id}`);
+        if (modalBtn) {
+            modalBtn.style.background = btnBg;
+            modalBtn.style.boxShadow = btnShadow;
+            modalBtn.innerHTML = btnContent;
         }
     });
 }

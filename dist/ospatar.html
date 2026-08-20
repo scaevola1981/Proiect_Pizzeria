@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-title" content="Ospătar Bella">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest-ospatar.json">
-  <script type="module" crossorigin src="/assets/ospatar-BgiiSYHe.js"></script>
+  <script type="module" crossorigin src="/assets/ospatar-CVFZ88lC.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/supabase-CdU8ZLGB.js">
   <link rel="modulepreload" crossorigin href="/assets/security-Bv09CpAF.js">
   <link rel="stylesheet" crossorigin href="/assets/supabase-DN60NlFN.css">
@@ -26,34 +26,46 @@
     <!-- Overlay Autentificare Ospătar (Start Tură) -->
     <div id="waiter-login-overlay"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b1120; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-        
-        <div class="glass-panel" style="max-width: 380px; width: 100%; text-align: center; padding: 25px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid rgba(245, 176, 65, 0.4);">
+
+        <div class="glass-panel"
+            style="max-width: 380px; width: 100%; text-align: center; padding: 25px 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid rgba(245, 176, 65, 0.4);">
             <div style="font-size: 2.2rem; color: #f5b041; margin-bottom: 5px;">
                 <i class="fas fa-user-tie"></i>
             </div>
             <h2 style="color: #fff; margin: 0 0 5px 0; font-size: 1.4rem; letter-spacing: 1px;">BELLA ROMA</h2>
-            <p style="color: #f5b041; font-weight: bold; font-size: 0.9rem; margin: 0 0 18px 0;">Autentificare Tură Ospătar</p>
+            <p style="color: #f5b041; font-weight: bold; font-size: 0.9rem; margin: 0 0 18px 0;">Autentificare Tură
+                Ospătar</p>
 
             <!-- 1. Formular Inițial: Nume + PIN (prima oară pe acest dispozitiv) -->
             <form id="waiter-first-login-form" style="display: block; text-align: left;">
                 <div style="margin-bottom: 14px;">
-                    <label for="waiter-name-input" style="display: block; color: #cbd5e1; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">Nume Ospătar:</label>
-                    <input type="text" id="waiter-name-input" required placeholder="ex: Maria, Andrei..." class="modern-input" style="width: 100%; font-size: 1rem; padding: 12px;" maxlength="50" autocomplete="name">
+                    <label for="waiter-name-input"
+                        style="display: block; color: #cbd5e1; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">Nume
+                        Ospătar:</label>
+                    <input type="text" id="waiter-name-input" required placeholder="ex: Maria, Andrei..."
+                        class="modern-input" style="width: 100%; font-size: 1rem; padding: 12px;" maxlength="50"
+                        autocomplete="name">
                 </div>
 
                 <div style="margin-bottom: 18px;">
-                    <label for="waiter-pin-input" style="display: block; color: #cbd5e1; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">PIN Acces (4 cifre):</label>
-                    <input type="password" id="waiter-pin-input" required placeholder="••••" class="modern-input" style="width: 100%; font-size: 1.3rem; padding: 10px; text-align: center; letter-spacing: 6px;" maxlength="4" inputmode="numeric">
+                    <label for="waiter-pin-input"
+                        style="display: block; color: #cbd5e1; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">PIN
+                        Acces (4 cifre):</label>
+                    <input type="password" id="waiter-pin-input" required placeholder="••••" class="modern-input"
+                        style="width: 100%; font-size: 1.3rem; padding: 10px; text-align: center; letter-spacing: 6px;"
+                        maxlength="4" inputmode="numeric">
                 </div>
 
-                <button type="submit" id="btn-start-first-shift" class="modern-form-btn" style="background: #27ae60; color: white; width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
+                <button type="submit" id="btn-start-first-shift" class="modern-form-btn"
+                    style="background: #27ae60; color: white; width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);">
                     <i class="fas fa-sign-in-alt"></i> Intră în Tură
                 </button>
             </form>
 
             <!-- 2. Formular Rapid: Doar PIN (pentru utilizări ulterioare) -->
             <div id="waiter-remembered-pin-screen" style="display: none;">
-                <div style="background: rgba(255,255,255,0.06); padding: 10px 14px; border-radius: 12px; margin-bottom: 15px; display: inline-flex; align-items: center; gap: 8px;">
+                <div
+                    style="background: rgba(255,255,255,0.06); padding: 10px 14px; border-radius: 12px; margin-bottom: 15px; display: inline-flex; align-items: center; gap: 8px;">
                     <span style="color: #94a3b8; font-size: 0.85rem;">Ospătar:</span>
                     <strong id="remembered-waiter-name" style="color: #2ecc71; font-size: 1.1rem;"></strong>
                 </div>
@@ -61,15 +73,21 @@
                 <p style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 12px;">Introduceți PIN-ul de 4 cifre:</p>
 
                 <!-- Buline PIN -->
-                <div id="pin-dots-container" style="display: flex; justify-content: center; gap: 14px; margin-bottom: 18px;">
-                    <span class="pin-dot" id="dot-0" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
-                    <span class="pin-dot" id="dot-1" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
-                    <span class="pin-dot" id="dot-2" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
-                    <span class="pin-dot" id="dot-3" style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                <div id="pin-dots-container"
+                    style="display: flex; justify-content: center; gap: 14px; margin-bottom: 18px;">
+                    <span class="pin-dot" id="dot-0"
+                        style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                    <span class="pin-dot" id="dot-1"
+                        style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                    <span class="pin-dot" id="dot-2"
+                        style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
+                    <span class="pin-dot" id="dot-3"
+                        style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid #f5b041; background: transparent; transition: all 0.2s;"></span>
                 </div>
 
                 <!-- Tastatură Numerică (PIN Pad) -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto 12px auto;">
+                <div
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto 12px auto;">
                     <button type="button" class="pin-key-btn" onclick="window.pressPinKey('1')">1</button>
                     <button type="button" class="pin-key-btn" onclick="window.pressPinKey('2')">2</button>
                     <button type="button" class="pin-key-btn" onclick="window.pressPinKey('3')">3</button>
@@ -79,12 +97,16 @@
                     <button type="button" class="pin-key-btn" onclick="window.pressPinKey('7')">7</button>
                     <button type="button" class="pin-key-btn" onclick="window.pressPinKey('8')">8</button>
                     <button type="button" class="pin-key-btn" onclick="window.pressPinKey('9')">9</button>
-                    <button type="button" class="pin-key-btn" onclick="window.clearPinKey()" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border-color: #e74c3c;">C</button>
+                    <button type="button" class="pin-key-btn" onclick="window.clearPinKey()"
+                        style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border-color: #e74c3c;">C</button>
                     <button type="button" class="pin-key-btn" onclick="window.pressPinKey('0')">0</button>
-                    <button type="button" class="pin-key-btn" onclick="window.submitRememberedPin()" style="background: rgba(46, 204, 113, 0.3); color: #2ecc71; border-color: #2ecc71;"><i class="fas fa-check"></i></button>
+                    <button type="button" class="pin-key-btn" onclick="window.submitRememberedPin()"
+                        style="background: rgba(46, 204, 113, 0.3); color: #2ecc71; border-color: #2ecc71;"><i
+                            class="fas fa-check"></i></button>
                 </div>
 
-                <button type="button" onclick="window.switchWaiterAccount()" style="background: transparent; border: none; color: #94a3b8; font-size: 0.85rem; cursor: pointer; text-decoration: underline; padding: 6px;">
+                <button type="button" onclick="window.switchWaiterAccount()"
+                    style="background: transparent; border: none; color: #94a3b8; font-size: 0.85rem; cursor: pointer; text-decoration: underline; padding: 6px;">
                     <i class="fas fa-user-friends"></i> Alt ospătar / Schimbă numele
                 </button>
 
@@ -100,6 +122,7 @@
                         cursor: pointer;
                         transition: all 0.15s;
                     }
+
                     .pin-key-btn:active {
                         transform: scale(0.92);
                         background: rgba(245, 176, 65, 0.4);
@@ -107,13 +130,16 @@
                 </style>
             </div>
 
-            <p id="waiter-login-error" style="color: #e74c3c; font-size: 0.85rem; font-weight: bold; margin-top: 10px; display: none;"></p>
+            <p id="waiter-login-error"
+                style="color: #e74c3c; font-size: 0.85rem; font-weight: bold; margin-top: 10px; display: none;"></p>
         </div>
     </div>
 
     <header class="bella-roma-hero" style="height: 90px; margin-bottom: 15px; position: relative;">
-        <div style="position: absolute; top: 10px; left: 12px; z-index: 10; display: flex; align-items: center; gap: 8px;">
-            <div id="waiter-session-badge" style="background: rgba(46, 204, 113, 0.25); color: #2ecc71; border: 1px solid #2ecc71; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+        <div
+            style="position: absolute; top: 10px; left: 12px; z-index: 10; display: flex; align-items: center; gap: 8px;">
+            <div id="waiter-session-badge"
+                style="background: rgba(46, 204, 113, 0.25); color: #2ecc71; border: 1px solid #2ecc71; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="fas fa-user-tie"></i> <span id="current-waiter-name">Ospătar</span>
             </div>
             <button onclick="window.logoutWaiter()" title="Ieșire din tură"
@@ -122,7 +148,8 @@
             </button>
         </div>
 
-        <div class="hero-overlay" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding-top: 15px;">
+        <div class="hero-overlay"
+            style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding-top: 15px;">
             <h1 class="hero-title" style="font-size: 1.6rem; margin: 0; letter-spacing: 2px;">BELLA ROMA</h1>
             <p class="hero-subtitle" style="font-size: 0.85rem; margin: 0; color: #f5b041; font-weight: bold;">
                 COMANDA RAPIDĂ MESE
@@ -132,16 +159,19 @@
 
     <!-- Panou Compact Masă & Persoane (Optimizat Telefon: 3 Carduri / Rând) -->
     <div class="glass-panel" style="margin-bottom: 12px; padding: 10px 12px; border-radius: 16px;">
-        
+
         <!-- Rândul 1: Deschide Masă (Apasă pentru Tastatură Numerică) -->
         <div style="margin-bottom: 8px;">
             <div onclick="window.openTableNumpadModal()"
                 style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.55); border: 1.5px solid #f5b041; border-radius: 12px; padding: 10px 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                <div style="color: #f5b041; font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                <div
+                    style="color: #f5b041; font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-utensils"></i> Deschide Masă:
                 </div>
-                <div id="current-table-display-badge" style="font-size: 1.15rem; font-weight: 900; color: #2ecc71; display: flex; align-items: center; gap: 8px;">
-                    <span id="table-display-val" style="color: #94a3b8; font-size: 0.95rem; font-weight: bold;">Apasă pentru a alege masa</span>
+                <div id="current-table-display-badge"
+                    style="font-size: 1.15rem; font-weight: 900; color: #2ecc71; display: flex; align-items: center; gap: 8px;">
+                    <span id="table-display-val" style="color: #94a3b8; font-size: 0.95rem; font-weight: bold;">Apasă
+                        pentru a alege masa</span>
                     <i class="fas fa-keyboard" style="color: #f5b041; font-size: 1.05rem;"></i>
                 </div>
             </div>
@@ -150,40 +180,52 @@
         </div>
 
         <!-- Rândul 2: Grid Mese Active / Selectate (Exact 3 carduri pe rând pe telefon!) -->
-        <div id="active-tables-pills-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; margin-bottom: 10px;">
+        <div id="active-tables-pills-container"
+            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; margin-bottom: 10px;">
             <!-- Generat dinamic: [🍽️ Masa 1] [🍽️ Masa 3] [🍽️ Masa 4] -->
         </div>
 
         <!-- Rândul 3: Selector Rapid Persoane (Exact 3 carduri pe rând pe telefon!) -->
-        <div id="person-chips-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%;">
-            <button type="button" class="person-chip active" data-person="Masa" onclick="window.selectPersonChip(this, 'Masa')" style="grid-column: 1 / -1; padding: 8px 10px;">
+        <div id="person-chips-container"
+            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%;">
+            <button type="button" class="person-chip active" data-person="Masa"
+                onclick="window.selectPersonChip(this, 'Masa')" style="grid-column: 1 / -1; padding: 8px 10px;">
                 👥 Împreună (Masa)
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 1" onclick="window.selectPersonChip(this, 'Persoana 1')">
+            <button type="button" class="person-chip" data-person="Persoana 1"
+                onclick="window.selectPersonChip(this, 'Persoana 1')">
                 👤 Pers. 1
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 2" onclick="window.selectPersonChip(this, 'Persoana 2')">
+            <button type="button" class="person-chip" data-person="Persoana 2"
+                onclick="window.selectPersonChip(this, 'Persoana 2')">
                 👤 Pers. 2
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 3" onclick="window.selectPersonChip(this, 'Persoana 3')">
+            <button type="button" class="person-chip" data-person="Persoana 3"
+                onclick="window.selectPersonChip(this, 'Persoana 3')">
                 👤 Pers. 3
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 4" onclick="window.selectPersonChip(this, 'Persoana 4')">
+            <button type="button" class="person-chip" data-person="Persoana 4"
+                onclick="window.selectPersonChip(this, 'Persoana 4')">
                 👤 Pers. 4
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 5" onclick="window.selectPersonChip(this, 'Persoana 5')">
+            <button type="button" class="person-chip" data-person="Persoana 5"
+                onclick="window.selectPersonChip(this, 'Persoana 5')">
                 👤 Pers. 5
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 6" onclick="window.selectPersonChip(this, 'Persoana 6')">
+            <button type="button" class="person-chip" data-person="Persoana 6"
+                onclick="window.selectPersonChip(this, 'Persoana 6')">
                 👤 Pers. 6
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 7" onclick="window.selectPersonChip(this, 'Persoana 7')">
+            <button type="button" class="person-chip" data-person="Persoana 7"
+                onclick="window.selectPersonChip(this, 'Persoana 7')">
                 👤 Pers. 7
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 8" onclick="window.selectPersonChip(this, 'Persoana 8')">
+            <button type="button" class="person-chip" data-person="Persoana 8"
+                onclick="window.selectPersonChip(this, 'Persoana 8')">
                 👤 Pers. 8
             </button>
-            <button type="button" class="person-chip" data-person="Persoana 9" onclick="window.selectPersonChip(this, 'Persoana 9')">
+            <button type="button" class="person-chip" data-person="Persoana 9"
+                onclick="window.selectPersonChip(this, 'Persoana 9')">
                 👤 Pers. 9
             </button>
         </div>
@@ -204,6 +246,7 @@
                 width: 100%;
                 box-sizing: border-box;
             }
+
             .person-chip {
                 padding: 8px 6px;
                 border-radius: 10px;
@@ -222,6 +265,7 @@
                 width: 100%;
                 box-sizing: border-box;
             }
+
             .person-chip:hover {
                 background: rgba(245, 176, 65, 0.25);
                 border-color: #f5b041;
@@ -234,10 +278,11 @@
             <!-- Header Sticky Navigație & Căutare Meniu -->
             <div class="menu-controls"
                 style="position: sticky; top: 0; z-index: 100; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 12px 14px 10px 14px; margin-top: -15px; margin-left: -15px; margin-right: -15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);">
-                
+
                 <!-- Search Bar -->
                 <div class="search-bar" style="margin-bottom: 10px; position: relative;">
-                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #888;"></i>
                     <input type="text" id="search-input" placeholder="Caută preparat sau băutură..."
                         style="width: 100%; padding: 11px 15px 11px 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; font-size: 0.95rem; box-sizing: border-box; outline: none;">
                 </div>
@@ -267,16 +312,70 @@
         </main>
     </div>
 
+    <!-- Modal Produse Categorie (Fără Scrolling pe toată pagina) -->
+    <div id="category-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 10002; justify-content: center; align-items: center; padding: 10px; box-sizing: border-box;">
+        <div class="glass-panel"
+            style="width: 100%; max-width: 600px; height: 92vh; display: flex; flex-direction: column; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); border-radius: 22px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); overflow: hidden; animation: fadeIn 0.2s ease;">
+            
+            <!-- Header Modal Categorie -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98);">
+                <div>
+                    <h2 id="category-modal-title" style="margin: 0; font-size: 1.25rem; color: #f5b041; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-utensils"></i> Categorie
+                    </h2>
+                    <div id="category-modal-count" style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">
+                        0 produse
+                    </div>
+                </div>
+                <button type="button" onclick="window.closeCategoryModal()"
+                    style="background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Căutare rapidă în categorie -->
+            <div style="padding: 10px 18px 8px 18px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <div style="position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; font-size: 0.9rem;"></i>
+                    <input type="text" id="category-modal-search" placeholder="Filtrează în această categorie..."
+                        style="width: 100%; padding: 9px 12px 9px 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; font-size: 0.9rem; box-sizing: border-box; outline: none;"
+                        oninput="window.filterCategoryModalProducts(this.value)">
+                </div>
+            </div>
+
+            <!-- Conținut scrollabil cu produse -->
+            <div id="category-modal-products" style="flex: 1; overflow-y: auto; padding: 14px; -webkit-overflow-scrolling: touch;">
+                <!-- Carduri produse categorie -->
+            </div>
+
+            <!-- Footer Modal Sticky -->
+            <div style="padding: 12px 18px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <button type="button" onclick="window.closeCategoryModal()"
+                    style="flex: 1; background: linear-gradient(135deg, #f5b041 0%, #e67e22 100%); color: #1e293b; font-weight: 800; font-size: 0.95rem; padding: 12px; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(245, 176, 65, 0.35);">
+                    <i class="fas fa-arrow-left"></i> Înapoi la Categorii
+                </button>
+                <button type="button" onclick="window.openCartModal()"
+                    style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; padding: 12px 16px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-shopping-cart"></i> Coș
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Coș Comandă Ospătar (Afișat la apăsarea 'Vezi Coș') -->
     <div id="cart-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;">
         <div class="glass-panel"
             style="width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); overflow: hidden; animation: fadeIn 0.25s ease;">
-            
+
             <!-- Header Modal -->
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);">
-                <h2 style="margin: 0; font-size: 1.25rem; color: #f5b041; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-shopping-cart"></i> Comandă <span id="cart-table-display" style="color: #2ecc71; margin-left: 5px;">Masa 1</span>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);">
+                <h2
+                    style="margin: 0; font-size: 1.25rem; color: #f5b041; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-shopping-cart"></i> Comandă <span id="cart-table-display"
+                        style="color: #2ecc71; margin-left: 5px;">Masa 1</span>
                 </h2>
                 <button onclick="window.closeCartModal()"
                     style="background: rgba(255,255,255,0.12); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
@@ -285,15 +384,18 @@
             </div>
 
             <!-- Listă Produse (Scrollabilă) -->
-            <div id="cart-items" style="padding: 15px 20px; overflow-y: auto; flex: 1; min-height: 160px; max-height: 50vh;">
+            <div id="cart-items"
+                style="padding: 15px 20px; overflow-y: auto; flex: 1; min-height: 160px; max-height: 50vh;">
                 <p class="empty-cart">Alegeți preparatele pentru masa selectată.</p>
             </div>
 
             <!-- Footer Modal cu Total și Buton de Trimitere -->
-            <div style="padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98);">
+            <div
+                style="padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                     <span style="color: #aaa; font-size: 1rem; font-weight: 600;">Total de plată:</span>
-                    <span style="color: #2ecc71; font-size: 1.45rem; font-weight: 800;"><span id="cart-total">0.00</span> Lei</span>
+                    <span style="color: #2ecc71; font-size: 1.45rem; font-weight: 800;"><span
+                            id="cart-total">0.00</span> Lei</span>
                 </div>
                 <button id="btn-trimite-comanda-ospatar" onclick="window.sendWaiterOrder()" disabled
                     style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #1e293b; font-weight: 800; font-size: 1.15rem; padding: 15px; border-radius: 14px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); border: none; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;">
@@ -309,11 +411,13 @@
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;">
         <div class="glass-panel"
             style="width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); overflow: hidden; animation: fadeIn 0.25s ease;">
-            
+
             <!-- Header Modal stil Recepție -->
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(230, 126, 34, 0.3) 0%, rgba(15, 23, 42, 0.9) 100%);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(230, 126, 34, 0.3) 0%, rgba(15, 23, 42, 0.9) 100%);">
                 <div>
-                    <h2 id="table-modal-title" style="margin: 0; font-size: 1.3rem; color: #f5b041; display: flex; align-items: center; gap: 8px;">
+                    <h2 id="table-modal-title"
+                        style="margin: 0; font-size: 1.3rem; color: #f5b041; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-utensils"></i> Masa <span id="table-modal-nr">1</span>
                     </h2>
                     <div id="table-modal-subtitle" style="font-size: 0.85rem; color: #94a3b8; margin-top: 3px;">
@@ -327,15 +431,18 @@
             </div>
 
             <!-- Conținut Comandă (Scrollabil) -->
-            <div id="table-modal-content" style="padding: 16px 20px; overflow-y: auto; flex: 1; min-height: 180px; max-height: 55vh;">
+            <div id="table-modal-content"
+                style="padding: 16px 20px; overflow-y: auto; flex: 1; min-height: 180px; max-height: 55vh;">
                 <!-- Se va genera dinamic cu produsele grupate pe persoane -->
             </div>
 
             <!-- Footer Modal cu Total și Acțiuni -->
-            <div style="padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; gap: 10px;">
+            <div
+                style="padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; gap: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="color: #aaa; font-size: 1.05rem; font-weight: 600;">Total Masă:</span>
-                    <span style="color: #2ecc71; font-size: 1.5rem; font-weight: 800;"><span id="table-modal-total">0.00</span> Lei</span>
+                    <span style="color: #2ecc71; font-size: 1.5rem; font-weight: 800;"><span
+                            id="table-modal-total">0.00</span> Lei</span>
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" onclick="window.closeTableOrderModal()"
@@ -357,7 +464,7 @@
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 10005; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;">
         <div class="glass-panel"
             style="width: 100%; max-width: 350px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); padding: 20px 18px; text-align: center; animation: fadeIn 0.2s ease;">
-            
+
             <!-- Header Modal -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin: 0; color: #f5b041; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
@@ -370,9 +477,11 @@
             </div>
 
             <!-- Ecran Afișare Număr Masă -->
-            <div style="background: rgba(0,0,0,0.6); border: 2px solid #f5b041; border-radius: 14px; padding: 10px; margin-bottom: 14px;">
+            <div
+                style="background: rgba(0,0,0,0.6); border: 2px solid #f5b041; border-radius: 14px; padding: 10px; margin-bottom: 14px;">
                 <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 2px;">Numărul Mesei</div>
-                <div id="numpad-table-preview" style="font-size: 2rem; font-weight: 900; color: #ffffff; min-height: 38px; display: flex; align-items: center; justify-content: center; letter-spacing: 2px;">
+                <div id="numpad-table-preview"
+                    style="font-size: 2rem; font-weight: 900; color: #ffffff; min-height: 38px; display: flex; align-items: center; justify-content: center; letter-spacing: 2px;">
                     -
                 </div>
             </div>
@@ -388,9 +497,12 @@
                 <button type="button" class="table-numpad-btn" onclick="window.pressTableNumpad('7')">7</button>
                 <button type="button" class="table-numpad-btn" onclick="window.pressTableNumpad('8')">8</button>
                 <button type="button" class="table-numpad-btn" onclick="window.pressTableNumpad('9')">9</button>
-                <button type="button" class="table-numpad-btn" onclick="window.clearTableNumpad()" style="background: rgba(231, 76, 60, 0.25); color: #e74c3c; border-color: rgba(231, 76, 60, 0.5);">C</button>
+                <button type="button" class="table-numpad-btn" onclick="window.clearTableNumpad()"
+                    style="background: rgba(231, 76, 60, 0.25); color: #e74c3c; border-color: rgba(231, 76, 60, 0.5);">C</button>
                 <button type="button" class="table-numpad-btn" onclick="window.pressTableNumpad('0')">0</button>
-                <button type="button" class="table-numpad-btn" onclick="window.backspaceTableNumpad()" style="background: rgba(245, 176, 65, 0.2); color: #f5b041; border-color: rgba(245, 176, 65, 0.4);"><i class="fas fa-backspace"></i></button>
+                <button type="button" class="table-numpad-btn" onclick="window.backspaceTableNumpad()"
+                    style="background: rgba(245, 176, 65, 0.2); color: #f5b041; border-color: rgba(245, 176, 65, 0.4);"><i
+                        class="fas fa-backspace"></i></button>
             </div>
 
             <!-- Buton Confirmare Masă -->
@@ -411,6 +523,7 @@
                     cursor: pointer;
                     transition: all 0.15s;
                 }
+
                 .table-numpad-btn:active {
                     transform: scale(0.92);
                     background: rgba(245, 176, 65, 0.4);
@@ -423,7 +536,8 @@
     <div id="ospatar-floating-cart-bar"
         style="position: fixed; bottom: 15px; right: 15px; left: 15px; z-index: 9990; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 10px 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-            <span style="color: #2ecc71; font-weight: 800; font-size: 1rem; background: rgba(46, 204, 113, 0.15); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(46, 204, 113, 0.3);">
+            <span
+                style="color: #2ecc71; font-weight: 800; font-size: 1rem; background: rgba(46, 204, 113, 0.15); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(46, 204, 113, 0.3);">
                 📍 Masa <span id="quick-bar-masa">1</span>
             </span>
             <span style="color: #fff; font-weight: bold; font-size: 0.95rem;">
