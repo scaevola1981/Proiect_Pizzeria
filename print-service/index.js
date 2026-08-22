@@ -47,15 +47,15 @@ for (const p of possibleConfigPaths) {
     }
 }
 
-process.on('uncaughtException', (err) => {
-    console.error("\n❌ EROARE NECURATĂ:", err);
-});
-process.on('unhandledRejection', (reason, promise) => {
-    console.error("\n❌ PROMISE RESPINSĂ:", reason);
-});
+// 2. Inițializare Supabase Client cu WebSocket nativ pentru Node.js
+const WebSocket = require('ws');
+global.WebSocket = WebSocket;
 
-// 2. Inițializare Supabase Client
-const supabase = createClient(config.supabase_url, config.supabase_key);
+const supabase = createClient(config.supabase_url, config.supabase_key, {
+    realtime: {
+        transport: WebSocket
+    }
+});
 
 // Set în memorie pentru prevenirea printărilor duplicate
 const printedOrderHistory = new Set();
