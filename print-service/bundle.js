@@ -21860,10 +21860,15 @@ var require_printer_driver_usb = __commonJS({
         if (process.platform !== "win32") {
           return resolve(["POS-80 (Simulated Non-Windows)"]);
         }
-        const psCommand = `powershell -NoProfile -Command "Get-Printer | Select-Object -ExpandProperty Name"`;
+        const psCommand = `powershell -NoProfile -Command "Get-CimInstance Win32_Printer | Select-Object -ExpandProperty Name"`;
         exec(psCommand, { timeout: 4e3 }, (error, stdout) => {
           if (error || !stdout) {
-            return resolve([]);
+            exec(`powershell -NoProfile -Command "(Get-WmiObject -Class Win32_Printer).Name"`, { timeout: 3e3 }, (err2, out2) => {
+              if (err2 || !out2) return resolve([]);
+              const printers2 = out2.split(/\r?\n/).map((p) => p.trim()).filter((p) => p.length > 0);
+              resolve(printers2);
+            });
+            return;
           }
           const printers = stdout.split(/\r?\n/).map((p) => p.trim()).filter((p) => p.length > 0);
           resolve(printers);

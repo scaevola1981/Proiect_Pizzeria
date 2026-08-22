@@ -19,10 +19,16 @@ async function getWindowsPrinters() {
             return resolve(['POS-80 (Simulated Non-Windows)']);
         }
 
-        const psCommand = `powershell -NoProfile -Command "Get-Printer | Select-Object -ExpandProperty Name"`;
+        const psCommand = `powershell -NoProfile -Command "Get-CimInstance Win32_Printer | Select-Object -ExpandProperty Name"`;
         exec(psCommand, { timeout: 4000 }, (error, stdout) => {
             if (error || !stdout) {
-                return resolve([]);
+                // Fallback la WMI vechi dacă CIM e indisponibil
+                exec(`powershell -NoProfile -Command "(Get-WmiObject -Class Win32_Printer).Name"`, { timeout: 3000 }, (err2, out2) => {
+                    if (err2 || !out2) return resolve([]);
+                    const printers = out2.split(/\r?\n/).map(p => p.trim()).filter(p => p.length > 0);
+                    resolve(printers);
+                });
+                return;
             }
             const printers = stdout
                 .split(/\r?\n/)
