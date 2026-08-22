@@ -10,12 +10,17 @@ const { createClient } = require('@supabase/supabase-js');
 const { buildEscPosBuffer } = require('./escpos-builder');
 const { printRawBuffer, resolveTargetPrinter, getWindowsPrinters } = require('./printer-driver-usb');
 
-// 1. Încărcare Configurație
-const configPath = path.join(__dirname, 'config.json');
+// 1. Încărcare Configurație (Caută în directorul executabilului, cwd și directorul scriptului)
+const possibleConfigPaths = [
+    path.join(path.dirname(process.execPath), 'config.json'),
+    path.join(process.cwd(), 'config.json'),
+    path.join(__dirname, 'config.json')
+];
+
 let config = {
     connection_type: "USB",
     printer_name: "POS-80",
-    printer_name_regex: "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80)",
+    printer_name_regex: "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80|Samsung|M2020|M2026)",
     supabase_url: "https://tzdtssvjsrhyocskivmm.supabase.co",
     supabase_key: "sb_publishable_JRIxO4MMjth3IkqfaOCPmw_e69T87UP",
     auto_cut: true,
@@ -27,14 +32,27 @@ let config = {
     max_retries: 5
 };
 
-if (fs.existsSync(configPath)) {
-    try {
-        const userConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        config = { ...config, ...userConfig };
-    } catch (e) {
-        console.warn("⚠️ Nu s-a putut citi config.json, folosim setările implicite:", e.message);
+for (const p of possibleConfigPaths) {
+    if (fs.existsSync(p)) {
+        try {
+            const rawContent = fs.readFileSync(p, 'utf8');
+            const cleanContent = rawContent.replace(/^\uFEFF/, '').trim();
+            const userConfig = JSON.parse(cleanContent);
+            config = { ...config, ...userConfig };
+            console.log(`📁 Configurație încărcată cu succes din: ${p}`);
+            break;
+        } catch (e) {
+            console.warn(`⚠️ Eroare parsare fișier config (${p}):`, e.message);
+        }
     }
 }
+
+process.on('uncaughtException', (err) => {
+    console.error("\n❌ EROARE NECURATĂ:", err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error("\n❌ PROMISE RESPINSĂ:", reason);
+});
 
 // 2. Inițializare Supabase Client
 const supabase = createClient(config.supabase_url, config.supabase_key);
@@ -223,7 +241,30 @@ async function startService() {
     console.log("==================================================");
 
     const targetPrinter = await resolveTargetPrinter(config);
-    console.log(`🎯 Imprimantă USB Țintă: "${targetPrinter}"`);
+    console.log(`🎯 Imprimantă USB Țintă: "${targetPrinter}"\n`);
+
+    if (process.argv.includes('--test')) {
+        console.log("🧪 TESTARE DIRECTĂ A IMPRIMANTEI...");
+        const testOrder = {
+            id: 101,
+            numar_masa: "4",
+            created_at: new Date().toISOString(),
+            ospatar_nume: "Maria (Test)",
+            total: 118.00,
+            detalii_comanda: [
+                { product: { nume: "Pizza Diavola", pret: 35.00 }, quantity: 2, notes: "Fara ceapa, bine facuta", customer_name: "Masa" },
+                { product: { nume: "Coca-Cola 0.33L", pret: 10.00 }, quantity: 1, customer_name: "Masa" },
+                { product: { nume: "Paste Carbonara", pret: 38.00 }, quantity: 1, customer_name: "Persoana 1" }
+            ]
+        };
+        const res = await processOrder(testOrder, true);
+        if (res.success) {
+            console.log("\n🎉 TEST REUȘIT! Bonul a fost trimis către imprimantă.");
+        } else {
+            console.error("\n❌ EȘEC TEST:", res.error);
+        }
+        return;
+    }
 
     startLocalHttpServer();
     await syncUnprintedOrders();

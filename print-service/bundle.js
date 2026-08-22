@@ -22006,11 +22006,15 @@ var fs = require("fs");
 var { createClient } = require_dist4();
 var { buildEscPosBuffer } = require_escpos_builder();
 var { printRawBuffer, resolveTargetPrinter, getWindowsPrinters } = require_printer_driver_usb();
-var configPath = path.join(__dirname, "config.json");
+var possibleConfigPaths = [
+  path.join(path.dirname(process.execPath), "config.json"),
+  path.join(process.cwd(), "config.json"),
+  path.join(__dirname, "config.json")
+];
 var config = {
   connection_type: "USB",
   printer_name: "POS-80",
-  printer_name_regex: "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80)",
+  printer_name_regex: "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80|Samsung|M2020|M2026)",
   supabase_url: "https://tzdtssvjsrhyocskivmm.supabase.co",
   supabase_key: "sb_publishable_JRIxO4MMjth3IkqfaOCPmw_e69T87UP",
   auto_cut: true,
@@ -22021,14 +22025,26 @@ var config = {
   retry_delay_seconds: 3,
   max_retries: 5
 };
-if (fs.existsSync(configPath)) {
-  try {
-    const userConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    config = { ...config, ...userConfig };
-  } catch (e) {
-    console.warn("\u26A0\uFE0F Nu s-a putut citi config.json, folosim set\u0103rile implicite:", e.message);
+for (const p of possibleConfigPaths) {
+  if (fs.existsSync(p)) {
+    try {
+      const rawContent = fs.readFileSync(p, "utf8");
+      const cleanContent = rawContent.replace(/^\uFEFF/, "").trim();
+      const userConfig = JSON.parse(cleanContent);
+      config = { ...config, ...userConfig };
+      console.log(`\u{1F4C1} Configura\u021Bie \xEEnc\u0103rcat\u0103 cu succes din: ${p}`);
+      break;
+    } catch (e) {
+      console.warn(`\u26A0\uFE0F Eroare parsare fi\u0219ier config (${p}):`, e.message);
+    }
   }
 }
+process.on("uncaughtException", (err) => {
+  console.error("\n\u274C EROARE NECURAT\u0102:", err);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("\n\u274C PROMISE RESPINS\u0102:", reason);
+});
 var supabase = createClient(config.supabase_url, config.supabase_key);
 var printedOrderHistory = /* @__PURE__ */ new Set();
 async function processOrder(order, isManual = false) {
@@ -22162,7 +22178,30 @@ async function startService() {
   console.log("\u{1F680} BELLA ROMA - IN-HOUSE USB PRINT SERVICE v1.0");
   console.log("==================================================");
   const targetPrinter = await resolveTargetPrinter(config);
-  console.log(`\u{1F3AF} Imprimant\u0103 USB \u021Aint\u0103: "${targetPrinter}"`);
+  console.log(`\u{1F3AF} Imprimant\u0103 USB \u021Aint\u0103: "${targetPrinter}"
+`);
+  if (process.argv.includes("--test")) {
+    console.log("\u{1F9EA} TESTARE DIRECT\u0102 A IMPRIMANTEI...");
+    const testOrder = {
+      id: 101,
+      numar_masa: "4",
+      created_at: (/* @__PURE__ */ new Date()).toISOString(),
+      ospatar_nume: "Maria (Test)",
+      total: 118,
+      detalii_comanda: [
+        { product: { nume: "Pizza Diavola", pret: 35 }, quantity: 2, notes: "Fara ceapa, bine facuta", customer_name: "Masa" },
+        { product: { nume: "Coca-Cola 0.33L", pret: 10 }, quantity: 1, customer_name: "Masa" },
+        { product: { nume: "Paste Carbonara", pret: 38 }, quantity: 1, customer_name: "Persoana 1" }
+      ]
+    };
+    const res = await processOrder(testOrder, true);
+    if (res.success) {
+      console.log("\n\u{1F389} TEST REU\u0218IT! Bonul a fost trimis c\u0103tre imprimant\u0103.");
+    } else {
+      console.error("\n\u274C E\u0218EC TEST:", res.error);
+    }
+    return;
+  }
   startLocalHttpServer();
   await syncUnprintedOrders();
   initRealtimeSubscription();
