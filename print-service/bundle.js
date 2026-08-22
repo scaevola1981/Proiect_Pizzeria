@@ -21723,7 +21723,38 @@ var require_escpos_builder = __commonJS({
   "escpos-builder.js"(exports2, module2) {
     function cleanDiacritics(str) {
       if (!str) return "";
-      return str.replace(/ă|â/gi, "a").replace(/Ă|Â/g, "A").replace(/î|í/gi, "i").replace(/Î|Í/g, "I").replace(/ș|ş/gi, "s").replace(/Ș|Ş/g, "S").replace(/ț|ţ/gi, "t").replace(/Ț|Ţ/g, "T").replace(/é|è|ê/gi, "e").replace(/É|È|Ê/g, "E").replace(/ó|ò/gi, "o").replace(/Ó|Ò/g, "O").replace(/ú|ù/gi, "u").replace(/Ú|Ù/g, "U");
+      return String(str).replace(/ă|â/gi, "a").replace(/Ă|Â/g, "A").replace(/î|í/gi, "i").replace(/Î|Í/g, "I").replace(/ș|ş/gi, "s").replace(/Ș|Ş/g, "S").replace(/ț|ţ/gi, "t").replace(/Ț|Ţ/g, "T").replace(/é|è|ê/gi, "e").replace(/É|È|Ê/g, "E").replace(/ó|ò/gi, "o").replace(/Ó|Ò/g, "O").replace(/ú|ù/gi, "u").replace(/Ú|Ù/g, "U");
+    }
+    function formatDateTime(dateInput) {
+      const d = dateInput ? new Date(dateInput) : /* @__PURE__ */ new Date();
+      try {
+        const formatterDate = new Intl.DateTimeFormat("ro-RO", {
+          timeZone: "Europe/Bucharest",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        });
+        const formatterTime = new Intl.DateTimeFormat("ro-RO", {
+          timeZone: "Europe/Bucharest",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        });
+        return {
+          dateStr: formatterDate.format(d),
+          timeStr: formatterTime.format(d)
+        };
+      } catch (_) {
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2, "0");
+        const minutes = String(d.getMinutes()).padStart(2, "0");
+        return {
+          dateStr: `${day}.${month}.${year}`,
+          timeStr: `${hours}:${minutes}`
+        };
+      }
     }
     function formatTwoColumns(leftText, rightText, totalWidth = 48) {
       const cleanLeft = cleanDiacritics(String(leftText || ""));
@@ -21752,9 +21783,7 @@ var require_escpos_builder = __commonJS({
       const detalii = Array.isArray(order.detalii_comanda) ? order.detalii_comanda : [];
       const masaStr = String(order.numar_masa || "?");
       const totalVal = parseFloat(order.total || 0);
-      const dateObj = order.created_at ? new Date(order.created_at) : /* @__PURE__ */ new Date();
-      const dateStr = dateObj.toLocaleDateString("ro-RO", { day: "2-digit", month: "2-digit", year: "numeric" });
-      const timeStr = dateObj.toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" });
+      const { dateStr, timeStr } = formatDateTime(order.created_at);
       const hasNewItems = detalii.some((item) => item.is_new === true);
       const isSupplement = Boolean(order.is_supplement || hasNewItems);
       const itemsToPrint = hasNewItems ? detalii.filter((item) => item.is_new === true) : detalii;
@@ -21779,11 +21808,17 @@ var require_escpos_builder = __commonJS({
         commands.push(Buffer.from([27, 69, 1]));
         commands.push(Buffer.from("*** BON SUPLIMENTAR ***\n", "ascii"));
         commands.push(Buffer.from([27, 69, 0]));
+      } else {
+        commands.push(Buffer.from("*** BON DE COMANDA ***\n", "ascii"));
       }
       commands.push(Buffer.from("=".repeat(lineChars) + "\n", "ascii"));
       commands.push(Buffer.from([27, 97, 0]));
-      const tableLine = formatTwoColumns(`Masa: ${masaStr}`, `#${order.id || ""}`, lineChars);
+      commands.push(Buffer.from([29, 33, 1]));
+      commands.push(Buffer.from([27, 69, 1]));
+      const tableLine = formatTwoColumns(`MASA: ${masaStr}`, `#${order.id || ""}`, 42);
       commands.push(Buffer.from(tableLine + "\n", "ascii"));
+      commands.push(Buffer.from([29, 33, 0]));
+      commands.push(Buffer.from([27, 69, 0]));
       const dateLine = formatTwoColumns(`Data: ${dateStr}`, `Ora: ${timeStr}`, lineChars);
       commands.push(Buffer.from(dateLine + "\n", "ascii"));
       const waiter = order.ospatar_nume || detalii.find((i) => i.ospatar_nume)?.ospatar_nume;
@@ -21807,7 +21842,7 @@ var require_escpos_builder = __commonJS({
           personTotal += lineTotal;
           const pName = item.product?.nume || "Produs";
           commands.push(Buffer.from([27, 69, 1]));
-          const itemLine = formatTwoColumns(`${qty}x ${pName}`, lineTotal.toFixed(2), lineChars);
+          const itemLine = formatTwoColumns(`${qty}x ${pName}`, `${lineTotal.toFixed(2)} Lei`, lineChars);
           commands.push(Buffer.from(itemLine + "\n", "ascii"));
           commands.push(Buffer.from([27, 69, 0]));
           if (item.notes && item.notes.trim() !== "") {
@@ -21816,18 +21851,22 @@ var require_escpos_builder = __commonJS({
 `, "ascii"));
           }
         });
-        const subtotalLine = formatTwoColumns("", `Subtotal: ${personTotal.toFixed(2)} Lei`, lineChars);
-        commands.push(Buffer.from(subtotalLine + "\n\n", "ascii"));
+        if (items.length > 1) {
+          const subtotalLine = formatTwoColumns("", `Subtotal: ${personTotal.toFixed(2)} Lei`, lineChars);
+          commands.push(Buffer.from(subtotalLine + "\n", "ascii"));
+        }
+        commands.push(Buffer.from("\n", "ascii"));
       }
       commands.push(Buffer.from("=".repeat(lineChars) + "\n", "ascii"));
       commands.push(Buffer.from([27, 97, 1]));
       commands.push(Buffer.from([29, 33, 17]));
       commands.push(Buffer.from([27, 69, 1]));
-      commands.push(Buffer.from(`TOTAL: ${totalVal.toFixed(2)} Lei
+      commands.push(Buffer.from(`TOTAL: ${totalVal.toFixed(2)} LEI
 `, "ascii"));
       commands.push(Buffer.from([29, 33, 0]));
       commands.push(Buffer.from([27, 69, 0]));
       commands.push(Buffer.from("=".repeat(lineChars) + "\n", "ascii"));
+      commands.push(Buffer.from([27, 97, 1]));
       commands.push(Buffer.from("Va multumim!\n", "ascii"));
       commands.push(Buffer.from("www.bella-roma.ro\n\n\n\n", "ascii"));
       if (autoCut) {
@@ -21838,11 +21877,74 @@ var require_escpos_builder = __commonJS({
       }
       return Buffer.concat(commands);
     }
+    function buildPlainTextReceipt2(order, options = {}) {
+      const lineChars = 46;
+      const detalii = Array.isArray(order.detalii_comanda) ? order.detalii_comanda : [];
+      const masaStr = String(order.numar_masa || "?");
+      const totalVal = parseFloat(order.total || 0);
+      const { dateStr, timeStr } = formatDateTime(order.created_at);
+      const hasNewItems = detalii.some((item) => item.is_new === true);
+      const isSupplement = Boolean(order.is_supplement || hasNewItems);
+      const itemsToPrint = hasNewItems ? detalii.filter((item) => item.is_new === true) : detalii;
+      const grouped = {};
+      itemsToPrint.forEach((item) => {
+        const rawPerson = item.customer_name && item.customer_name.trim() !== "" ? item.customer_name.trim() : "Masa";
+        const person = cleanDiacritics(rawPerson);
+        if (!grouped[person]) grouped[person] = [];
+        grouped[person].push(item);
+      });
+      const lines = [];
+      lines.push("==============================================");
+      lines.push(formatCenter("BELLA ROMA", lineChars));
+      lines.push(formatCenter("PUB & PIZZERIE", lineChars));
+      if (isSupplement) {
+        lines.push(formatCenter("*** BON SUPLIMENTAR ***", lineChars));
+      } else {
+        lines.push(formatCenter("*** BON DE COMANDA ***", lineChars));
+      }
+      lines.push("==============================================");
+      lines.push(formatTwoColumns(`MASA: ${masaStr}`, `#${order.id || ""}`, lineChars));
+      lines.push(formatTwoColumns(`Data: ${dateStr}`, `Ora: ${timeStr}`, lineChars));
+      const waiter = order.ospatar_nume || detalii.find((i) => i.ospatar_nume)?.ospatar_nume;
+      if (waiter) {
+        lines.push(`Ospatar: ${cleanDiacritics(waiter)}`);
+      }
+      lines.push("----------------------------------------------");
+      for (const [person, items] of Object.entries(grouped)) {
+        const headerLabel = person === "Masa" || person.toLowerCase() === "masa" ? "--- [ IMPREUNA ] ---" : `--- [ ${person.toUpperCase()} ] ---`;
+        lines.push(formatCenter(headerLabel, lineChars));
+        let personTotal = 0;
+        items.forEach((item) => {
+          const qty = parseInt(item.quantity || 1);
+          const price = parseFloat(item.product?.pret || 0);
+          const lineTotal = qty * price;
+          personTotal += lineTotal;
+          const pName = item.product?.nume || "Produs";
+          lines.push(formatTwoColumns(`${qty}x ${pName}`, `${lineTotal.toFixed(2)} Lei`, lineChars));
+          if (item.notes && item.notes.trim() !== "") {
+            lines.push(`   * ${cleanDiacritics(item.notes.trim())}`);
+          }
+        });
+        if (items.length > 1) {
+          lines.push(formatTwoColumns("", `Subtotal: ${personTotal.toFixed(2)} Lei`, lineChars));
+        }
+        lines.push("");
+      }
+      lines.push("==============================================");
+      lines.push(formatTwoColumns("TOTAL DE PLATA:", `${totalVal.toFixed(2)} LEI`, lineChars));
+      lines.push("==============================================");
+      lines.push(formatCenter("Va multumim!", lineChars));
+      lines.push(formatCenter("www.bella-roma.ro", lineChars));
+      lines.push("\r\n\r\n");
+      return lines.join("\r\n");
+    }
     module2.exports = {
       buildEscPosBuffer: buildEscPosBuffer2,
+      buildPlainTextReceipt: buildPlainTextReceipt2,
       cleanDiacritics,
       formatTwoColumns,
-      formatCenter
+      formatCenter,
+      formatDateTime
     };
   }
 });
@@ -21850,20 +21952,21 @@ var require_escpos_builder = __commonJS({
 // printer-driver-usb.js
 var require_printer_driver_usb = __commonJS({
   "printer-driver-usb.js"(exports2, module2) {
+    var { exec } = require("child_process");
     var fs2 = require("fs");
     var path2 = require("path");
     var os = require("os");
-    var { exec, execSync } = require("child_process");
+    var { cleanDiacritics, formatDateTime } = require_escpos_builder();
     var cachedPrinterName = null;
     async function getWindowsPrinters2() {
       return new Promise((resolve) => {
         if (process.platform !== "win32") {
           return resolve(["POS-80 (Simulated Non-Windows)"]);
         }
-        const psCommand = `powershell -NoProfile -Command "Get-CimInstance Win32_Printer | Select-Object -ExpandProperty Name"`;
-        exec(psCommand, { timeout: 4e3 }, (error, stdout) => {
+        const psCommand = `powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_Printer | Select-Object -ExpandProperty Name"`;
+        exec(psCommand, { timeout: 5e3 }, (error, stdout) => {
           if (error || !stdout) {
-            exec(`powershell -NoProfile -Command "(Get-WmiObject -Class Win32_Printer).Name"`, { timeout: 3e3 }, (err2, out2) => {
+            exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-WmiObject -Class Win32_Printer).Name"`, { timeout: 4e3 }, (err2, out2) => {
               if (err2 || !out2) return resolve([]);
               const printers2 = out2.split(/\r?\n/).map((p) => p.trim()).filter((p) => p.length > 0);
               resolve(printers2);
@@ -21882,22 +21985,46 @@ var require_printer_driver_usb = __commonJS({
         return cachedPrinterName;
       }
       const printers = await getWindowsPrinters2();
-      console.log("\u{1F5A8}\uFE0F Imprimante Windows detectate:", printers);
-      if (config2.printer_name) {
-        const exactMatch = printers.find((p) => p.toLowerCase() === config2.printer_name.toLowerCase());
+      console.log("\u{1F5A8}\uFE0F Imprimante Windows detectate:", printers.length > 0 ? printers.join(", ") : "(Niciuna)");
+      const configNames = (config2.printer_name || "POS-80").split(/[|,]/).map((s) => s.trim()).filter(Boolean);
+      for (const name of configNames) {
+        const exactMatch = printers.find((p) => p.toLowerCase() === name.toLowerCase());
         if (exactMatch) {
           cachedPrinterName = exactMatch;
           return cachedPrinterName;
         }
       }
-      const regex = new RegExp(config2.printer_name_regex || "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80)", "i");
-      const autoMatch = printers.find((p) => regex.test(p));
-      if (autoMatch) {
-        cachedPrinterName = autoMatch;
+      for (const name of configNames) {
+        const partialMatch = printers.find((p) => p.toLowerCase().includes(name.toLowerCase()));
+        if (partialMatch) {
+          cachedPrinterName = partialMatch;
+          return cachedPrinterName;
+        }
+      }
+      if (config2.printer_name_regex) {
+        try {
+          const regex = new RegExp(config2.printer_name_regex, "i");
+          const regexMatch = printers.find((p) => regex.test(p));
+          if (regexMatch) {
+            cachedPrinterName = regexMatch;
+            return cachedPrinterName;
+          }
+        } catch (e) {
+          console.warn("\u26A0\uFE0F Regex invalid \xEEn config:", e.message);
+        }
+      }
+      const defaultThermal = printers.find((p) => /(pos|ocpp|thermal|receipt|xp-80|xp-58|zj-80|m2020|samsung)/i.test(p));
+      if (defaultThermal) {
+        cachedPrinterName = defaultThermal;
         return cachedPrinterName;
       }
-      cachedPrinterName = printers[0] || config2.printer_name || "POS-80";
+      cachedPrinterName = configNames[0] || "POS-80";
       return cachedPrinterName;
+    }
+    function isThermalPrinter2(printerName) {
+      if (!printerName) return false;
+      const thermalRegex = /(pos|ocpp|thermal|receipt|xp-80|xp-58|zj-58|zj-80|epson tm|citizen|star|rongta|xprinter|black copper)/i;
+      return thermalRegex.test(printerName);
     }
     async function printRawBuffer2(buffer, config2 = {}) {
       const targetPrinter = await resolveTargetPrinter2(config2);
@@ -21906,9 +22033,12 @@ var require_printer_driver_usb = __commonJS({
         return { success: true, printer: targetPrinter, simulated: true };
       }
       return new Promise((resolve, reject) => {
-        const tempPath = path2.join(os.tmpdir(), `bella_pos_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.bin`);
+        const tempPath = path2.join(os.tmpdir(), `bella_print_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.bin`);
+        const scriptPath = path2.join(os.tmpdir(), `bella_raw_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.ps1`);
         fs2.writeFileSync(tempPath, buffer);
         const psScript = `
+$ProgressPreference = 'SilentlyContinue';
+$WarningPreference = 'SilentlyContinue';
 $printerName = "${targetPrinter.replace(/"/g, '`"')}";
 $filePath = "${tempPath.replace(/\\/g, "\\\\")}";
 
@@ -21917,7 +22047,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-public class RawPrinter {
+public class RawPrinterHelper {
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public class DOCINFOA {
         [MarshalAs(UnmanagedType.LPStr)] public string pDocName;
@@ -21925,73 +22055,147 @@ public class RawPrinter {
         [MarshalAs(UnmanagedType.LPStr)] public string pDataType;
     }
 
-    [DllImport("winspool.drv", EntryPoint = "OpenPrinterA", ExactSpelling = true, SetLastError = true)]
-    public static extern bool OpenPrinter(string pPrinterName, out IntPtr phPrinter, IntPtr pDefault);
+    [DllImport("winspool.Drv", EntryPoint = "OpenPrinterA", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    public static extern bool OpenPrinter([MarshalAs(UnmanagedType.LPStr)] string szPrinter, out IntPtr hPrinter, IntPtr pd);
 
-    [DllImport("winspool.drv", EntryPoint = "ClosePrinter", ExactSpelling = true, SetLastError = true)]
+    [DllImport("winspool.Drv", EntryPoint = "ClosePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     public static extern bool ClosePrinter(IntPtr hPrinter);
 
-    [DllImport("winspool.drv", EntryPoint = "StartDocPrinterA", ExactSpelling = true, SetLastError = true)]
-    public static extern int StartDocPrinter(IntPtr hPrinter, int Level, [In] DOCINFOA pDocInfo);
+    [DllImport("winspool.Drv", EntryPoint = "StartDocPrinterA", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    public static extern bool StartDocPrinter(IntPtr hPrinter, Int32 level, [In, MarshalAs(UnmanagedType.LPStruct)] DOCINFOA di);
 
-    [DllImport("winspool.drv", EntryPoint = "EndDocPrinter", ExactSpelling = true, SetLastError = true)]
+    [DllImport("winspool.Drv", EntryPoint = "EndDocPrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     public static extern bool EndDocPrinter(IntPtr hPrinter);
 
-    [DllImport("winspool.drv", EntryPoint = "StartPagePrinter", ExactSpelling = true, SetLastError = true)]
+    [DllImport("winspool.Drv", EntryPoint = "StartPagePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     public static extern bool StartPagePrinter(IntPtr hPrinter);
 
-    [DllImport("winspool.drv", EntryPoint = "EndPagePrinter", ExactSpelling = true, SetLastError = true)]
+    [DllImport("winspool.Drv", EntryPoint = "EndPagePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     public static extern bool EndPagePrinter(IntPtr hPrinter);
 
-    [DllImport("winspool.drv", EntryPoint = "WritePrinter", ExactSpelling = true, SetLastError = true)]
-    public static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
+    [DllImport("winspool.Drv", EntryPoint = "WritePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    public static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, Int32 dwCount, out Int32 dwWritten);
 
-    public static bool SendBytes(string printerName, byte[] bytes) {
-        IntPtr hPrinter;
-        if (!OpenPrinter(printerName, out hPrinter, IntPtr.Zero)) return false;
-        
+    public static bool SendFileToPrinter(string szPrinterName, string szFileName) {
+        IntPtr hPrinter = IntPtr.Zero;
         DOCINFOA di = new DOCINFOA();
-        di.pDocName = "BellaRoma Receipt";
+        di.pDocName = "Bella Roma Receipt";
         di.pDataType = "RAW";
 
-        int docId = StartDocPrinter(hPrinter, 1, di);
-        if (docId == 0) { ClosePrinter(hPrinter); return false; }
+        if (!OpenPrinter(szPrinterName, out hPrinter, IntPtr.Zero)) {
+            return false;
+        }
 
-        if (!StartPagePrinter(hPrinter)) { EndDocPrinter(hPrinter); ClosePrinter(hPrinter); return false; }
+        if (!StartDocPrinter(hPrinter, 1, di)) {
+            ClosePrinter(hPrinter);
+            return false;
+        }
 
+        if (!StartPagePrinter(hPrinter)) {
+            EndDocPrinter(hPrinter);
+            ClosePrinter(hPrinter);
+            return false;
+        }
+
+        byte[] bytes = File.ReadAllBytes(szFileName);
         IntPtr pUnmanagedBytes = Marshal.AllocCoTaskMem(bytes.Length);
         Marshal.Copy(bytes, 0, pUnmanagedBytes, bytes.Length);
 
-        int written = 0;
-        bool success = WritePrinter(hPrinter, pUnmanagedBytes, bytes.Length, out written);
-
+        Int32 dwWritten = 0;
+        bool bSuccess = WritePrinter(hPrinter, pUnmanagedBytes, bytes.Length, out dwWritten);
         Marshal.FreeCoTaskMem(pUnmanagedBytes);
+
         EndPagePrinter(hPrinter);
         EndDocPrinter(hPrinter);
         ClosePrinter(hPrinter);
 
-        return success && written == bytes.Length;
+        return bSuccess;
     }
 }
-"@;
+"@
 
-Add-Type -TypeDefinition $code -ErrorAction Stop;
-$bytes = [System.IO.File]::ReadAllBytes($filePath);
-$res = [RawPrinter]::SendBytes($printerName, $bytes);
-if ($res) { exit 0 } else { exit 1 }
+Add-Type -TypeDefinition $code -Language CSharp
+$res = [RawPrinterHelper]::SendFileToPrinter($printerName, $filePath)
+
+if ($res) {
+    exit 0
+} else {
+    exit 1
+}
 `;
-        const encodedCommand = Buffer.from(psScript, "utf16le").toString("base64");
-        const execCmd = `powershell -NoProfile -EncodedCommand ${encodedCommand}`;
-        exec(execCmd, { timeout: 6e3 }, (error) => {
+        fs2.writeFileSync(scriptPath, psScript, "utf8");
+        const execCmd = `powershell -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}"`;
+        exec(execCmd, { timeout: 12e3 }, (error) => {
           try {
             fs2.unlinkSync(tempPath);
+          } catch (_) {
+          }
+          try {
+            fs2.unlinkSync(scriptPath);
           } catch (_) {
           }
           if (error) {
             console.error(`\u274C Eroare la trimiterea bonului c\u0103tre "${targetPrinter}":`, error.message);
             return reject(new Error(`E\u0219ec printare pe ${targetPrinter}: ${error.message}`));
           }
-          console.log(`\u2705 Bon printat cu succes pe imprimanta USB "${targetPrinter}"!`);
+          console.log(`\u2705 Bon ESC/POS trimis cu succes c\u0103tre imprimanta termic\u0103 "${targetPrinter}"!`);
+          resolve({ success: true, printer: targetPrinter });
+        });
+      });
+    }
+    async function printTextDocument2(text, config2 = {}) {
+      const targetPrinter = await resolveTargetPrinter2(config2);
+      if (process.platform !== "win32") {
+        console.log(`[SIMULARE NON-WINDOWS TEXT] Bon trimis spre: "${targetPrinter}"
+${text}`);
+        return { success: true, printer: targetPrinter, simulated: true };
+      }
+      return new Promise((resolve, reject) => {
+        const tempPath = path2.join(os.tmpdir(), `bella_doc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.txt`);
+        const scriptPath = path2.join(os.tmpdir(), `bella_txt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.ps1`);
+        fs2.writeFileSync(tempPath, text, "utf8");
+        const psScript = `
+$ProgressPreference = 'SilentlyContinue';
+$WarningPreference = 'SilentlyContinue';
+$printerName = "${targetPrinter.replace(/"/g, '`"')}";
+$filePath = "${tempPath.replace(/\\/g, "\\\\")}";
+
+try {
+    Add-Type -AssemblyName System.Drawing;
+    $text = [System.IO.File]::ReadAllText($filePath, [System.Text.Encoding]::UTF8);
+    $doc = New-Object System.Drawing.Printing.PrintDocument;
+    $doc.PrinterSettings.PrinterName = $printerName;
+    $doc.PrintController = New-Object System.Drawing.Printing.StandardPrintController;
+    $font = New-Object System.Drawing.Font("Consolas", 11, [System.Drawing.FontStyle]::Bold);
+    $doc.add_PrintPage({
+        param($sender, $e)
+        $e.Graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias;
+        $e.Graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit;
+        $e.Graphics.DrawString($text, $font, [System.Drawing.Brushes]::Black, 25, 20);
+    });
+    $doc.Print();
+    exit 0;
+} catch {
+    Get-Content -Path $filePath -Encoding UTF8 | Out-Printer -Name $printerName;
+    exit 0;
+}
+`;
+        fs2.writeFileSync(scriptPath, psScript, "utf8");
+        const execCmd = `powershell -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}"`;
+        exec(execCmd, { timeout: 15e3 }, (error) => {
+          try {
+            fs2.unlinkSync(tempPath);
+          } catch (_) {
+          }
+          try {
+            fs2.unlinkSync(scriptPath);
+          } catch (_) {
+          }
+          if (error) {
+            console.error(`\u274C Eroare la printarea text c\u0103tre "${targetPrinter}":`, error.message);
+            return reject(new Error(`E\u0219ec printare pe ${targetPrinter}: ${error.message}`));
+          }
+          console.log(`\u2705 Bon POS-80 printat cu succes pe imprimanta "${targetPrinter}"!`);
           resolve({ success: true, printer: targetPrinter });
         });
       });
@@ -21999,7 +22203,9 @@ if ($res) { exit 0 } else { exit 1 }
     module2.exports = {
       getWindowsPrinters: getWindowsPrinters2,
       resolveTargetPrinter: resolveTargetPrinter2,
-      printRawBuffer: printRawBuffer2
+      isThermalPrinter: isThermalPrinter2,
+      printRawBuffer: printRawBuffer2,
+      printTextDocument: printTextDocument2
     };
   }
 });
@@ -25700,12 +25906,18 @@ var require_ws = __commonJS({
 });
 
 // index.js
+process.on("uncaughtException", (err) => {
+  console.error("\u274C EROARE NECON\u021AINUT\u0102:", err.message || err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("\u274C PROMISIUNE NEREZOLVAT\u0102:", reason);
+});
 var http = require("http");
 var path = require("path");
 var fs = require("fs");
 var { createClient } = require_dist4();
-var { buildEscPosBuffer } = require_escpos_builder();
-var { printRawBuffer, resolveTargetPrinter, getWindowsPrinters } = require_printer_driver_usb();
+var { buildEscPosBuffer, buildPlainTextReceipt } = require_escpos_builder();
+var { printRawBuffer, printTextDocument, isThermalPrinter, resolveTargetPrinter, getWindowsPrinters } = require_printer_driver_usb();
 var possibleConfigPaths = [
   path.join(path.dirname(process.execPath), "config.json"),
   path.join(process.cwd(), "config.json"),
@@ -25746,19 +25958,32 @@ var supabase = createClient(config.supabase_url, config.supabase_key, {
     transport: WebSocket2
   }
 });
-var printedOrderHistory = /* @__PURE__ */ new Set();
+var printedOrderHistory = /* @__PURE__ */ new Map();
+var activePrintingLocks = /* @__PURE__ */ new Set();
 async function processOrder(order, isManual = false) {
   if (!order || !order.id) return { success: false, error: "Comand\u0103 invalid\u0103" };
-  const orderKey = `${order.id}_${order.total}_${(order.detalii_comanda || []).length}`;
-  if (!isManual && printedOrderHistory.has(orderKey)) {
-    console.log(`\u2139\uFE0F Comanda #${order.id} a fost deja printat\u0103 recent. Se omite.`);
-    return { success: true, duplicate: true };
+  const orderKey = `order_${order.id}`;
+  const now = Date.now();
+  const lastPrintTime = printedOrderHistory.get(orderKey) || 0;
+  const isForce = Boolean(order.force === true);
+  if (!isForce && (activePrintingLocks.has(orderKey) || now - lastPrintTime < 6e4)) {
+    console.log(`\u2139\uFE0F Comanda #${order.id} este deja \xEEn curs de printare sau a fost printat\u0103 recent (${Math.round((now - lastPrintTime) / 1e3)}s). Se omite duplicatul.`);
+    return { success: true, duplicate: true, orderId: order.id };
   }
+  activePrintingLocks.add(orderKey);
+  printedOrderHistory.set(orderKey, now);
   try {
-    console.log(`\u{1F4C4} Preg\u0103tire bon pentru Masa ${order.numar_masa} (Comanda #${order.id})...`);
-    const buffer = buildEscPosBuffer(order, config);
-    await printRawBuffer(buffer, config);
-    printedOrderHistory.add(orderKey);
+    const targetPrinter = await resolveTargetPrinter(config);
+    const isThermal = isThermalPrinter(targetPrinter);
+    if (isThermal) {
+      console.log(`\u{1F4C4} [MOD TERMIC POS] Preg\u0103tire bon pentru Masa ${order.numar_masa} (Comanda #${order.id}) pe "${targetPrinter}"...`);
+      const buffer = buildEscPosBuffer(order, config);
+      await printRawBuffer(buffer, config);
+    } else {
+      console.log(`\u{1F4C4} [MOD GDI POS-80] Preg\u0103tire bon pentru Masa ${order.numar_masa} (Comanda #${order.id}) pe "${targetPrinter}"...`);
+      const text = buildPlainTextReceipt(order, config);
+      await printTextDocument(text, config);
+    }
     if (order.status === "noua") {
       try {
         await supabase.from("comenzi").update({ status: "in_preparare" }).eq("id", order.id);
@@ -25767,10 +25992,13 @@ async function processOrder(order, isManual = false) {
         console.warn(`\u26A0\uFE0F Nu s-a putut actualiza statusul comenzii #${order.id} \xEEn DB:`, dbErr.message);
       }
     }
-    return { success: true, orderId: order.id };
+    return { success: true, orderId: order.id, printer: targetPrinter };
   } catch (err) {
+    printedOrderHistory.delete(orderKey);
     console.error(`\u274C Eroare la procesarea comenzii #${order.id}:`, err.message);
     return { success: false, error: err.message };
+  } finally {
+    activePrintingLocks.delete(orderKey);
   }
 }
 async function syncUnprintedOrders() {
@@ -25868,6 +26096,13 @@ function startLocalHttpServer() {
     }
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Endpoint inexistent" }));
+  });
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.warn(`\u26A0\uFE0F Portul local ${config.http_port} este deja utilizat de o alt\u0103 instan\u021B\u0103. Serviciul continu\u0103 s\u0103 func\u021Bioneze prin Supabase Realtime.`);
+    } else {
+      console.error(`\u274C Eroare server HTTP local:`, err.message);
+    }
   });
   server.listen(config.http_port, () => {
     console.log(`\u{1F310} Server local HTTP activ pe http://localhost:${config.http_port}`);

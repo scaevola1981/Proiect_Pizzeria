@@ -170,6 +170,14 @@ async function autoPrintIfNew(order) {
 
     if (!printedOrderSignatures.has(signature)) {
         printedOrderSignatures.add(signature);
+        
+        // Dacă serviciul In-House este activ pe PC, el primește comanda direct prin Supabase Realtime!
+        const isInHouse = await checkInHousePrintService();
+        if (isInHouse) {
+            console.log("🖨️ Comanda #", order.id, "este gestionată direct de Serviciul In-House (fără trimitere duplicat).");
+            return;
+        }
+
         console.log("🖨️ Auto-print declanșat automat pentru comanda #", order.id, "Masa:", order.numar_masa);
         await printReceiptForOrder(order);
         
@@ -219,7 +227,7 @@ window.renderOwnerOrders = function () {
         let itemsStr = renderOrderItemsGroupedByPerson(order.detalii_comanda);
 
         const dateStr = new Date(order.created_at).toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
-        const timeStr = new Date(order.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+        const timeStr = new Date(order.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', hour12: false });
 
         let statusLabel = order.status.toUpperCase();
         let statusColor = '#f39c12';
@@ -330,7 +338,7 @@ window.renderHistory = function () {
         recentOrders.forEach(o => {
             const orderDate = new Date(o.created_at);
             const dateStr = orderDate.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
-            const timeStr = orderDate.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+            const timeStr = orderDate.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', hour12: false });
 
             const fullDateStr = orderDate.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             if (fullDateStr !== lastDate) {
@@ -634,7 +642,7 @@ async function printReceiptForOrder(order) {
     const totalStr = parseFloat(order.total || 0).toFixed(2);
     const dateObj = new Date(order.created_at);
     const dateStr = dateObj.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const timeStr = dateObj.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+    const timeStr = dateObj.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', hour12: false });
 
     // Verificăm dacă există produse noi (is_new === true) pentru a tipări doar bonul suplimentar
     const hasNewItems = detalii.some(item => item.is_new === true);

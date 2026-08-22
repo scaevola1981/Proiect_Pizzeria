@@ -3,8 +3,8 @@
  * Rulează: node test-print.js
  */
 
-const { buildEscPosBuffer } = require('./escpos-builder');
-const { printRawBuffer, resolveTargetPrinter, getWindowsPrinters } = require('./printer-driver-usb');
+const { buildEscPosBuffer, buildPlainTextReceipt } = require('./escpos-builder');
+const { printRawBuffer, printTextDocument, isThermalPrinter, resolveTargetPrinter, getWindowsPrinters } = require('./printer-driver-usb');
 const config = require('./config.json');
 
 async function runTest() {
@@ -16,7 +16,8 @@ async function runTest() {
     console.log("Imprimante disponibile:", printers);
 
     const targetPrinter = await resolveTargetPrinter(config);
-    console.log(`\nImprimantă selectată: "${targetPrinter}"\n`);
+    const isThermal = isThermalPrinter(targetPrinter);
+    console.log(`\nImprimantă selectată: "${targetPrinter}" (Tip: ${isThermal ? 'Termică ESC/POS' : 'Laser/GDI/Standard'})\n`);
 
     const sampleOrder = {
         id: 101,
@@ -44,13 +45,19 @@ async function runTest() {
         ]
     };
 
-    console.log("Generare buffer ESC/POS...");
-    const buffer = buildEscPosBuffer(sampleOrder, config);
-    console.log(`Buffer generat: ${buffer.length} bytes.`);
-
-    console.log(`Trimitere către imprimanta "${targetPrinter}"...`);
     try {
-        const result = await printRawBuffer(buffer, config);
+        if (isThermal) {
+            console.log("Generare buffer ESC/POS...");
+            const buffer = buildEscPosBuffer(sampleOrder, config);
+            console.log(`Buffer generat: ${buffer.length} bytes.`);
+            console.log(`Trimitere binară către imprimanta termică "${targetPrinter}"...`);
+            await printRawBuffer(buffer, config);
+        } else {
+            console.log("Generare bon text formatat pentru imprimantă standard/laser...");
+            const text = buildPlainTextReceipt(sampleOrder, config);
+            console.log(`Trimitere text document către imprimanta "${targetPrinter}"...`);
+            await printTextDocument(text, config);
+        }
         console.log("\n🎉 REZULTAT: TEST REUȘIT!");
         console.log("Bonul ar trebui să fie tipărit acum pe imprimantă.");
     } catch (e) {

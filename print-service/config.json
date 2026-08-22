@@ -1,7 +1,7 @@
 {
   "connection_type": "USB",
   "printer_name": "POS-80",
-  "printer_name_regex": "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80)",
+  "printer_name_regex": "(POS-80|OCPP|Thermal|Receipt|XP-80|POS80|Samsung|M2020|M2026|Generic)",
   "supabase_url": "https://tzdtssvjsrhyocskivmm.supabase.co",
   "supabase_key": "sb_publishable_JRIxO4MMjth3IkqfaOCPmw_e69T87UP",
   "auto_cut": true,

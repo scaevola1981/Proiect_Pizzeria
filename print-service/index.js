@@ -3,12 +3,20 @@
  * Autonomous daemon bridging Supabase Realtime with local USB ESC/POS thermal printer.
  */
 
+process.on('uncaughtException', (err) => {
+    console.error('❌ EROARE NECONȚINUTĂ:', err.message || err);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('❌ PROMISIUNE NEREZOLVATĂ:', reason);
+});
+
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
-const { buildEscPosBuffer } = require('./escpos-builder');
-const { printRawBuffer, resolveTargetPrinter, getWindowsPrinters } = require('./printer-driver-usb');
+const { buildEscPosBuffer, buildPlainTextReceipt } = require('./escpos-builder');
+const { printRawBuffer, printTextDocument, isThermalPrinter, resolveTargetPrinter, getWindowsPrinters } = require('./printer-driver-usb');
 
 // 1. Încărcare Configurație (Caută în directorul executabilului, cwd și directorul scriptului)
 const possibleConfigPaths = [
@@ -57,30 +65,44 @@ const supabase = createClient(config.supabase_url, config.supabase_key, {
     }
 });
 
-// Set în memorie pentru prevenirea printărilor duplicate
-const printedOrderHistory = new Set();
+// Map & Set în memorie pentru prevenirea strictă a printărilor duplicate
+const printedOrderHistory = new Map();
+const activePrintingLocks = new Set();
 
 /**
- * Procesează și trimite o comandă către imprimanta USB
+ * Procesează și trimite o comandă către imprimanta USB (Garantează 1 singură printare)
  */
 async function processOrder(order, isManual = false) {
     if (!order || !order.id) return { success: false, error: 'Comandă invalidă' };
 
-    const orderKey = `${order.id}_${order.total}_${(order.detalii_comanda || []).length}`;
+    const orderKey = `order_${order.id}`;
+    const now = Date.now();
+    const lastPrintTime = printedOrderHistory.get(orderKey) || 0;
+    const isForce = Boolean(order.force === true);
 
-    // Verificare duplicat
-    if (!isManual && printedOrderHistory.has(orderKey)) {
-        console.log(`ℹ️ Comanda #${order.id} a fost deja printată recent. Se omite.`);
-        return { success: true, duplicate: true };
+    // Verificare duplicat și lock concurent: dacă este deja în curs de printare sau a fost printat în ultimele 60 de secunde
+    if (!isForce && (activePrintingLocks.has(orderKey) || (now - lastPrintTime < 60000))) {
+        console.log(`ℹ️ Comanda #${order.id} este deja în curs de printare sau a fost printată recent (${Math.round((now - lastPrintTime) / 1000)}s). Se omite duplicatul.`);
+        return { success: true, duplicate: true, orderId: order.id };
     }
 
+    // Punem lock-ul și timestamp-ul IMEDIAT pentru a preveni apeluri paralele/concurente
+    activePrintingLocks.add(orderKey);
+    printedOrderHistory.set(orderKey, now);
+
     try {
-        console.log(`📄 Pregătire bon pentru Masa ${order.numar_masa} (Comanda #${order.id})...`);
-        const buffer = buildEscPosBuffer(order, config);
-        
-        await printRawBuffer(buffer, config);
-        
-        printedOrderHistory.add(orderKey);
+        const targetPrinter = await resolveTargetPrinter(config);
+        const isThermal = isThermalPrinter(targetPrinter);
+
+        if (isThermal) {
+            console.log(`📄 [MOD TERMIC POS] Pregătire bon pentru Masa ${order.numar_masa} (Comanda #${order.id}) pe "${targetPrinter}"...`);
+            const buffer = buildEscPosBuffer(order, config);
+            await printRawBuffer(buffer, config);
+        } else {
+            console.log(`📄 [MOD GDI POS-80] Pregătire bon pentru Masa ${order.numar_masa} (Comanda #${order.id}) pe "${targetPrinter}"...`);
+            const text = buildPlainTextReceipt(order, config);
+            await printTextDocument(text, config);
+        }
 
         // Actualizăm statusul în Supabase dacă este "noua"
         if (order.status === 'noua') {
@@ -95,10 +117,13 @@ async function processOrder(order, isManual = false) {
             }
         }
 
-        return { success: true, orderId: order.id };
+        return { success: true, orderId: order.id, printer: targetPrinter };
     } catch (err) {
+        printedOrderHistory.delete(orderKey);
         console.error(`❌ Eroare la procesarea comenzii #${order.id}:`, err.message);
         return { success: false, error: err.message };
+    } finally {
+        activePrintingLocks.delete(orderKey);
     }
 }
 
@@ -227,6 +252,14 @@ function startLocalHttpServer() {
 
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Endpoint inexistent' }));
+    });
+
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.warn(`⚠️ Portul local ${config.http_port} este deja utilizat de o altă instanță. Serviciul continuă să funcționeze prin Supabase Realtime.`);
+        } else {
+            console.error(`❌ Eroare server HTTP local:`, err.message);
+        }
     });
 
     server.listen(config.http_port, () => {

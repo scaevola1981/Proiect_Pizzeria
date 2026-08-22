@@ -5,6 +5,15 @@
 let produse = [];
 let currentTab = 'restaurant';
 let searchQuery = '';
+let clientCart = [];
+let selectedMasa = '1';
+
+// Citiți masa din URL (ex: meniu.html?masa=5)
+const urlParams = new URLSearchParams(window.location.search);
+const masaParam = urlParams.get('masa');
+if (masaParam && masaParam.trim() !== '') {
+    selectedMasa = masaParam.trim();
+}
 
 // Funcție sigură pentru ascunderea ecranului de încărcare pe mobil
 function hideAppLoader() {
@@ -37,6 +46,7 @@ if (document.getElementById('produse-container')) {
         });
     }
 
+    updateMasaDisplay();
     loadProductsFromSupabase();
 }
 
@@ -85,6 +95,7 @@ async function loadProductsFromSupabase() {
     try {
         const { data, error } = await window.supabaseClient.from('meniu').select('*');
         if (error) {
+            console.error('Eroare la preluarea meniului din Supabase:', error);
             if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare la preluarea meniului.</p>';
             return;
         }
@@ -92,6 +103,7 @@ async function loadProductsFromSupabase() {
         produse = data || [];
         renderProducts();
     } catch (err) {
+        console.error('Eroare neașteptată:', err);
         if (container) container.innerHTML = '<p style="text-align:center; width:100%; color:red;">Eroare neașteptată.</p>';
     }
 }
@@ -124,7 +136,7 @@ function renderProducts() {
         const isBautura = (p.categorie || '').toLowerCase().trim() === 'bar';
         
         if (searchQuery) {
-            return p.nume.toLowerCase().includes(searchQuery) || (p.descriere || '').toLowerCase().includes(searchQuery);
+            return (p.nume || '').toLowerCase().includes(searchQuery) || (p.descriere || '').toLowerCase().includes(searchQuery);
         } else {
             return currentTab === 'bar' ? isBautura : !isBautura;
         }
@@ -196,17 +208,69 @@ function renderProducts() {
             navBar.appendChild(btn);
         });
         
-        if(navBar.firstChild) navBar.firstChild.classList.add('active');
+        if (navBar.firstChild) navBar.firstChild.classList.add('active');
     }
 
-let clientCart = [];
-let selectedMasa = '1';
+    // Randare grupuri de produse
+    for (const catName of sortedSubcats) {
+        const prods = grouped[catName];
+        const sectionId = `cat-${escapeHTML(catName.replace(/\s+/g, '-'))}`;
+        
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.id = sectionId;
 
-// Citiți masa din URL (ex: meniu.html?masa=5)
-const urlParams = new URLSearchParams(window.location.search);
-const masaParam = urlParams.get('masa');
-if (masaParam && masaParam.trim() !== '') {
-    selectedMasa = masaParam.trim();
+        const sectionTitle = document.createElement('h2');
+        sectionTitle.innerText = catName;
+        section.appendChild(sectionTitle);
+
+        const grid = document.createElement('div');
+        grid.className = 'products-grid';
+
+        prods.forEach(p => {
+            const imageUrl = p.imagine_url || getDefaultProductImage();
+            const safeName = escapeHTML(p.nume);
+            const priceDisplay = `${escapeHTML(String(p.pret))} Lei`;
+
+            const card = document.createElement('div');
+            card.className = 'product-card';
+
+            const isDrink = currentTab === 'bar' || (p.categorie && p.categorie.toLowerCase() === 'bar');
+            const imgStyle = isDrink ?
+                'width: 100%; height: 180px; object-fit: contain; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 15px; box-sizing: border-box;' :
+                'width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;';
+
+            const qtyInCart = clientCart
+                .filter(item => String(item.product.id) === String(p.id))
+                .reduce((sum, item) => sum + item.quantity, 0);
+
+            let btnBg = 'background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);';
+            let btnContent = `<i class="fas fa-plus"></i> Adaugă în Coș`;
+
+            if (qtyInCart > 0) {
+                btnBg = 'background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.45); transform: scale(1.02);';
+                btnContent = `<i class="fas fa-check-circle"></i> În coș (${qtyInCart})`;
+            }
+
+            card.innerHTML = `
+                <img src="${escapeHTML(imageUrl)}" alt="${safeName}" style="${imgStyle}">
+                <h3>${safeName}</h3>
+                <p>${p.displayDesc}</p>
+                <h4 style="margin-top: auto; padding-top: 15px; font-size: 1.1rem; color: #f5b041;">${priceDisplay}</h4>
+                <button id="client-add-btn-${p.id}" onclick="window.addToCartClient(${parseInt(p.id)})"
+                    style="width: 100%; padding: 11px; ${btnBg} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                    ${btnContent}
+                </button>
+            `;
+
+            grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        container.appendChild(section);
+    }
+
+    updateCartUI();
 }
 
 window.changeMasaPrompt = function () {
@@ -316,6 +380,27 @@ function updateCartUI() {
     updateAllClientProductButtons();
 }
 
+function updateAllClientProductButtons() {
+    produse.forEach(p => {
+        const btn = document.getElementById(`client-add-btn-${p.id}`);
+        if (!btn) return;
+
+        const qtyInCart = clientCart
+            .filter(item => String(item.product.id) === String(p.id))
+            .reduce((sum, item) => sum + item.quantity, 0);
+
+        if (qtyInCart > 0) {
+            btn.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
+            btn.style.boxShadow = '0 4px 15px rgba(46, 204, 113, 0.45)';
+            btn.innerHTML = `<i class="fas fa-check-circle"></i> În coș (${qtyInCart})`;
+        } else {
+            btn.style.background = 'linear-gradient(to right, #29EAC4, #4284DB)';
+            btn.style.boxShadow = '0 4px 12px rgba(41, 234, 196, 0.35)';
+            btn.innerHTML = `<i class="fas fa-plus"></i> Adaugă în Coș`;
+        }
+    });
+}
+
 window.sendClientOrder = async function () {
     if (clientCart.length === 0) return;
 
@@ -373,87 +458,4 @@ function showNotification(msg, icon = 'fas fa-info-circle', bg = '#3498db') {
         toast.style.transform = 'translateY(-10px)';
         setTimeout(() => toast.remove(), 300);
     }, 3500);
-}
-
-    // Randare grupuri de produse
-    for (const catName of sortedSubcats) {
-        const prods = grouped[catName];
-        const sectionId = `cat-${escapeHTML(catName.replace(/\s+/g, '-'))}`;
-        
-        const section = document.createElement('div');
-        section.className = 'category-section';
-        section.id = sectionId;
-
-        const sectionTitle = document.createElement('h2');
-        sectionTitle.innerText = catName;
-        section.appendChild(sectionTitle);
-
-        const grid = document.createElement('div');
-        grid.className = 'products-grid';
-
-        prods.forEach(p => {
-            const imageUrl = p.imagine_url || getDefaultProductImage();
-            const safeName = escapeHTML(p.nume);
-            const priceDisplay = `${escapeHTML(String(p.pret))} Lei`;
-
-            const card = document.createElement('div');
-            card.className = 'product-card';
-
-            const isDrink = currentTab === 'bar' || (p.categorie && p.categorie.toLowerCase() === 'bar');
-            const imgStyle = isDrink ?
-                'width: 100%; height: 180px; object-fit: contain; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 15px; box-sizing: border-box;' :
-                'width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 15px;';
-
-            const qtyInCart = clientCart
-                .filter(item => String(item.product.id) === String(p.id))
-                .reduce((sum, item) => sum + item.quantity, 0);
-
-            let btnBg = 'background: #4284DB; background: -webkit-linear-gradient(to right, #29EAC4, #4284DB); background: linear-gradient(to right, #29EAC4, #4284DB); box-shadow: 0 4px 12px rgba(41, 234, 196, 0.35);';
-            let btnContent = `<i class="fas fa-plus"></i> Adaugă în Coș`;
-
-            if (qtyInCart > 0) {
-                btnBg = 'background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.45); transform: scale(1.02);';
-                btnContent = `<i class="fas fa-check-circle"></i> În coș (${qtyInCart})`;
-            }
-
-            card.innerHTML = `
-                <img src="${escapeHTML(imageUrl)}" alt="${safeName}" style="${imgStyle}">
-                <h3>${safeName}</h3>
-                <p>${p.displayDesc}</p>
-                <h4 style="margin-top: auto; padding-top: 15px; font-size: 1.1rem; color: #f5b041;">${priceDisplay}</h4>
-                <button id="client-add-btn-${p.id}" onclick="window.addToCartClient(${parseInt(p.id)})"
-                    style="width: 100%; padding: 11px; ${btnBg} color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                    ${btnContent}
-                </button>
-            `;
-
-            grid.appendChild(card);
-        });
-
-        section.appendChild(grid);
-        container.appendChild(section);
-    }
-
-    updateCartUI();
-}
-
-function updateAllClientProductButtons() {
-    produse.forEach(p => {
-        const btn = document.getElementById(`client-add-btn-${p.id}`);
-        if (!btn) return;
-
-        const qtyInCart = clientCart
-            .filter(item => String(item.product.id) === String(p.id))
-            .reduce((sum, item) => sum + item.quantity, 0);
-
-        if (qtyInCart > 0) {
-            btn.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
-            btn.style.boxShadow = '0 4px 15px rgba(46, 204, 113, 0.45)';
-            btn.innerHTML = `<i class="fas fa-check-circle"></i> În coș (${qtyInCart})`;
-        } else {
-            btn.style.background = 'linear-gradient(to right, #29EAC4, #4284DB)';
-            btn.style.boxShadow = '0 4px 12px rgba(41, 234, 196, 0.35)';
-            btn.innerHTML = `<i class="fas fa-plus"></i> Adaugă în Coș`;
-        }
-    });
 }
